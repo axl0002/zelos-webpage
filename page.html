@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zelos Support</title>
+  <meta name="description" content="Help and support for the Zelos app: FAQs, contact, and policies." />
+  <link rel="canonical" href="https://zelos.club/support" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Zelos Support" />
+  <meta property="og:description" content="Help and support for the Zelos app: FAQs, contact, and policies." />
+  <meta property="og:url" content="https://zelos.club/support" />
+  <meta property="og:type" content="website" />
+
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #0f172a; /* slate-900 */
+      --muted: #475569; /* slate-600 */
+      --card: #f8fafc; /* slate-50 */
+      --accent: #0ea5e9; /* sky-500 */
+      --border: #e2e8f0; /* slate-200 */
+      --radius: 16px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b0f19;
+        --fg: #e5e7eb;
+        --muted: #94a3b8;
+        --card: #0f172a;
+        --accent: #38bdf8;
+        --border: #1f2937;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Apple Color Emoji, Segoe UI Emoji;
+      background: var(--bg); color: var(--fg); line-height: 1.6;
+    }
+    .wrap {
+      max-width: 880px; margin: 0 auto; padding: 32px 20px 64px;
+    }
+    header {
+      display: flex; align-items: center; gap: 14px; margin-bottom: 18px;
+    }
+    .logo {
+      width: 36px; height: 36px; border-radius: 10px; background: var(--fg);
+    }
+    h1 { font-size: 1.875rem; margin: 0; letter-spacing: -0.01em; }
+    .subtitle { color: var(--muted); margin-top: 6px; }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 18px;
+    }
+    section { margin-top: 22px; }
+    h2 { font-size: 1.125rem; margin: 0 0 10px; }
+    ul { padding-left: 18px; margin: 10px 0; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .grid { display: grid; gap: 16px; }
+    @media (min-width: 760px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+    }
+    .muted { color: var(--muted); }
+    .kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: rgba(148,163,184,.15); padding: 2px 6px; border-radius: 6px;
+    }
+    footer { margin-top: 28px; font-size: 0.9375rem; }
+  </style>
+
+  <!-- Structured data for FAQ -->
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"FAQPage",
+    "mainEntity":[
+      {
+        "@type":"Question",
+        "name":"How do I contact support?",
+        "acceptedAnswer":{"@type":"Answer","text":"Email support@zelos.club and include your device, iOS version, and app version from Settings → Zelos → About."}
+      },
+      {
+        "@type":"Question",
+        "name":"Where can I find Privacy Policy and Terms?",
+        "acceptedAnswer":{"@type":"Answer","text":"Visit https://zelos.club/privacy and https://zelos.club/terms."}
+      },
+      {
+        "@type":"Question",
+        "name":"How are rankings calculated?",
+        "acceptedAnswer":{"@type":"Answer","text":"Zelos uses a professional rating system to rank athletes based on pairwise comparisons and performance signals."}
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <img src="assets/z_app_icon.png" alt="Zelos logo" class="logo" />
+      <div>
+        <h1>Zelos Support</h1>
+        <p class="subtitle">Global Calisthenics Rankings</p>
+      </div>
+    </header>
+
+    <section class="card">
+      <h2>Contact</h2>
+      <p>Need help? Email <a href="mailto:support@zelos.club">support@zelos.club</a>.</p>
+      <p class="muted">Please include: device model, iOS version, and app version (<span class="kbd">Zelos → Profile → Settings → About</span>).</p>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Quick Start</h2>
+        <ul>
+          <li>Download Zelos on the App Store and create your profile.</li>
+          <li>Vote on athlete matchups to contribute to rankings.</li>
+          <li>Track your standing on global leaderboards.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>Troubleshooting</h2>
+        <ul>
+          <li>Force-quit and reopen the app.</li>
+          <li>Check you’re on the latest version in the App Store.</li>
+          <li>Ensure network connectivity (Wi-Fi or mobile data).</li>
+          <li>If issues persist, email <a href="mailto:support@zelos.club">support@zelos.club</a> with screenshots.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- <section class="grid"> -->
+      <!-- <div class="card">
+        <h2>FAQs</h2>
+        <p><strong>How are rankings calculated?</strong><br>
+        Zelos uses a professional rating system based on pairwise comparisons and performance signals.</p>
+        <p><strong>Can I request data deletion?</strong><br>
+        Yes. Email <a href="mailto:support@zelos.club?subject=Data%20Deletion%20Request">support@zelos.club</a> from the address linked to your account.</p>
+      </div> -->
+
+      <!-- <div class="card"> -->
+        <!-- <h2>Policies</h2> -->
+        <!-- <ul> -->
+          <!-- <li><a href="https://zelos.club/privacy">Privacy Policy</a></li> -->
+          <!-- <li><a href="https://zelos.club/terms">Terms of Service</a></li> -->
+          <!-- Optional: add an imprint/business info page for EU -->
+          <!-- <li><a href="https://zelos.club/imprint">Imprint (EU)</a></li> -->
+        <!-- </ul> -->
+      <!-- </div> -->
+    <!-- </section> -->
+
+    <footer class="muted">
+      <div>© <span id="y"></span> Zelos. All rights reserved.</div>
+      <!-- Optional status page link -->
+      <!-- <div>Service status: <a href="https://status.zelos.club">status.zelos.club</a></div> -->
+    </footer>
+  </div>
+
+  <script>
+    // Year
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
