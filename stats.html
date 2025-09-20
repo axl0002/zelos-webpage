@@ -1,78 +1,60 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Zelos Stats</title>
-    <meta name="description" content="Live user count for the Zelos app." />
-    <style>
-        :root {
-            font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif;
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stats - Zelos Calisthenics App</title>
+    <meta name="description" content="Real-time statistics and insights into the Zelos calisthenics community.">
 
-        html,
-        body {
-            height: 100%;
-        }
-
-        body {
-            margin: 0;
-            display: grid;
-            place-items: center;
-            background: #0b0b0c;
-            color: #fff;
-        }
-
-        .card {
-            padding: 2.5rem 3rem;
-            border-radius: 1.25rem;
-            background: #141416;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
-            text-align: center;
-        }
-
-        h1 {
-            margin: 0 0 .75rem;
-            font-size: 1rem;
-            letter-spacing: .14em;
-            text-transform: uppercase;
-            color: #9aa0a6;
-        }
-
-        .count {
-            font-size: clamp(3rem, 8vw, 7rem);
-            font-weight: 800;
-            line-height: 1;
-        }
-
-        .updated {
-            margin-top: .75rem;
-            font-size: .9rem;
-            color: #9aa0a6;
-        }
-
-        .error {
-            color: #ff6b6b;
-        }
-    </style>
-
-    <!-- Optional (local dev only): enable App Check debug token -->
-    <!--
-  <script>
-    // BEFORE AppCheck init; then copy the token from console and add in Firebase Console > App Check > Manage debug tokens
-    // self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-  </script>
-  -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
-    <div class="card">
-        <h1>Total users</h1>
-        <div class="count" id="count">—</div>
-        <div class="updated" id="updated">Loading…</div>
-        <div class="updated" id="note"></div>
-    </div>
+    <!-- Navigation -->
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <span class="logo-text">Home</span>
+            </a>
+
+            <div class="nav-links">
+                <a href="stats.html" class="nav-button">Stats</a>
+                <a href="support.html" class="nav-button">Support</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <p class="page-subtitle">Real-time insights into the Zelos community</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-title">Total Users</h3>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number" id="totalUserCount"></div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-title">Skills uploaded</h3>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number" id="totalSkillCount"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
 
     <script type="module">
         // Firebase v10 (modular) CDN imports
@@ -106,7 +88,8 @@
         // Now Firestore
         const db = getFirestore(app);
 
-        const countEl = document.getElementById("count");
+        const totalUserCountEl = document.getElementById("totalUserCount");
+        const totalSkillCountEl = document.getElementById("totalSkillCount");
         const updatedEl = document.getElementById("updated");
         const noteEl = document.getElementById("note");
 
@@ -119,17 +102,28 @@
 
         onSnapshot(ref, (snap) => {
             const data = snap.data();
-            if (!data || typeof data.userCount !== "number") {
-                countEl.textContent = "—";
-                updatedEl.innerHTML = '<span class="error">No data found at meta/appStats</span>';
-                return;
+            if (!data) {
+                if (typeof data.userCount !== "number") {
+                    totalUserCountEl.textContent = "—";
+                    updatedEl.innerHTML = '<span class="error">No data found at meta/appStats</span>';
+                } else {
+                    totalUserCountEl.textContent = data.userCount.toLocaleString();
+                }
+
+
+                if (typeof data.totalSkillCount !== "number") {
+                    totalSkillCountEl.textContent = "—";
+                    updatedEl.innerHTML = '<span class="error">No data found at meta/appStats</span>';
+                } else {
+                    totalSkillCountEl.textContent = data.totalSkillCount.toLocaleString();
+                }
             }
-            countEl.textContent = data.userCount.toLocaleString();
             updatedEl.textContent = `Updated ${fmtNow()}`;
             noteEl.textContent = ""; // clear any previous warnings
         }, (err) => {
             console.error(err);
-            countEl.textContent = "—";
+            totalUserCountEl.textContent = "—";
+            totalSkillCountEl.textContent = "—";
             updatedEl.innerHTML = `<span class="error">${err.code || "Error"}: ${err.message}</span>`;
             noteEl.textContent = "If App Check is enforced, ensure this domain is allowed and App Check is initialized before Firestore.";
         });
