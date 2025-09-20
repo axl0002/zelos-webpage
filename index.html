@@ -2,123 +2,58 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Zelos — Calisthenics Rankings</title>
-  <style>
-    /* Prevent 100%+padding overflow on tiny screens */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zelos - Official Calisthenics Ranking App</title>
+  <meta name="description"
+    content="Track your calisthenics progress, compete globally, and master bodyweight training with Zelos - the official calisthenics ranking app.">
+  <meta name="author" content="Zelos">
+  <meta name="keywords"
+    content="calisthenics, bodyweight training, fitness ranking, workout tracker, strength training">
 
-    :root {
-      --nav-h: 64px;
-    }
+  <meta property="og:title" content="Zelos - Official Calisthenics Ranking App">
+  <meta property="og:description"
+    content="Track your calisthenics progress, compete globally, and master bodyweight training with Zelos.">
+  <meta property="og:type" content="website">
 
-    html,
-    body {
-      height: 100%;
-      margin: 0;
-      /* font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; */
-      font-family: 'Neue Haas Grotesk Pro', Arial, sans-serif;
-      font-size: small;
-      background: #1a1a1a;
-      color: #ffffff;
-      overflow-x: hidden;
-      /* safety for mobile */
-    }
-
-    /* Navbar */
-    nav {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      /* use left/right instead of width:100% to avoid overflow */
-      height: var(--nav-h);
-      background: #111111;
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      padding: 0 1.25rem;
-      /* padding stays inside because of border-box */
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      z-index: 10;
-      gap: 1.5rem; /* 👈 adds space between the links */
-    }
-
-    nav a {
-      color: #ffffff;
-      text-decoration: none;
-      font-size: 0.95rem;
-    }
-
-    nav a:hover {
-      text-decoration: underline;
-    }
-
-    /* Main content */
-    main {
-      min-height: calc(100vh - var(--nav-h));
-      padding-top: var(--nav-h);
-      /* push content below fixed nav */
-      display: grid;
-      place-items: center;
-      text-align: center;
-      padding-left: 1rem;
-      padding-right: 1rem;
-    }
-
-    .stack {
-      display: grid;
-      gap: 1rem;
-      justify-items: center;
-    }
-
-    img.logo {
-      max-width: 50%;
-      height: auto;
-    }
-
-    h1 {
-      margin: 0;
-      font-weight: 500;
-      font-size: clamp(1.25rem, 1.1rem + 0.8vw, 1.75rem);
-    }
-
-    @font-face {
-      font-family: 'Neue Haas Grotesk Pro';
-      src: url('fonts/NeueHaasGroteskPro-Regular.ttf') format('truetype');
-      font-weight: 400;
-      font-style: normal;
-      font-display: swap;
-    }
-
-    @font-face {
-      font-family: 'Neue Haas Grotesk Pro';
-      src: url('fonts/NeueHaasGroteskPro-Bold.ttf') format('truetype');
-      font-weight: 700;
-      font-style: normal;
-      font-display: swap;
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
-  <nav>
-    <a href="/stats" aria-label="Stats">Stats</a>
-    <a href="/support" aria-label="Support">Support</a>
+  <!-- Navigation -->
+  <nav class="nav-bar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo">
+        <span class="logo-text">Home</span>
+      </a>
+
+      <div class="nav-links">
+        <a href="stats.html" class="nav-button">Stats</a>
+        <a href="support.html" class="nav-button">Support</a>
+      </div>
+    </div>
   </nav>
 
-  <main>
-    <div class="stack">
-      <img class="logo" src="assets/zelos_logo_1200.png" alt="Zelos logo" />
-      <h1>THE WORLD'S FIRST GLOBAL CALISTHENICS RANKING SYSTEM</h1>
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-container">
+      <div class="hero-content">
+        <img src="assets/zelos_logo_1200.png" alt="Zelos Logo" class="landing-logo">
+        <p class="hero-subtitle">The Official Calisthenics Ranking App</p>
+        <p class="hero-description">
+          Track your progress, compete with athletes worldwide, and be part of the global calisthenics community.
+      </div>
+
+      <div class="hero-buttons">
+        <a href="https://apps.apple.com/gb/app/zelos/id6751625048" target="_blank" rel="noopener noreferrer">
+          <button class="btn-primary">Get on iOS</button>
+        </a>
+      </div>
     </div>
-  </main>
+  </section>
 </body>
 
 </html>
