@@ -52,6 +52,15 @@
                     <div class="stat-number" id="totalSkillCount"></div>
                 </div>
             </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-title">Votes casted</h3>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number" id="totalVoteCount"></div>
+                </div>
+            </div>
         </div>
         <div class="page-header">
             <p class="page-subtitle" id="updated"></p>
@@ -94,6 +103,7 @@
 
         const totalUserCountEl = document.getElementById("totalUserCount");
         const totalSkillCountEl = document.getElementById("totalSkillCount");
+        const totalVoteCountEl = document.getElementById("totalVoteCount");
         const updatedEl = document.getElementById("updated");
         const noteEl = document.getElementById("note");
 
@@ -114,13 +124,18 @@
                     totalUserCountEl.textContent = data.userCount.toLocaleString();
                 }
 
-
                 if (typeof data.totalSkillCount !== "number") {
                     totalSkillCountEl.textContent = "—";
                     updatedEl.innerHTML = '<span class="error">No data found at meta/appStats</span>';
-                    console.log()
                 } else {
                     totalSkillCountEl.textContent = data.totalSkillCount.toLocaleString();
+                }
+
+                if (typeof data.totalVoteCount !== "number") {
+                    totalVoteCountEl.textContent = "—";
+                    updatedEl.innerHTML = '<span class="error">No data found at meta/appStats</span>';
+                } else {
+                    totalVoteCountEl.textContent = data.totalVoteCount.toLocaleString();
                 }
             }
             updatedEl.textContent = `Updated ${fmtNow()}`;
