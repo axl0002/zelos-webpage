@@ -104,7 +104,7 @@
 
         onSnapshot(ref, (snap) => {
             const data = snap.data();
-            if (!data) {
+            if (data) {
                 if (typeof data.userCount !== "number") {
                     totalUserCountEl.textContent = "—";
                     updatedEl.innerHTML = '<span class="error">No data found at meta/appStats</span>';
@@ -116,6 +116,7 @@
                 if (typeof data.totalSkillCount !== "number") {
                     totalSkillCountEl.textContent = "—";
                     updatedEl.innerHTML = '<span class="error">No data found at meta/appStats</span>';
+                    console.log()
                 } else {
                     totalSkillCountEl.textContent = data.totalSkillCount.toLocaleString();
                 }
