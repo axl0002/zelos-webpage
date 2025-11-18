@@ -4,22 +4,87 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zelos - Official Calisthenics Ranking App</title>
-  <meta name="description"
-    content="Track your calisthenics progress, compete globally, and master bodyweight training with Zelos - the official calisthenics ranking app.">
-  <meta name="author" content="Zelos">
-  <meta name="keywords"
-    content="calisthenics, bodyweight training, fitness ranking, workout tracker, strength training">
 
-  <meta property="og:title" content="Zelos - Official Calisthenics Ranking App">
+  <!-- SEO: Clear, keyword-rich title -->
+  <title>Zelos - Calisthenics App</title>
+
+  <!-- SEO: Strong meta description targeting "calisthenics app" -->
+  <meta name="description"
+    content="Zelos is the calisthenics app for tracking skills, ranking your strength, and competing on global leaderboards. Join the online calisthenics community on iOS & Android.">
+
+  <meta name="author" content="Zelos">
+
+  <!-- (Meta keywords are mostly ignored by modern search engines, but harmless to keep) -->
+  <meta name="keywords"
+    content="calisthenics app, calisthenics ranking, calisthenics leaderboard">
+
+  <!-- SEO: Tell bots to index and follow -->
+  <meta name="robots" content="index, follow">
+
+  <!-- SEO: Canonical URL -->
+  <link rel="canonical" href="https://zelos.club/">
+
+  <!-- Social: Open Graph tags -->
+  <meta property="og:title" content="Zelos - Calisthenics App ">
   <meta property="og:description"
-    content="Track your calisthenics progress, compete globally, and master bodyweight training with Zelos.">
+    content="Track your calisthenics skills, compete with athletes worldwide, and climb the global leaderboard with Zelos – the official calisthenics ranking app.">
   <meta property="og:type" content="website">
+  <meta property="og:url" content="https://zelos.club/">
+  <!-- Replace with your actual image path (recommended 1200x630) -->
+  <meta property="og:image" content="https://zelos.club/assets/zelos_og_image.jpg">
+
+  <!-- Social: Twitter Card tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Zelos - Calisthenics App">
+  <meta name="twitter:description"
+    content="Join Zelos, the calisthenics app that ranks your skills and connects you with athletes worldwide.">
+  <meta name="twitter:image" content="https://zelos.club/assets/zelos_og_image.jpg">
+
+  <!-- Structured Data: WebSite + search action (helps branding in search) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Zelos",
+    "url": "https://zelos.club",
+    "description": "Zelos is the calisthenics app for tracking skills, strength progress and global rankings.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://zelos.club/?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+
+  <!-- Optional: Structured Data for the app itself -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "MobileApplication",
+    "name": "Zelos",
+    "operatingSystem": "iOS, Android",
+    "applicationCategory": "FitnessApplication",
+    "description": "A calisthenics app for tracking skills, rankings and competing on global leaderboards.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "url": "https://zelos.club",
+    "image": "https://zelos.club/assets/zelos_og_image.jpg",
+    "installUrl": [
+      "https://apps.apple.com/gb/app/zelos/id6751625048",
+      "https://play.google.com/store/apps/details?id=club.zelos.app"
+    ]
+  }
+  </script>
 
   <link rel="stylesheet" href="styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
 </head>
 
 <body>
@@ -42,10 +107,20 @@
   <section class="hero-section">
     <div class="hero-container">
       <div class="hero-content">
-        <img src="assets/zelos_logo_1200.png" alt="Zelos Logo" class="landing-logo">
-        <p class="hero-subtitle">The Official Calisthenics Ranking App</p>
+        <!--  Better alt text for SEO & accessibility -->
+        <img src="assets/zelos_logo_1200.png" alt="Zelos calisthenics app logo" class="landing-logo">
+
+        <!-- Main keyword in an H1 -->
+        <h1 class="visually-hidden">Zelos - Calisthenics App</h1>
+
+        <!-- Subheading supporting the main keyword -->
+        <p class="hero-subtitle">The official calisthenics ranking app</p>
+
+        <!-- Slightly richer copy with target phrases -->
         <p class="hero-description">
-          Track your progress, compete with athletes worldwide, and be part of the global calisthenics community.
+          Track your calisthenics skills, measure your strength, and compete with athletes worldwide.
+          Zelos ranks your progress on global leaderboards so you can see exactly where you stand in the calisthenics community.
+        </p>
       </div>
 
       <div class="hero-buttons">
