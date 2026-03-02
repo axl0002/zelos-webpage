@@ -4,6 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="assets/z_app_icon.png">
+  <link rel="apple-touch-icon" href="assets/z_app_icon.png">
 
   <!-- SEO: Clear, keyword-rich title -->
   <title>Zelos - Calisthenics App</title>
@@ -92,7 +94,7 @@
   <nav class="nav-bar">
     <div class="nav-container">
       <a href="index.html" class="nav-logo">
-        <span class="logo-text">Home</span>
+        <img src="assets/z_app_icon.png" alt="Zelos icon" class="logo-img">
       </a>
 
       <div class="nav-links">
@@ -107,32 +109,151 @@
   <section class="hero-section">
     <div class="hero-container">
       <div class="hero-content">
-        <!--  Better alt text for SEO & accessibility -->
         <img src="assets/zelos_logo_1200.png" alt="Zelos calisthenics app logo" class="landing-logo">
 
-        <!-- Main keyword in an H1 -->
         <h1 class="visually-hidden">Zelos - Calisthenics App</h1>
 
-        <!-- Subheading supporting the main keyword -->
-        <p class="hero-subtitle">The official calisthenics ranking app</p>
+        <p class="hero-tagline">The Official Calisthenics Ranking App</p>
 
-        <!-- Slightly richer copy with target phrases -->
         <p class="hero-description">
-          Track your calisthenics skills, measure your strength, and compete with athletes worldwide.
-          Zelos ranks your progress on global leaderboards so you can see exactly where you stand in the calisthenics community.
+          Track your skills, measure your strength, and compete with athletes worldwide on global leaderboards.
         </p>
-      </div>
 
-      <div class="hero-buttons">
-        <a href="https://apps.apple.com/gb/app/zelos/id6751625048" target="_blank" rel="noopener noreferrer">
-          <button class="btn-primary">App Store</button>
+        <div class="hero-buttons">
+          <a href="https://apps.apple.com/gb/app/zelos/id6751625048" target="_blank" rel="noopener noreferrer" class="store-badge" aria-label="Download on the App Store">
+            <svg viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg">
+              <rect width="120" height="40" rx="6" fill="#000"/>
+              <rect x="0.5" y="0.5" width="119" height="39" rx="5.5" stroke="#A6A6A6" fill="none"/>
+              <path d="M24.77 20.3a4.95 4.95 0 0 1 2.36-4.15 5.07 5.07 0 0 0-3.99-2.16c-1.68-.18-3.31 1.01-4.17 1.01-.87 0-2.19-.99-3.61-.96a5.31 5.31 0 0 0-4.47 2.73c-1.93 3.34-.49 8.27 1.36 10.97.93 1.33 2.02 2.82 3.45 2.76 1.39-.06 1.92-.89 3.6-.89 1.68 0 2.16.89 3.62.86 1.5-.03 2.44-1.33 3.33-2.67a11.02 11.02 0 0 0 1.52-3.11 4.78 4.78 0 0 1-2.9-4.39h-.1z" fill="#fff"/>
+              <path d="M22.04 12.21a4.87 4.87 0 0 0 1.12-3.49 4.96 4.96 0 0 0-3.21 1.66 4.64 4.64 0 0 0-1.15 3.36 4.1 4.1 0 0 0 3.24-1.53z" fill="#fff"/>
+              <text fill="#fff" font-family="Inter, system-ui, sans-serif" font-size="8" x="36" y="15" font-weight="400">Download on the</text>
+              <text fill="#fff" font-family="Inter, system-ui, sans-serif" font-size="14" x="36" y="30" font-weight="600">App Store</text>
+            </svg>
+          </a>
+          <a href="https://play.google.com/store/apps/details?id=club.zelos.app" target="_blank" rel="noopener noreferrer" class="store-badge" aria-label="Get it on Google Play">
+            <svg viewBox="0 0 135 40" xmlns="http://www.w3.org/2000/svg">
+              <rect width="135" height="40" rx="6" fill="#000"/>
+              <rect x="0.5" y="0.5" width="134" height="39" rx="5.5" stroke="#A6A6A6" fill="none"/>
+              <path d="M14.5 7.13a2.12 2.12 0 0 0-.49 1.49v22.76a2.12 2.12 0 0 0 .49 1.49l.08.08L27.2 20.33v-.26-.26L14.58 7.05l-.08.08z" fill="#00D2FF"/>
+              <path d="M31.4 24.53l-4.2-4.2v-.26-.26l4.2-4.2.1.05 4.98 2.83c1.42.81 1.42 2.13 0 2.93l-4.98 2.83-.1.05v.23z" fill="#FFBC00"/>
+              <path d="M31.5 24.3L27.2 20 14.5 32.87c.47.5 1.24.56 2.1.06L31.5 24.3z" fill="#FF3A44"/>
+              <path d="M31.5 15.7L16.6 7.07c-.86-.5-1.63-.44-2.1.06L27.2 20l4.3-4.3z" fill="#01E85E"/>
+              <text fill="#fff" font-family="Inter, system-ui, sans-serif" font-size="7" x="42" y="14" font-weight="400">GET IT ON</text>
+              <text fill="#fff" font-family="Inter, system-ui, sans-serif" font-size="13" x="42" y="29" font-weight="600">Google Play</text>
+            </svg>
+          </a>
+        </div>
+
+        <p class="hero-free-note">Free on iOS & Android</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features-section">
+    <div class="features-container">
+      <h2 class="section-title">Why Athletes Choose Zelos</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Track Skills</h3>
+          <p class="feature-text">Log your calisthenics skills and watch your progress over time with detailed tracking.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 20V10"/>
+              <path d="M12 20V4"/>
+              <path d="M6 20v-6"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Global Rankings</h3>
+          <p class="feature-text">See where you stand against athletes worldwide with our Elo-inspired rating system.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Community</h3>
+          <p class="feature-text">Join thousands of calisthenics athletes. Vote on matchups and climb the leaderboards.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Social Proof Section -->
+  <section class="proof-section">
+    <div class="proof-container">
+      <div class="proof-grid">
+        <div class="proof-stat">
+          <span class="proof-number">8,000+</span>
+          <span class="proof-label">Athletes</span>
+        </div>
+        <div class="proof-stat">
+          <span class="proof-number">1,000+</span>
+          <span class="proof-label">Daily Active Users</span>
+        </div>
+        <div class="proof-stat">
+          <span class="proof-number">iOS & Android</span>
+          <span class="proof-label">Available Now</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bottom CTA Section -->
+  <section class="cta-section">
+    <div class="cta-container">
+      <h2 class="cta-title">Ready to Find Your Rank?</h2>
+      <p class="cta-description">Download Zelos and join the global calisthenics community today.</p>
+      <div class="cta-buttons">
+        <a href="https://apps.apple.com/gb/app/zelos/id6751625048" target="_blank" rel="noopener noreferrer" class="store-badge" aria-label="Download on the App Store">
+          <svg viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg">
+            <rect width="120" height="40" rx="6" fill="#000"/>
+            <rect x="0.5" y="0.5" width="119" height="39" rx="5.5" stroke="#A6A6A6" fill="none"/>
+            <path d="M24.77 20.3a4.95 4.95 0 0 1 2.36-4.15 5.07 5.07 0 0 0-3.99-2.16c-1.68-.18-3.31 1.01-4.17 1.01-.87 0-2.19-.99-3.61-.96a5.31 5.31 0 0 0-4.47 2.73c-1.93 3.34-.49 8.27 1.36 10.97.93 1.33 2.02 2.82 3.45 2.76 1.39-.06 1.92-.89 3.6-.89 1.68 0 2.16.89 3.62.86 1.5-.03 2.44-1.33 3.33-2.67a11.02 11.02 0 0 0 1.52-3.11 4.78 4.78 0 0 1-2.9-4.39h-.1z" fill="#fff"/>
+            <path d="M22.04 12.21a4.87 4.87 0 0 0 1.12-3.49 4.96 4.96 0 0 0-3.21 1.66 4.64 4.64 0 0 0-1.15 3.36 4.1 4.1 0 0 0 3.24-1.53z" fill="#fff"/>
+            <text fill="#fff" font-family="Inter, system-ui, sans-serif" font-size="8" x="36" y="15" font-weight="400">Download on the</text>
+            <text fill="#fff" font-family="Inter, system-ui, sans-serif" font-size="14" x="36" y="30" font-weight="600">App Store</text>
+          </svg>
         </a>
-        <a href="https://play.google.com/store/apps/details?id=club.zelos.app" target="_blank" rel="noopener noreferrer">
-          <button class="btn-primary">Google Play</button>
+        <a href="https://play.google.com/store/apps/details?id=club.zelos.app" target="_blank" rel="noopener noreferrer" class="store-badge" aria-label="Get it on Google Play">
+          <svg viewBox="0 0 135 40" xmlns="http://www.w3.org/2000/svg">
+            <rect width="135" height="40" rx="6" fill="#000"/>
+            <rect x="0.5" y="0.5" width="134" height="39" rx="5.5" stroke="#A6A6A6" fill="none"/>
+            <path d="M14.5 7.13a2.12 2.12 0 0 0-.49 1.49v22.76a2.12 2.12 0 0 0 .49 1.49l.08.08L27.2 20.33v-.26-.26L14.58 7.05l-.08.08z" fill="#00D2FF"/>
+            <path d="M31.4 24.53l-4.2-4.2v-.26-.26l4.2-4.2.1.05 4.98 2.83c1.42.81 1.42 2.13 0 2.93l-4.98 2.83-.1.05v.23z" fill="#FFBC00"/>
+            <path d="M31.5 24.3L27.2 20 14.5 32.87c.47.5 1.24.56 2.1.06L31.5 24.3z" fill="#FF3A44"/>
+            <path d="M31.5 15.7L16.6 7.07c-.86-.5-1.63-.44-2.1.06L27.2 20l4.3-4.3z" fill="#01E85E"/>
+            <text fill="#fff" font-family="Inter, system-ui, sans-serif" font-size="7" x="42" y="14" font-weight="400">GET IT ON</text>
+            <text fill="#fff" font-family="Inter, system-ui, sans-serif" font-size="13" x="42" y="29" font-weight="600">Google Play</text>
+          </svg>
         </a>
       </div>
     </div>
   </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-links">
+        <a href="about.html">About</a>
+        <a href="support.html">Support</a>
+        <a href="legal/privacy.html">Privacy</a>
+        <a href="legal/terms.html">Terms</a>
+      </div>
+      <p class="footer-copy">&copy; 2025 Zelos. All rights reserved.</p>
+    </div>
+  </footer>
 </body>
 
 </html>
