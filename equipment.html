@@ -449,7 +449,8 @@ var scene = new THREE.Scene();
 scene.background = new THREE.Color('#212121');
 
 var camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 1000);
-camera.position.set(65, 40, 80);
+var zoomScale = Math.max(1, 900 / container.clientWidth);
+camera.position.set(65 * zoomScale, 40 * zoomScale, 80 * zoomScale);
 
 var renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(container.clientWidth, container.clientHeight);
@@ -761,12 +762,16 @@ var stackedPositions = {
   p2X: 4, p2Y: 12, p2Z: 0, p2RotX: -180, p2RotY: 0, p2RotZ: 0,
 };
 
-var views = {
-  front:   { pos: [100, 12, 20],  target: [0, 5, 20],  layout: 'default' },
-  side:    { pos: [0, 12, 130],   target: [0, 5, 20],  layout: 'default' },
-  top:     { pos: [0.01, 120, 20], target: [0, 0, 20], layout: 'default' },
-  stacked: { pos: [65, 40, 40],   target: [0, 8, 0],   layout: 'stacked' },
-};
+function scaledViews() {
+  var s = Math.max(1, 900 / container.clientWidth);
+  return {
+    front:   { pos: [100*s, 12, 20],  target: [0, 5, 20],  layout: 'default' },
+    side:    { pos: [0, 12, 130*s],   target: [0, 5, 20],  layout: 'default' },
+    top:     { pos: [0.01, 120*s, 20], target: [0, 0, 20], layout: 'default' },
+    stacked: { pos: [65*s, 40*s, 40*s], target: [0, 8, 0], layout: 'stacked' },
+  };
+}
+var views = scaledViews();
 var currentLayout = 'default';
 
 var animating = false;
@@ -827,6 +832,7 @@ window.addEventListener('resize', function() {
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   renderer.setSize(w, h);
+  views = scaledViews();
 });
 
 // Animate
