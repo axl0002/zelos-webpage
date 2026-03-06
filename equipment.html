@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="assets/z_app_icon.png">
+  <link rel="apple-touch-icon" href="assets/z_app_icon.png">
+
+  <title>Zelos - Equipment</title>
+  <meta name="description" content="Zelos calisthenics equipment. Premium parallettes designed for athletes.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://zelos.club/equipment.html">
+
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    .viewer-wrapper {
+      position: relative;
+      width: 100%;
+      height: 70vh;
+      min-height: 400px;
+      border-radius: 1rem;
+      overflow: hidden;
+      border: 1px solid hsl(0, 0%, 20%);
+      background: #212121;
+    }
+    .viewer-wrapper canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+    .viewer-hint {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.75rem;
+      pointer-events: none;
+      font-family: 'Inter', sans-serif;
+    }
+    .equipment-header {
+      padding-top: 2rem;
+    }
+    .view-switcher {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      margin-bottom: 3rem;
+      flex-wrap: wrap;
+    }
+    .view-btn {
+      background-color: hsl(0, 0%, 12%);
+      border: 1px solid hsl(0, 0%, 20%);
+      color: hsl(0, 0%, 75%);
+      padding: 0.5rem 1.25rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    .view-btn:hover {
+      background-color: hsl(0, 0%, 18%);
+      color: hsl(0, 0%, 90%);
+    }
+    .view-btn.active {
+      background-color: hsl(0, 0%, 20%);
+      color: hsl(0, 0%, 98%);
+      border-color: hsl(0, 0%, 35%);
+    }
+    .product-info {
+      max-width: 640px;
+      margin: 3rem auto 0;
+      text-align: center;
+    }
+    .product-name {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: hsl(0, 0%, 98%);
+      margin-bottom: 0.75rem;
+    }
+    .product-desc {
+      font-size: 1rem;
+      color: hsl(0, 0%, 60%);
+      line-height: 1.7;
+    }
+    .product-tag {
+      display: inline-block;
+      margin-top: 1.25rem;
+      padding: 0.4rem 1rem;
+      background-color: hsl(0, 0%, 15%);
+      border: 1px solid hsl(0, 0%, 22%);
+      border-radius: 2rem;
+      font-size: 0.8rem;
+      color: hsl(0, 0%, 55%);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Navigation -->
+  <nav class="nav-bar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo">
+        <img src="assets/z_app_icon.png" alt="Zelos icon" class="logo-img">
+      </a>
+      <div class="nav-links">
+        <a href="stats.html" class="nav-button">Stats</a>
+        <a href="equipment.html" class="nav-button active">Equipment</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <div class="page-header equipment-header">
+      <h1 class="page-title">Coming Soon</h1>
+      <p class="page-subtitle">Premium calisthenics gear, designed by athletes.</p>
+    </div>
+
+    <div class="viewer-wrapper" id="viewer-container">
+      <span class="viewer-hint">Drag to rotate, scroll to zoom</span>
+    </div>
+
+    <div class="view-switcher">
+      <button class="view-btn active" data-view="front">Front</button>
+      <button class="view-btn" data-view="side">Side</button>
+      <button class="view-btn" data-view="top">Top</button>
+      <button class="view-btn" data-view="stacked">Stacked</button>
+    </div>
+
+    <!--
+    <div class="product-info">
+      <h2 class="product-name">Zelos Parallettes</h2>
+      <p class="product-desc">
+        Handcrafted wooden parallettes with painted supports, magnetic peg attachments,
+        and precision-cut details. Designed for training at any level.
+      </p>
+      <span class="product-tag">Coming Soon</span>
+    </div>
+    -->
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-links">
+        <a href="about.html">About</a>
+        <a href="support.html">Support</a>
+        <a href="legal/privacy.html">Privacy</a>
+        <a href="legal/terms.html">Terms</a>
+      </div>
+      <p class="footer-copy">&copy; 2025 Zelos. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <script>
+// ═══════════════════════════════════════════════════════════
+// Minimal CSG (Constructive Solid Geometry) for Three.js
+// ═══════════════════════════════════════════════════════════
+(function() {
+  var EPSILON = 1e-5;
+  var COPLANAR = 0, FRONT = 1, BACK = 2, SPANNING = 3;
+
+  function CSGVertex(pos, normal) {
+    this.pos = pos.clone();
+    this.normal = normal.clone();
+  }
+  CSGVertex.prototype.clone = function() { return new CSGVertex(this.pos, this.normal); };
+  CSGVertex.prototype.flip = function() { this.normal.negate(); };
+  CSGVertex.prototype.interpolate = function(other, t) {
+    return new CSGVertex(
+      this.pos.clone().lerp(other.pos, t),
+      this.normal.clone().lerp(other.normal, t).normalize()
+    );
+  };
+
+  function CSGPlane(normal, w) { this.normal = normal; this.w = w; }
+  CSGPlane.fromPoints = function(a, b, c) {
+    var n = new THREE.Vector3().subVectors(b, a).cross(new THREE.Vector3().subVectors(c, a)).normalize();
+    return new CSGPlane(n, n.dot(a));
+  };
+  CSGPlane.prototype.clone = function() { return new CSGPlane(this.normal.clone(), this.w); };
+  CSGPlane.prototype.flip = function() { this.normal.negate(); this.w = -this.w; };
+  CSGPlane.prototype.splitPolygon = function(polygon, coplanarFront, coplanarBack, front, back) {
+    var types = [], polygonType = 0;
+    for (var i = 0; i < polygon.vertices.length; i++) {
+      var t = this.normal.dot(polygon.vertices[i].pos) - this.w;
+      var type = (t < -EPSILON) ? BACK : (t > EPSILON) ? FRONT : COPLANAR;
+      polygonType |= type;
+      types.push(type);
+    }
+    switch (polygonType) {
+      case COPLANAR:
+        (this.normal.dot(polygon.plane.normal) > 0 ? coplanarFront : coplanarBack).push(polygon);
+        break;
+      case FRONT: front.push(polygon); break;
+      case BACK: back.push(polygon); break;
+      case SPANNING:
+        var f = [], b = [];
+        for (var i = 0; i < polygon.vertices.length; i++) {
+          var j = (i + 1) % polygon.vertices.length;
+          var ti = types[i], tj = types[j];
+          var vi = polygon.vertices[i], vj = polygon.vertices[j];
+          if (ti !== BACK) f.push(vi);
+          if (ti !== FRONT) b.push(vi);
+          if ((ti | tj) === SPANNING) {
+            var t = (this.w - this.normal.dot(vi.pos)) / this.normal.dot(new THREE.Vector3().subVectors(vj.pos, vi.pos));
+            var v = vi.interpolate(vj, t);
+            f.push(v); b.push(v.clone());
+          }
+        }
+        if (f.length >= 3) front.push(new CSGPolygon(f));
+        if (b.length >= 3) back.push(new CSGPolygon(b));
+        break;
+    }
+  };
+
+  function CSGPolygon(vertices) {
+    this.vertices = vertices;
+    this.plane = CSGPlane.fromPoints(vertices[0].pos, vertices[1].pos, vertices[2].pos);
+  }
+  CSGPolygon.prototype.clone = function() {
+    return new CSGPolygon(this.vertices.map(function(v) { return v.clone(); }));
+  };
+  CSGPolygon.prototype.flip = function() {
+    this.vertices.reverse().forEach(function(v) { v.flip(); });
+    this.plane.flip();
+  };
+
+  function CSGNode(polygons) {
+    this.plane = null; this.front = null; this.back = null; this.polygons = [];
+    if (polygons) this.build(polygons);
+  }
+  CSGNode.prototype.clone = function() {
+    var node = new CSGNode();
+    node.plane = this.plane && this.plane.clone();
+    node.front = this.front && this.front.clone();
+    node.back = this.back && this.back.clone();
+    node.polygons = this.polygons.map(function(p) { return p.clone(); });
+    return node;
+  };
+  CSGNode.prototype.invert = function() {
+    for (var i = 0; i < this.polygons.length; i++) this.polygons[i].flip();
+    if (this.plane) this.plane.flip();
+    if (this.front) this.front.invert();
+    if (this.back) this.back.invert();
+    var temp = this.front; this.front = this.back; this.back = temp;
+  };
+  CSGNode.prototype.clipPolygons = function(polygons) {
+    if (!this.plane) return polygons.slice();
+    var front = [], back = [];
+    for (var i = 0; i < polygons.length; i++)
+      this.plane.splitPolygon(polygons[i], front, back, front, back);
+    if (this.front) front = this.front.clipPolygons(front);
+    if (this.back) back = this.back.clipPolygons(back); else back = [];
+    return front.concat(back);
+  };
+  CSGNode.prototype.clipTo = function(bsp) {
+    this.polygons = bsp.clipPolygons(this.polygons);
+    if (this.front) this.front.clipTo(bsp);
+    if (this.back) this.back.clipTo(bsp);
+  };
+  CSGNode.prototype.allPolygons = function() {
+    var polygons = this.polygons.slice();
+    if (this.front) polygons = polygons.concat(this.front.allPolygons());
+    if (this.back) polygons = polygons.concat(this.back.allPolygons());
+    return polygons;
+  };
+  CSGNode.prototype.build = function(polygons) {
+    if (!polygons.length) return;
+    if (!this.plane) this.plane = polygons[0].plane.clone();
+    var front = [], back = [];
+    for (var i = 0; i < polygons.length; i++)
+      this.plane.splitPolygon(polygons[i], this.polygons, this.polygons, front, back);
+    if (front.length) { if (!this.front) this.front = new CSGNode(); this.front.build(front); }
+    if (back.length) { if (!this.back) this.back = new CSGNode(); this.back.build(back); }
+  };
+
+  function CSG() { this.polygons = []; }
+  CSG.fromPolygons = function(polygons) { var csg = new CSG(); csg.polygons = polygons; return csg; };
+  CSG.prototype.clone = function() {
+    var csg = new CSG(); csg.polygons = this.polygons.map(function(p) { return p.clone(); }); return csg;
+  };
+  CSG.prototype.toPolygons = function() { return this.polygons; };
+  CSG.prototype.subtract = function(csg) {
+    var a = new CSGNode(this.clone().polygons);
+    var b = new CSGNode(csg.clone().polygons);
+    a.invert(); a.clipTo(b); b.clipTo(a); b.invert(); b.clipTo(a); b.invert();
+    a.build(b.allPolygons()); a.invert();
+    return CSG.fromPolygons(a.allPolygons());
+  };
+
+  CSG.fromGeometry = function(geom) {
+    var polygons = [], pos = geom.attributes.position, norm = geom.attributes.normal, idx = geom.index;
+    function getVertex(i) {
+      return new CSGVertex(
+        new THREE.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i)),
+        norm ? new THREE.Vector3(norm.getX(i), norm.getY(i), norm.getZ(i)) : new THREE.Vector3(0,1,0)
+      );
+    }
+    if (idx) { for (var i = 0; i < idx.count; i += 3) polygons.push(new CSGPolygon([getVertex(idx.getX(i)), getVertex(idx.getX(i+1)), getVertex(idx.getX(i+2))])); }
+    else { for (var i = 0; i < pos.count; i += 3) polygons.push(new CSGPolygon([getVertex(i), getVertex(i+1), getVertex(i+2)])); }
+    return CSG.fromPolygons(polygons);
+  };
+
+  CSG.toGeometry = function(csg) {
+    var vertices = [], normals = [], indices = [], idx = 0;
+    csg.toPolygons().forEach(function(polygon) {
+      var start = idx;
+      polygon.vertices.forEach(function(v) {
+        vertices.push(v.pos.x, v.pos.y, v.pos.z);
+        normals.push(v.normal.x, v.normal.y, v.normal.z);
+        idx++;
+      });
+      for (var i = 2; i < polygon.vertices.length; i++) indices.push(start, start + i - 1, start + i);
+    });
+    var geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geom.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+    geom.setIndex(indices);
+    return geom;
+  };
+
+  window.CSG = CSG;
+})();
+
+// ═══════════════════════════════════════════════════════════
+// Inline OrbitControls
+// ═══════════════════════════════════════════════════════════
+(function() {
+  const OrbitControls = function(camera, domElement) {
+    this.camera = camera;
+    this.domElement = domElement;
+    this.target = new THREE.Vector3();
+    this.enableDamping = true;
+    this.dampingFactor = 0.08;
+    this.rotateSpeed = 0.8;
+    this.zoomSpeed = 1.0;
+    this.panSpeed = 0.5;
+
+    let spherical = new THREE.Spherical();
+    let sphericalDelta = new THREE.Spherical();
+    let scale = 1;
+    let panOffset = new THREE.Vector3();
+    let rotateStart = new THREE.Vector2();
+    let rotateEnd = new THREE.Vector2();
+    let panStart = new THREE.Vector2();
+    let panEnd = new THREE.Vector2();
+    let state = -1;
+    const self = this;
+
+    function getZoomScale() { return Math.pow(0.95, self.zoomSpeed); }
+
+    this.update = function() {
+      const offset = new THREE.Vector3();
+      offset.copy(camera.position).sub(self.target);
+      spherical.setFromVector3(offset);
+      spherical.theta += sphericalDelta.theta;
+      spherical.phi += sphericalDelta.phi;
+      spherical.phi = Math.max(0.01, Math.min(Math.PI - 0.01, spherical.phi));
+      spherical.radius *= scale;
+      spherical.radius = Math.max(5, Math.min(200, spherical.radius));
+      self.target.add(panOffset);
+      offset.setFromSpherical(spherical);
+      camera.position.copy(self.target).add(offset);
+      camera.lookAt(self.target);
+      if (self.enableDamping) {
+        sphericalDelta.theta *= (1 - self.dampingFactor);
+        sphericalDelta.phi *= (1 - self.dampingFactor);
+      } else { sphericalDelta.set(0, 0, 0); }
+      scale = 1;
+      panOffset.set(0, 0, 0);
+    };
+
+    function onMouseDown(e) {
+      if (e.button === 0) { state = 0; rotateStart.set(e.clientX, e.clientY); }
+      else if (e.button === 2) { state = 2; panStart.set(e.clientX, e.clientY); }
+      domElement.style.cursor = 'grabbing';
+    }
+    function onMouseMove(e) {
+      if (state === 0) {
+        rotateEnd.set(e.clientX, e.clientY);
+        sphericalDelta.theta -= 2 * Math.PI * (rotateEnd.x - rotateStart.x) / domElement.clientHeight * self.rotateSpeed;
+        sphericalDelta.phi -= 2 * Math.PI * (rotateEnd.y - rotateStart.y) / domElement.clientHeight * self.rotateSpeed;
+        rotateStart.copy(rotateEnd);
+      } else if (state === 2) {
+        panEnd.set(e.clientX, e.clientY);
+        var offset = new THREE.Vector3().copy(camera.position).sub(self.target);
+        var td = offset.length() * Math.tan(camera.fov / 2 * Math.PI / 180);
+        var pl = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 0)
+          .multiplyScalar(-2 * (panEnd.x - panStart.x) * td / domElement.clientHeight * self.panSpeed);
+        var pu = new THREE.Vector3().setFromMatrixColumn(camera.matrix, 1)
+          .multiplyScalar(2 * (panEnd.y - panStart.y) * td / domElement.clientHeight * self.panSpeed);
+        panOffset.add(pl).add(pu);
+        panStart.copy(panEnd);
+      }
+    }
+    function onMouseUp() { state = -1; domElement.style.cursor = 'grab'; }
+    function onWheel(e) {
+      e.preventDefault();
+      scale *= e.deltaY > 0 ? 1/getZoomScale() : getZoomScale();
+    }
+    domElement.addEventListener('mousedown', onMouseDown);
+    domElement.addEventListener('mousemove', onMouseMove);
+    domElement.addEventListener('mouseup', onMouseUp);
+    domElement.addEventListener('mouseleave', onMouseUp);
+    domElement.addEventListener('wheel', onWheel, { passive: false });
+    domElement.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+    domElement.style.cursor = 'grab';
+  };
+  THREE.OrbitControls = OrbitControls;
+})();
+
+// ═══════════════════════════════════════════════════════════
+// Scene Setup
+// ═══════════════════════════════════════════════════════════
+var container = document.getElementById('viewer-container');
+
+var p = {
+  barLength: 50, barDiameter: 3.8,
+  supportBaseWidth: 25.5, supportHeight: 9.5, barHeight: 7,
+  flatTopWidth: 5.5, flatSideHeight: 0.5,
+  cutoutHeight: 2,
+  triCutoutBase: 8.5, triCutoutHeight: 4, triCutoutFlatTop: 1.5, triCutoutY: -0.5,
+  supportThickness: 4, edgeRadius: 0.3,
+  logoZSize: 6.5, logoZY: 6.5, logoZelosSize: 1.5, logoZelosX: 15,
+  pegDiameter: 1.5, pegHeight: 0.8,
+  pegPair1Offset: 21, pegPair1Y: -1.5,
+  pegPair2Offset: 25, pegPair2Y: -2.8,
+  rectWidth: 2.5, rectDepth: 7.9, rectHeight: 1.3,
+  rectY: -7, rectOffset: 25, rectZ: 8.6,
+  showSecond: true,
+  p1X: 0, p1Y: 0, p1Z: 0, p1RotX: 0, p1RotY: 0, p1RotZ: 0,
+  p2X: 0, p2Y: 0, p2Z: 40, p2RotX: 0, p2RotY: 0, p2RotZ: 0,
+};
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color('#212121');
+
+var camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 1000);
+camera.position.set(65, 40, 80);
+
+var renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = false;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.9;
+renderer.outputEncoding = THREE.sRGBEncoding;
+container.appendChild(renderer.domElement);
+
+var controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.target.set(0, 5, 20);
+
+// Lighting
+var hemiLight = new THREE.HemisphereLight(0xfff5e6, 0xe8e8f0, 0.25);
+scene.add(hemiLight);
+
+var keyLight = new THREE.DirectionalLight(0xfff8f0, 0.7);
+keyLight.position.set(25, 35, 20);
+scene.add(keyLight);
+
+var fill = new THREE.DirectionalLight(0xeef2ff, 0.3);
+fill.position.set(-25, 20, -5);
+scene.add(fill);
+
+var rim = new THREE.DirectionalLight(0xffffff, 0.25);
+rim.position.set(-10, 15, -30);
+scene.add(rim);
+
+var topLight = new THREE.DirectionalLight(0xffffff, 0.1);
+topLight.position.set(0, 50, 0);
+scene.add(topLight);
+
+
+// Environment map
+(function() {
+  var envScene = new THREE.Scene();
+  envScene.background = new THREE.Color(0xffffff);
+  var envGeo = new THREE.SphereGeometry(100, 16, 16);
+  var envMat = new THREE.MeshBasicMaterial({ color: 0xe8e8e8, side: THREE.BackSide });
+  envScene.add(new THREE.Mesh(envGeo, envMat));
+  var panelGeo = new THREE.PlaneGeometry(80, 80);
+  var panelMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  var panel = new THREE.Mesh(panelGeo, panelMat);
+  panel.position.set(0, 50, 0); panel.rotation.x = Math.PI / 2;
+  envScene.add(panel);
+  var envCam = new THREE.CubeCamera(0.1, 200, new THREE.WebGLCubeRenderTarget(256));
+  envCam.update(renderer, envScene);
+  scene.environment = envCam.renderTarget.texture;
+})();
+
+// Materials
+function createWoodTexture(res) {
+  res = res || 1024;
+  var c = document.createElement('canvas'); c.width = res; c.height = res;
+  var ctx = c.getContext('2d');
+  var grad = ctx.createLinearGradient(0, 0, 0, res);
+  grad.addColorStop(0, '#c9a96e'); grad.addColorStop(0.5, '#c4a270'); grad.addColorStop(1, '#c09868');
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, res, res);
+  for (var i = 0; i < 120; i++) {
+    var y = Math.random() * res, l = Math.random() * 25 - 12;
+    ctx.strokeStyle = 'rgba('+(195+l)+','+(160+l)+','+(105+l)+','+(0.15+Math.random()*0.35)+')';
+    ctx.lineWidth = 0.3 + Math.random() * 1.5;
+    ctx.beginPath(); ctx.moveTo(0, y);
+    for (var x = 0; x < res; x += 6) ctx.lineTo(x, y + Math.sin(x*0.015 + Math.random()*0.5)*(1.5+Math.random()*2.5));
+    ctx.stroke();
+  }
+  for (var i = 0; i < 15; i++) {
+    var y = Math.random() * res, l = Math.random() * 20 - 10;
+    ctx.strokeStyle = 'rgba('+(180+l)+','+(145+l)+','+(95+l)+',0.12)';
+    ctx.lineWidth = 3 + Math.random() * 5;
+    ctx.beginPath(); ctx.moveTo(0, y);
+    for (var x = 0; x < res; x += 8) ctx.lineTo(x, y + Math.sin(x*0.01)*(3+Math.random()*4));
+    ctx.stroke();
+  }
+  var tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.encoding = THREE.sRGBEncoding;
+  return tex;
+}
+
+function createWoodBumpTexture() {
+  var c = document.createElement('canvas'); c.width = 512; c.height = 512;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#808080'; ctx.fillRect(0, 0, 512, 512);
+  for (var i = 0; i < 100; i++) {
+    var y = Math.random() * 512, v = 118 + Math.random() * 20;
+    ctx.strokeStyle = 'rgb('+v+','+v+','+v+')';
+    ctx.lineWidth = 0.3 + Math.random() * 1;
+    ctx.beginPath(); ctx.moveTo(0, y);
+    for (var x = 0; x < 512; x += 6) ctx.lineTo(x, y + Math.sin(x*0.015)*(1+Math.random()*2));
+    ctx.stroke();
+  }
+  var tex = new THREE.CanvasTexture(c); tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  return tex;
+}
+
+function createPaintedWoodBump() {
+  var c = document.createElement('canvas'); c.width = 512; c.height = 512;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = '#808080'; ctx.fillRect(0, 0, 512, 512);
+  for (var i = 0; i < 60; i++) {
+    var y = Math.random() * 512, v = 125 + Math.random() * 8;
+    ctx.strokeStyle = 'rgb('+v+','+v+','+v+')';
+    ctx.lineWidth = 0.5 + Math.random() * 1.5;
+    ctx.beginPath(); ctx.moveTo(0, y);
+    for (var x = 0; x < 512; x += 8) ctx.lineTo(x, y + Math.sin(x*0.012)*(1+Math.random()*1.5));
+    ctx.stroke();
+  }
+  var tex = new THREE.CanvasTexture(c); tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  return tex;
+}
+
+var barMaterial = new THREE.MeshStandardMaterial({
+  map: createWoodTexture(1024), roughness: 0.5, metalness: 0.0,
+  bumpMap: createWoodBumpTexture(), bumpScale: 0.4, envMapIntensity: 0.3,
+});
+
+var magnetMaterial = new THREE.MeshStandardMaterial({
+  color: 0x2a2a2a, roughness: 0.25, metalness: 0.9, envMapIntensity: 0.6,
+});
+
+var rubberMaterial = new THREE.MeshStandardMaterial({
+  color: 0xcccccc, roughness: 0.85, metalness: 0.0,
+  transparent: true, opacity: 0.6, envMapIntensity: 0.15,
+});
+
+var whiteMaterial = new THREE.MeshStandardMaterial({
+  color: 0xe5e2dc, roughness: 0.45, metalness: 0.0,
+  bumpMap: createPaintedWoodBump(), bumpScale: 0.15, envMapIntensity: 0.2,
+});
+
+// Logo textures
+function createTextTexture(text, fontSize) {
+  var c = document.createElement('canvas'); var size = 256;
+  c.width = size; c.height = size;
+  var ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, size, size);
+  ctx.fillStyle = '#222222';
+  ctx.font = 'normal ' + fontSize + 'px "Georgia Pro", Georgia, serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, size / 2, size / 2);
+  var tex = new THREE.CanvasTexture(c); tex.needsUpdate = true;
+  return tex;
+}
+
+function createZelosCylinderTexture(fontSize, barRadius, barLength, xOffset) {
+  var circumference = 2 * Math.PI * barRadius;
+  var aspect = circumference / barLength;
+  var cH = 1024, cW = Math.round(cH * aspect);
+  var c = document.createElement('canvas'); c.width = cW; c.height = cH;
+  var ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, cW, cH);
+  ctx.fillStyle = '#222222';
+  ctx.font = 'normal ' + fontSize + 'px "Georgia Pro", Georgia, serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  var yPos = cH / 2 - (xOffset / barLength) * cH;
+  ctx.save(); ctx.translate(cW / 2, yPos); ctx.rotate(-Math.PI / 2);
+  ctx.fillText('Zelos', 0, 0); ctx.restore();
+  var tex = new THREE.CanvasTexture(c); tex.needsUpdate = true;
+  return tex;
+}
+
+// ═══════════════════════════════════════════════════════════
+// Build Parallette
+// ═══════════════════════════════════════════════════════════
+var paralletteGroup = new THREE.Group();
+scene.add(paralletteGroup);
+
+function createSupportGeo() {
+  var hw = p.supportBaseWidth / 2, h = p.supportHeight;
+  var ft = p.flatTopWidth / 2, thick = p.supportThickness;
+  var fsh = Math.min(p.flatSideHeight, h);
+  var shape = new THREE.Shape();
+  shape.moveTo(-hw, 0); shape.lineTo(hw, 0); shape.lineTo(hw, fsh);
+  shape.lineTo(ft, h); shape.lineTo(-ft, h); shape.lineTo(-hw, fsh); shape.lineTo(-hw, 0);
+
+  var bevel = p.edgeRadius;
+  var supportGeo = new THREE.ExtrudeGeometry(shape, {
+    depth: thick - bevel * 2,
+    bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel,
+    bevelSegments: Math.ceil(bevel * 5),
+  });
+  supportGeo.translate(0, 0, -thick / 2);
+  supportGeo.computeVertexNormals();
+
+  var supportCSG = CSG.fromGeometry(supportGeo);
+
+  var circleR = (p.barDiameter + 0.1) / 2;
+  var cylGeo = new THREE.CylinderGeometry(circleR, circleR, thick + 4, 24);
+  cylGeo.rotateX(Math.PI / 2); cylGeo.translate(0, p.cutoutHeight, 0);
+  cylGeo.computeVertexNormals();
+  supportCSG = supportCSG.subtract(CSG.fromGeometry(cylGeo));
+
+  var thw = p.triCutoutBase / 2, th = p.triCutoutHeight, ty = p.triCutoutY, tft = p.triCutoutFlatTop / 2;
+  var triShape = new THREE.Shape();
+  triShape.moveTo(-thw, ty); triShape.lineTo(thw, ty);
+  triShape.lineTo(tft, ty + th); triShape.lineTo(-tft, ty + th); triShape.lineTo(-thw, ty);
+  var triGeo = new THREE.ExtrudeGeometry(triShape, { depth: thick + 4, bevelEnabled: false });
+  triGeo.translate(0, 0, -(thick + 4) / 2);
+  triGeo.computeVertexNormals();
+  supportCSG = supportCSG.subtract(CSG.fromGeometry(triGeo));
+
+  var finalGeo = CSG.toGeometry(supportCSG);
+  finalGeo.computeVertexNormals();
+  return finalGeo;
+}
+
+function buildScene() {
+  while (paralletteGroup.children.length) {
+    var ch = paralletteGroup.children[0];
+    paralletteGroup.remove(ch);
+    ch.traverse(function(o){ if(o.geometry) o.geometry.dispose(); });
+  }
+
+  var barR = p.barDiameter / 2;
+  var halfBar = p.barLength / 2;
+  var pegR = p.pegDiameter / 2;
+
+  function makePeg(xPos, yOff) {
+    var geo = new THREE.CylinderGeometry(pegR, pegR, p.pegHeight, 24);
+    var mesh = new THREE.Mesh(geo, magnetMaterial);
+    mesh.position.set(xPos, p.barHeight + yOff, 0);
+    return mesh;
+  }
+
+  function makeRectPeg(xPos, yOff, zOff) {
+    var geo = new THREE.BoxGeometry(p.rectWidth, p.rectHeight, p.rectDepth);
+    var mesh = new THREE.Mesh(geo, rubberMaterial);
+    mesh.position.set(xPos, p.barHeight + yOff, zOff);
+    return mesh;
+  }
+
+  var zSize = p.logoZSize;
+  function makeZLogo() {
+    var tex = createTextTexture('Z', 140);
+    var mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, alphaTest: 0.1, side: THREE.DoubleSide });
+    return new THREE.Mesh(new THREE.PlaneGeometry(zSize, zSize), mat);
+  }
+
+  function buildOne(posX, posY, posZ, rotX, rotY, rotZ) {
+    var barGeo = new THREE.CylinderGeometry(barR, barR, p.barLength, 32);
+    barGeo.rotateZ(Math.PI / 2);
+    var bar = new THREE.Mesh(barGeo, barMaterial);
+    bar.position.y = p.barHeight;
+
+    var sGeo = createSupportGeo();
+
+    var leftSupport = new THREE.Mesh(sGeo, whiteMaterial);
+    leftSupport.position.set(-halfBar, 0, 0);
+    leftSupport.rotation.y = Math.PI / 2;
+    var zLogoL = makeZLogo();
+    zLogoL.position.set(0, p.logoZY, -p.supportThickness / 2 - 0.15);
+    leftSupport.add(zLogoL);
+
+    var rightSupport = new THREE.Mesh(sGeo.clone(), whiteMaterial);
+    rightSupport.position.set(halfBar, 0, 0);
+    rightSupport.rotation.y = Math.PI / 2;
+    var zLogoR = makeZLogo();
+    zLogoR.position.set(0, p.logoZY, p.supportThickness / 2 + 0.15);
+    rightSupport.add(zLogoR);
+
+    var zelosTex = createZelosCylinderTexture(Math.round(p.logoZelosSize * 40), barR, p.barLength, p.logoZelosX);
+    var zelosMat = new THREE.MeshBasicMaterial({ map: zelosTex, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+    var zelosCylGeo = new THREE.CylinderGeometry(barR + 0.06, barR + 0.06, p.barLength, 64, 1, true);
+    zelosCylGeo.rotateZ(Math.PI / 2);
+    var zelosLogo = new THREE.Mesh(zelosCylGeo, zelosMat);
+    zelosLogo.position.set(0, p.barHeight, 0);
+
+    var group = new THREE.Group();
+    group.add(bar, leftSupport, rightSupport, zelosLogo);
+
+    // Cylindrical pegs
+    group.add(makePeg(-p.pegPair1Offset, p.pegPair1Y));
+    group.add(makePeg(p.pegPair1Offset, p.pegPair1Y));
+    group.add(makePeg(-p.pegPair2Offset, p.pegPair2Y));
+    group.add(makePeg(p.pegPair2Offset, p.pegPair2Y));
+
+    // Rectangular pegs
+    group.add(makeRectPeg(-p.rectOffset, p.rectY, p.rectZ));
+    group.add(makeRectPeg(p.rectOffset, p.rectY, p.rectZ));
+    group.add(makeRectPeg(-p.rectOffset, p.rectY, -p.rectZ));
+    group.add(makeRectPeg(p.rectOffset, p.rectY, -p.rectZ));
+
+    group.position.set(posX, posY, posZ);
+    group.rotation.set(rotX * Math.PI / 180, rotY * Math.PI / 180, rotZ * Math.PI / 180);
+    return group;
+  }
+
+  paralletteGroup.add(buildOne(p.p1X, p.p1Y, p.p1Z, p.p1RotX, p.p1RotY, p.p1RotZ));
+  if (p.showSecond) {
+    paralletteGroup.add(buildOne(p.p2X, p.p2Y, p.p2Z, p.p2RotX, p.p2RotY, p.p2RotZ));
+  }
+}
+
+buildScene();
+
+// ═══════════════════════════════════════════════════════════
+// View switching
+// ═══════════════════════════════════════════════════════════
+var defaultPositions = {
+  p1X: 0, p1Y: 0, p1Z: 0, p1RotX: 0, p1RotY: 0, p1RotZ: 0,
+  p2X: 0, p2Y: 0, p2Z: 40, p2RotX: 0, p2RotY: 0, p2RotZ: 0,
+};
+var stackedPositions = {
+  p1X: 0, p1Y: 3, p1Z: 0, p1RotX: 0, p1RotY: 0, p1RotZ: 0,
+  p2X: 4, p2Y: 12, p2Z: 0, p2RotX: -180, p2RotY: 0, p2RotZ: 0,
+};
+
+var views = {
+  front:   { pos: [100, 12, 20],  target: [0, 5, 20],  layout: 'default' },
+  side:    { pos: [0, 12, 130],   target: [0, 5, 20],  layout: 'default' },
+  top:     { pos: [0.01, 120, 20], target: [0, 0, 20], layout: 'default' },
+  stacked: { pos: [65, 40, 40],   target: [0, 8, 0],   layout: 'stacked' },
+};
+var currentLayout = 'default';
+
+var animating = false;
+
+function animateToView(viewName) {
+  var v = views[viewName];
+  if (!v || animating) return;
+
+  // Rebuild scene if layout changed
+  if (v.layout !== currentLayout) {
+    currentLayout = v.layout;
+    var positions = (v.layout === 'stacked') ? stackedPositions : defaultPositions;
+    Object.assign(p, positions);
+    buildScene();
+  }
+
+  animating = true;
+
+  var startPos = camera.position.clone();
+  var startTarget = controls.target.clone();
+  var endPos = new THREE.Vector3(v.pos[0], v.pos[1], v.pos[2]);
+  var endTarget = new THREE.Vector3(v.target[0], v.target[1], v.target[2]);
+  var startTime = performance.now();
+  var duration = 800;
+
+  function ease(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; }
+
+  function tick() {
+    var elapsed = performance.now() - startTime;
+    var t = Math.min(elapsed / duration, 1);
+    var e = ease(t);
+    camera.position.lerpVectors(startPos, endPos, e);
+    controls.target.lerpVectors(startTarget, endTarget, e);
+    camera.lookAt(controls.target);
+    if (t < 1) {
+      requestAnimationFrame(tick);
+    } else {
+      animating = false;
+    }
+  }
+  tick();
+
+  // Update active button
+  document.querySelectorAll('.view-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.view === viewName);
+  });
+}
+
+document.querySelectorAll('.view-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    animateToView(this.dataset.view);
+  });
+});
+
+// Resize
+window.addEventListener('resize', function() {
+  var w = container.clientWidth, h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+});
+
+// Animate
+(function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+})();
+  </script>
+</body>
+
+</html>
