@@ -103,6 +103,100 @@
       text-transform: uppercase;
       letter-spacing: 0.06em;
     }
+    .waitlist-section {
+      max-width: 520px;
+      margin: 0 auto 2.5rem;
+      text-align: center;
+    }
+    .waitlist-badge {
+      display: inline-block;
+      padding: 0.35rem 0.9rem;
+      background-color: hsl(35, 60%, 15%);
+      border: 1px solid hsl(35, 50%, 25%);
+      border-radius: 2rem;
+      font-size: 0.75rem;
+      color: hsl(35, 70%, 65%);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 1.25rem;
+    }
+    .waitlist-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: hsl(0, 0%, 95%);
+      margin-bottom: 0.75rem;
+      line-height: 1.3;
+    }
+    .waitlist-desc {
+      font-size: 0.95rem;
+      color: hsl(0, 0%, 55%);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+    .waitlist-form {
+      display: flex;
+      gap: 0.5rem;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+    .waitlist-input {
+      flex: 1;
+      padding: 0.7rem 1rem;
+      background-color: hsl(0, 0%, 10%);
+      border: 1px solid hsl(0, 0%, 22%);
+      border-radius: 0.5rem;
+      color: hsl(0, 0%, 90%);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    .waitlist-input::placeholder {
+      color: hsl(0, 0%, 40%);
+    }
+    .waitlist-input:focus {
+      border-color: hsl(0, 0%, 40%);
+    }
+    .waitlist-btn {
+      padding: 0.7rem 1.5rem;
+      background-color: hsl(0, 0%, 95%);
+      border: none;
+      border-radius: 0.5rem;
+      color: hsl(0, 0%, 8%);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      white-space: nowrap;
+    }
+    .waitlist-btn:hover {
+      background-color: hsl(0, 0%, 80%);
+    }
+    .waitlist-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .waitlist-msg {
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+      min-height: 1.25rem;
+    }
+    .waitlist-msg.success {
+      color: hsl(140, 50%, 55%);
+    }
+    .waitlist-msg.error {
+      color: hsl(0, 60%, 60%);
+    }
+    @media (max-width: 480px) {
+      .waitlist-form {
+        flex-direction: column;
+      }
+      .waitlist-btn {
+        padding: 0.75rem;
+      }
+    }
   </style>
 </head>
 
@@ -122,8 +216,18 @@
 
   <main class="main-content">
     <div class="page-header equipment-header">
-      <h1 class="page-title">Coming Soon</h1>
-      <p class="page-subtitle">Premium calisthenics gear, designed by athletes.</p>
+      <h1 class="page-title">Low Parallettes</h1>
+      <p class="page-subtitle">Premium. Affordable. Perfect for Planche.</p>
+    </div>
+
+    <div class="waitlist-section">
+      <span class="waitlist-badge">Limited First Drop</span>
+      <p class="waitlist-desc">Join the waitlist to get notified when preorders open.</p>
+      <form class="waitlist-form" id="waitlist-form">
+        <input type="email" class="waitlist-input" id="waitlist-email" placeholder="Enter your email" required>
+        <button type="submit" class="waitlist-btn" id="waitlist-btn">Join Waitlist</button>
+      </form>
+      <p class="waitlist-msg" id="waitlist-msg"></p>
     </div>
 
     <div class="viewer-wrapper" id="viewer-container">
@@ -131,7 +235,7 @@
     </div>
 
     <div class="view-switcher">
-      <button class="view-btn active" data-view="front">Front</button>
+      <button class="view-btn" data-view="front">Front</button>
       <button class="view-btn" data-view="side">Side</button>
       <button class="view-btn" data-view="top">Top</button>
       <button class="view-btn" data-view="stacked">Stacked</button>
@@ -147,6 +251,7 @@
       <span class="product-tag">Coming Soon</span>
     </div>
     -->
+
   </main>
 
   <!-- Footer -->
@@ -161,6 +266,60 @@
       <p class="footer-copy">&copy; 2025 Zelos. All rights reserved.</p>
     </div>
   </footer>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDbDf2XYrRSW9X7LNqEsXS2Y4hX480BVrM",
+      authDomain: "zelos-prod.firebaseapp.com",
+      projectId: "zelos-prod",
+      storageBucket: "zelos-prod.firebasestorage.app",
+      messagingSenderId: "462185352306",
+      appId: "1:462185352306:web:74e259c44aabfc4a9b46eb",
+      measurementId: "G-1MK1Q9G8LB"
+    };
+
+    const app = initializeApp(firebaseConfig);
+
+    initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider("6LfGBc8rAAAAAGEpdmhwno-b83rJ9t8msAjZc_D7"),
+      isTokenAutoRefreshEnabled: true,
+    });
+
+    const db = getFirestore(app);
+
+    document.getElementById('waitlist-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('waitlist-email').value.trim();
+      const btn = document.getElementById('waitlist-btn');
+      const msg = document.getElementById('waitlist-msg');
+
+      if (!email) return;
+
+      btn.disabled = true;
+      btn.textContent = 'Joining...';
+      msg.textContent = '';
+      msg.className = 'waitlist-msg';
+
+      try {
+        await addDoc(collection(db, 'equipmentWaitlist'), {
+          email: email,
+          timestamp: serverTimestamp()
+        });
+        document.getElementById('waitlist-form').style.display = 'none';
+        msg.textContent = "You're on the list! We'll notify you when preorders open.";
+        msg.className = 'waitlist-msg success';
+      } catch (err) {
+        msg.textContent = 'Something went wrong. Please try again.';
+        msg.className = 'waitlist-msg error';
+        btn.textContent = 'Join Waitlist';
+        btn.disabled = false;
+      }
+    });
+  </script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
