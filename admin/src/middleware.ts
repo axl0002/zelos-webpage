@@ -1,27 +1,26 @@
+import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-
+import { cookieOptions, supabaseConfig } from "./lib/supabase/config";
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  // Only protect admin routes (everything except /login)
-  if (pathname === "/login") {
-    return NextResponse.next();
-  }
-
-  // Check for session cookie
-  const session = request.cookies.get("__session");
-
-  if (!session?.value) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
-
-  // Cookie exists — actual token verification happens server-side in API routes/layout
-  // Middleware on Edge can't use firebase-admin, so we do a basic cookie presence check here
-  return NextResponse.next();
+  let response = NextResponse.next({ request });
+  const { url, key } = supabaseConfig();
+  const client = createServerClient(url, key, {
+    cookieOptions,
+    cookies: {
+      getAll: () => request.cookies.getAll(),
+      setAll: (values) => {
+        values.forEach(({ name, value }) => request.cookies.set(name, value));
+        response = NextResponse.next({ request });
+        values.forEach(({ name, value, options }) =>
+          response.cookies.set(name, value, options),
+        );
+      },
+    },
+  });
+  await client.auth.getUser();
+  response.headers.set("Cache-Control", "private, no-store");
+  return response;
 }
-
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|login|api/auth).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

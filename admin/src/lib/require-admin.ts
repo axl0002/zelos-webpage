@@ -1,32 +1,60 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getAdminAuth } from "./firebase-admin";
+import { NextResponse } from "next/server";
+import { isAuthRetryableFetchError, type AuthError } from "@supabase/supabase-js";
+import { serverClient } from "./supabase/server";
+import type { ReviewContext } from "./review-types";
 
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
-  .split(",")
-  .map((e) => e.trim().toLowerCase())
-  .filter(Boolean);
+function temporaryAuthError(error: AuthError | null) {
+  return (
+    !!error &&
+    (isAuthRetryableFetchError(error) ||
+      error.status === 0 ||
+      error.status === 429 ||
+      (error.status !== undefined && error.status >= 500))
+  );
+}
 
-export type AdminSession = {
-  uid: string;
-  email: string;
-};
-
-export async function requireAdmin(
-  request: NextRequest
-): Promise<{ admin: AdminSession } | { response: NextResponse }> {
-  const cookie = request.cookies.get("__session")?.value;
-  if (!cookie) {
-    return { response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
-  }
-
-  try {
-    const decoded = await getAdminAuth().verifySessionCookie(cookie, true);
-    const email = decoded.email?.toLowerCase();
-    if (!email || !ADMIN_EMAILS.includes(email)) {
-      return { response: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
-    }
-    return { admin: { uid: decoded.uid, email } };
-  } catch {
-    return { response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
-  }
+export async function requireAdmin() {
+  const client = await serverClient();
+  let result = await client.auth.getUser();
+  // Only retry the read-only identity check, never an approval. A failed
+  // connection is not evidence that the user's cookie session is invalid.
+  if (temporaryAuthError(result.error) && result.error?.status !== 429)
+    result = await client.auth.getUser();
+  const {
+    data: { user },
+    error,
+  } = result;
+  if (temporaryAuthError(error))
+    return {
+      response: NextResponse.json(
+        {
+          error:
+            "Could not verify your session because the sign-in service is temporarily unavailable. Your review inputs are still here; try again.",
+        },
+        { status: 503 },
+      ),
+    };
+  if (error || !user)
+    return {
+      response: NextResponse.json(
+        { error: "Sign in to continue." },
+        { status: 401 },
+      ),
+    };
+  const { data, error: roleError } = await client.rpc(
+    "admin_rank_review_context",
+  );
+  if (roleError)
+    return {
+      response: NextResponse.json(
+        {
+          error:
+            roleError.code === "42501"
+              ? "This account does not have admin access."
+              : "Review service unavailable. Try again.",
+        },
+        { status: roleError.code === "42501" ? 403 : 503 },
+      ),
+    };
+  return { client, user, context: data as ReviewContext };
 }

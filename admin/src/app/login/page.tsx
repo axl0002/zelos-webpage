@@ -1,103 +1,102 @@
 "use client";
-
-import { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase-client";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
-export default function AdminLogin() {
+import { browserClient } from "@/lib/supabase/client";
+export default function Login() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
-
-  const handleLogin = async (e: React.FormEvent) => {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("error"))
+      setError(
+        "This account does not have admin access. Use your assigned admin account.",
+      );
+  }, []);
+  async function login(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    const client = browserClient();
     try {
-      const credential = await signInWithEmailAndPassword(auth, email, password);
-      const idToken = await credential.user.getIdToken();
-
-      // Create server-side session
-      const res = await fetch("/api/auth/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
+      const { error: authError } = await client.auth.signInWithPassword({
+        email: email.trim(),
+        password,
       });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to create session");
+      if (authError) {
+        setError(
+          authError.status === 429
+            ? "Too many attempts. Please wait before trying again."
+            : "Could not sign in. Check your email and password.",
+        );
+        return;
       }
-
-      router.push("/dashboard");
+      const { error: accessError } = await client.rpc(
+        "admin_rank_review_context",
+      );
+      if (accessError) {
+        await client.auth.signOut({ scope: "local" });
+        setError(
+          accessError.code === "42501"
+            ? "This account does not have admin access. Use your assigned admin account."
+            : "The review service is unavailable. Please try again.",
+        );
+        return;
+      }
+      setPassword("");
+      router.replace("/");
       router.refresh();
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      if (message.includes("auth/invalid-credential") || message.includes("auth/wrong-password")) {
-        setError("Invalid email or password");
-      } else if (message.includes("auth/user-not-found")) {
-        setError("No account found with this email");
-      } else if (message.includes("auth/too-many-requests")) {
-        setError("Too many attempts. Try again later.");
-      } else {
-        setError(message);
-      }
+    } catch {
+      setError("Could not connect. Please try again.");
     } finally {
-      setLoading(false);
+      setBusy(false);
     }
-  };
-
+  }
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            zelos admin
-          </h2>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <input
-                type="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <input
-                type="password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {error && (
-            <div className="text-red-500 text-sm text-center">{error}</div>
-          )}
-
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50"
-            >
-              {loading ? "Signing in..." : "Sign in"}
-            </button>
-          </div>
+    <main className="login-wrap">
+      <section className="login-card">
+        <a href="/" className="brand">
+          zelos<span> / admin</span>
+        </a>
+        <p className="eyebrow">REVIEW WORKSPACE</p>
+        <h1>Welcome back.</h1>
+        <p className="muted">Sign in with your Zelos admin account.</p>
+        <form onSubmit={login}>
+          <label htmlFor="email">Email address</label>
+          <input
+            id="email"
+            type="email"
+            autoComplete="username"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            placeholder="you@example.com"
+          />
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <button
+            className="button primary full"
+            disabled={busy || !email.trim() || !password}
+          >
+            {busy ? "Signing in…" : "Sign in"}
+          </button>
         </form>
-      </div>
-    </div>
+        {error && (
+          <p role="alert" className="error">
+            {error}
+          </p>
+        )}
+        <p className="muted small">Access is limited to assigned admins.</p>
+      </section>
+    </main>
   );
 }
