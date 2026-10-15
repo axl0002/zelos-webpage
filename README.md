@@ -15,7 +15,8 @@ changes and configuring the Vercel project as described below.
 
 ## Current hosting and transition
 
-The current public landing site is hosted on Cloudflare, while the Vercel project
+The current public landing site is hosted by the `zelos-webpage` Cloudflare Worker,
+with `zelos.club` bound as its custom domain, while the Vercel project
 uses `zelos-webpage.vercel.app`. Cloudflare remains the DNS provider. Pushing this
 branch does not move the custom domain between hosts.
 
@@ -24,11 +25,12 @@ Until the domain is connected to Vercel, use
 hostname. After a successful Vercel deployment, add `zelos.club` (and `www` if
 used) to that project and use the exact DNS records Vercel provides. Set the
 production `ADMIN_ORIGIN` to `https://zelos.club` and redeploy for the cutover.
-Also preserve `support.zelos.club`, currently a CNAME to the apex, by configuring
-that hostname on Vercel to redirect to `https://zelos.club/support` at cutover.
+Also add `support.zelos.club`, currently a CNAME to the apex, to the Vercel project.
+The application redirects that hostname to `https://zelos.club/support`.
 Keep Shopify, media, CDN, email, and other unrelated DNS records unchanged.
-The supplied DNS export has no apex A/AAAA/CNAME record, so check the live
-Cloudflare DNS and Pages/Workers domain bindings before changing its routing.
+The supplied DNS export omits the apex record managed by the Worker binding.
+The live DNS has a read-only, proxied `AAAA 100::` record for this binding; detach
+the Worker custom domain only when the Vercel deployment is ready for cutover.
 
 ## Run the admin locally
 

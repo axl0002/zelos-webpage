@@ -9,6 +9,16 @@ module.exports = (phase) => {
     distDir: phase === PHASE_DEVELOPMENT_SERVER ? ".next-dev" : ".next",
     output: "standalone",
     poweredByHeader: false,
+    async redirects() {
+      return [
+        {
+          source: "/:path*",
+          has: [{ type: "host", value: "support.zelos.club" }],
+          destination: "https://zelos.club/support",
+          permanent: true,
+        },
+      ];
+    },
     async rewrites() {
       return [
         { source: "/", destination: "/index.html" },

@@ -30,10 +30,16 @@ afterEach(() => vi.unstubAllEnvs());
 
 async function resolvePublicUrl(url: string) {
   const response = await unstable_getResponseFromNextConfig({
-    url, nextConfig: nextConfig("phase-production-build"),
+    url, headers: { host: new URL(url).host }, nextConfig: nextConfig("phase-production-build"),
   });
   return { response, path: new URL(getRewrittenUrl(response) || url).pathname };
 }
+
+it.each(["/", "/support", "/support.html"])("redirects the support hostname at %s to the support page", async (path) => {
+  const { response } = await resolvePublicUrl(`https://support.zelos.club${path}`);
+  expect(response.status).toBe(308);
+  expect(response.headers.get("location")).toBe("https://zelos.club/support");
+});
 
 it("preserves the existing Cloudflare static deployment source unchanged", () => {
   const legacyDirectory = fileURLToPath(new URL("../../site", import.meta.url));
