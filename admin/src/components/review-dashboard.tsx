@@ -180,6 +180,9 @@ export default function ReviewDashboard({
         <a href="/admin" className="nav-item active">
           <span>▤</span> Exercise review
         </a>
+        <a href="/admin/safety" className="nav-item">
+          <span>◈</span> Upload safety
+        </a>
         <div className="sidebar-bottom">
           <span className="connection">
             <i /> Supabase

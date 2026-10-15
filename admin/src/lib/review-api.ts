@@ -63,6 +63,7 @@ export function rpcFailure(error: { code?: string; message?: string }) {
     assisted_exercise_not_eligible:
       "This clip mentions assistance and is not eligible for ranking. Scan the queue to apply the automatic rejection.",
     admin_required: "This account does not have admin access.",
+    review_unavailable: "This upload has already been reviewed or is no longer available. Refresh the queue.",
   };
   return NextResponse.json(
     {

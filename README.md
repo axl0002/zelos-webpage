@@ -12,7 +12,9 @@ Privacy, Terms, Support, Stats, About and Equipment keep their existing `.html`
 URLs; extensionless versions also work. Shop links still point to the separate
 Shopify store at `https://shop.zelos.club/`; its domain and DNS are unchanged.
 The admin uses only Zelos Supabase (`obnirsfjxcvyyiocwaii`) and published media at
-`media.zelos.club`. The old Firebase admin pages/endpoints have been removed from
+`media.zelos.club`. On this branch, the upload-safety queue at `/admin/safety` lets admins view
+flagged originals through two-minute signed links from private R2 staging, then
+approve reprocessing or reject and queue cleanup. The old Firebase admin pages/endpoints have been removed from
 this branch; their source remains in Git.
 
 ## Production hosting
@@ -164,7 +166,7 @@ npm run build
 npm audit
 ```
 
-Validation completed: 71 isolated UI/API/configuration tests, TypeScript and an
+Validation completed: 77 isolated UI/API/configuration tests, TypeScript and an
 optimized build. Isolated production HTTP checks also verified 35 public
 routes/assets against their original bytes, anonymous admin redirects, and
 unauthenticated API rejection. Tests cover password login, non-admin rejection,
