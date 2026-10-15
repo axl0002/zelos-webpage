@@ -123,7 +123,7 @@ export default function ReviewDashboard({
         after = result.cursor;
       }
       setNotice(
-        `Scan complete in ${((performance.now() - started) / 1000).toFixed(1)}s. ${scanned.toLocaleString()} imported training clips checked; ${queued.toLocaleString()} candidates added or refreshed; ${rejected.toLocaleString()} automatically rejected for assistance keywords.`,
+        `Scan complete in ${((performance.now() - started) / 1000).toFixed(1)}s. ${scanned.toLocaleString()} imported training clips checked; ${queued.toLocaleString()} candidates added or refreshed; ${rejected.toLocaleString()} automatically rejected for assistance, bad form, or added-weight keywords.`,
       );
     } catch (e) {
       if (!abort.signal.aborted) setError((e as Error).message);

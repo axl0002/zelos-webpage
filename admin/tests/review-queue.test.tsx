@@ -135,6 +135,7 @@ it("scan reports elapsed time and auto rejections across all batches", async () 
   const notice = await screen.findByText(/Scan complete in/);
   expect(notice.textContent).toContain("600 imported training clips checked");
   expect(notice.textContent).toContain("7 automatically rejected");
+  expect(notice.textContent).toContain("assistance, bad form, or added-weight keywords");
   expect(fetch.mock.calls.filter(([url]) => url.endsWith("/scan"))).toHaveLength(2);
 });
 

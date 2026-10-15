@@ -62,6 +62,8 @@ export function rpcFailure(error: { code?: string; message?: string }) {
     invalid_decision: "Check the review details and try again.",
     assisted_exercise_not_eligible:
       "This clip mentions assistance and is not eligible for ranking. Scan the queue to apply the automatic rejection.",
+    ranking_keywords_not_eligible:
+      "This clip mentions bad form or added weight and is not eligible for ranking. Scan the queue to apply the automatic rejection.",
     admin_required: "This account does not have admin access.",
   };
   return NextResponse.json(

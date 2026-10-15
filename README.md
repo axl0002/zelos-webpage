@@ -111,9 +111,12 @@ does not set environment variables or domain assignments.
    plus retained structured exercise tags. Generic mentions can suggest several
    exercises. Candidates whose title or description contains `assist`, `assisted`,
    `assit`, `band`, `bands`, or `banded` are automatically rejected for ranking.
-   Matching ignores case and handles separators such as `band-assisted`, while
-   keeping words such as `unassisted` distinct. Automatic rejections save the
-   matched words in review history and leave the post as Training. Completed
+   The same rule rejects bad/poor/sloppy/incorrect form or technique, weighted
+   exercise wording (including common misspellings, added weight and weight vests),
+   and kg/kilo/kilogram mentions such as `20kg` or `2.5 KGs`. Matching ignores case
+   and separators (`bad-form`, `bad_form`, `badform`), while keeping `unassisted`,
+   `unweighted`, and `bodyweight` distinct. Automatic rejections save matched
+   reasons in review history and leave the post as Training. Completed
    decisions are preserved. The scan reports elapsed time and rejection totals.
 2. Select a clip and watch it. The video uses 720p first, then smaller/other
    renditions, then the original, with fallback on playback errors. Only the
