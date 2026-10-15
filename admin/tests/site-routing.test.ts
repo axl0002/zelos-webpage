@@ -41,7 +41,7 @@ it.each(["/", "/support", "/support.html"])("redirects the support hostname at %
   expect(response.headers.get("location")).toBe("https://zelos.club/support");
 });
 
-it("preserves the existing Cloudflare static deployment source unchanged", () => {
+it("keeps the static source and deployed public assets identical", () => {
   const legacyDirectory = fileURLToPath(new URL("../../site", import.meta.url));
   const files = (directory: string) => readdirSync(directory, { recursive: true })
     .map(String)

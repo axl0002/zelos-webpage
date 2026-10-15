@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" type="image/png" href="../assets/z_app_icon.png">
-  <link rel="apple-touch-icon" href="../assets/z_app_icon.png">
+  <link rel="icon" type="image/png" href="/assets/z_app_icon.png">
+  <link rel="apple-touch-icon" href="/assets/z_app_icon.png">
   <title>Privacy Policy – Zelos</title>
   <meta name="description" content="Privacy Policy for the Zelos app: what we collect, how we use data, and your rights." />
   <link rel="canonical" href="https://zelos.club/privacy" />
@@ -15,77 +15,32 @@
   <meta property="og:url" content="https://zelos.club/privacy" />
   <meta property="og:type" content="website" />
 
-  <style>
-    :root {
-      --bg: #ffffff;
-      --fg: #0f172a; /* slate-900 */
-      --muted: #475569; /* slate-600 */
-      --card: #f8fafc; /* slate-50 */
-      --accent: #0ea5e9; /* sky-500 */
-      --border: #e2e8f0; /* slate-200 */
-      --radius: 16px;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0b0f19;
-        --fg: #e5e7eb;
-        --muted: #94a3b8;
-        --card: #0f172a;
-        --accent: #38bdf8;
-        --border: #1f2937;
-      }
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Apple Color Emoji, Segoe UI Emoji;
-      background: var(--bg);
-      color: var(--fg);
-      line-height: 1.7;
-    }
-    .wrap { max-width: 880px; margin: 0 auto; padding: 32px 20px 64px; }
-    header { margin-bottom: 18px; }
-    h1 { font-size: 2rem; margin: 0; letter-spacing: -0.01em; }
-    .subtitle { color: var(--muted); margin-top: 6px; }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px 18px;
-    }
-    section { margin-top: 22px; }
-    h2 { font-size: 1.25rem; margin: 0 0 10px; }
-    h3 { font-size: 1.05rem; margin: 14px 0 8px; }
-    p { margin: 10px 0; }
-    ul { padding-left: 18px; margin: 8px 0; }
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    .muted { color: var(--muted); }
-    .grid { display: grid; gap: 16px; }
-    @media (min-width: 760px) { .grid { grid-template-columns: 1fr 1fr; } }
-    .kbd {
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      background: rgba(148,163,184,.15); padding: 2px 6px; border-radius: 6px;
-    }
-    footer { margin-top: 28px; font-size: 0.9375rem; }
-    .notice {
-      font-size: .95rem;
-      border-left: 4px solid var(--accent);
-      padding: 8px 12px;
-      background: rgba(14,165,233,.08);
-      border-radius: 8px;
-    }
-  </style>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <h1>Privacy Policy</h1>
-      <p class="subtitle">Last updated: August 23, 2025</p>
-      <p class="muted">This Privacy Policy explains how Zelos (“we”, “us”, “our”) collects, uses, and shares information when you use our mobile app and website.</p>
+  <nav class="nav-bar" aria-label="Main navigation">
+    <div class="nav-container">
+      <a href="/" class="nav-logo" aria-label="Zelos home">
+        <img src="/assets/z_app_icon.png" alt="Zelos icon" class="logo-img">
+      </a>
+      <div class="nav-links">
+        <a href="/stats" class="nav-button">Stats</a>
+        <a href="https://shop.zelos.club/" class="nav-button">Shop</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="document-page legal-page" id="main-content">
+    <header class="page-header">
+      <h1 class="page-title">Privacy Policy</h1>
+      <p class="page-subtitle">Last updated: August 23, 2025</p>
+      <p class="page-intro">This Privacy Policy explains how Zelos (“we”, “us”, “our”) collects, uses, and shares information when you use our mobile app and website.</p>
     </header>
 
-    <section class="card">
+    <section class="document-card">
       <h2>Quick Summary</h2>
       <ul>
         <li>We collect account details you provide (e.g., email, username, country, height, weight, gender) and app activity (e.g., matchups voted, skills submitted).</li>
@@ -126,7 +81,7 @@
         <li><strong>Auth providers (if enabled):</strong> sign-in data from Apple/Google when you use social login.</li>
         <li><strong>Service providers:</strong> technical data from hosting, analytics, and email tools we use to operate Zelos.</li>
       </ul>
-      <p class="notice"><strong>Note:</strong> Do not submit sensitive personal information (e.g., health diagnoses, medical records). Fitness attributes you optionally provide (e.g., weight/height/ability) are treated as personal data and used only for in-app features and improving user experience.</p>
+      <p class="document-notice"><strong>Note:</strong> Do not submit sensitive personal information (e.g., health diagnoses, medical records). Fitness attributes you optionally provide (e.g., weight/height/ability) are treated as personal data and used only for in-app features and improving user experience.</p>
     </section>
 
     <section>
@@ -217,18 +172,25 @@
       <p>We may update this Privacy Policy from time to time. We will post the latest version on this page and update the “Last updated” date above. If changes materially affect your rights, we will provide additional notice in the app or by email.</p>
     </section>
 
-    <section class="card">
+    <section class="document-card">
       <h2>Contact</h2>
       <p>If you have questions or concerns about this Policy or our data practices, contact us at <a href="mailto:support@zelos.club">support@zelos.club</a>.</p>
-      <p class="muted"><!-- Optional for EU/UK compliance: add an address line below -->
-      <!-- Address: [PLACEHOLDER – add your business or contact address]</p> -->
-      <p class="muted">Support page: <a href="https://support.zelos.club">support.zelos.club</a></p>
+      <p class="document-muted">Support page: <a href="/support">zelos.club/support</a></p>
     </section>
 
-    <footer class="muted">
-      <div>© <span id="y"></span> Zelos. All rights reserved.</div>
-    </footer>
-  </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <nav class="footer-links" aria-label="Footer navigation">
+        <a href="/about">About</a>
+        <a href="/support">Support</a>
+        <a href="/privacy" aria-current="page">Privacy</a>
+        <a href="/terms">Terms</a>
+      </nav>
+      <p class="footer-copy">&copy; <span id="y">2026</span> Zelos. All rights reserved.</p>
+    </div>
+  </footer>
 
   <script>
     document.getElementById('y').textContent = new Date().getFullYear();

@@ -4,6 +4,10 @@
 at `/` and the ranking-review dashboard at `/admin`. The original landing HTML,
 styles, images and fonts are included in `admin/public/`. The existing `site/`
 folder is retained as the original static source. A test keeps both copies identical.
+Support, Privacy, and Terms use the landing page's shared `/styles.css`, Inter
+typography, navigation, and footer. Shared color variables keep their dark palette
+consistent. When editing public pages or styles, update both `site/` and
+`admin/public/`; support links use `https://zelos.club/support`.
 Privacy, Terms, Support, Stats, About and Equipment keep their existing `.html`
 URLs; extensionless versions also work. Shop links still point to the separate
 Shopify store at `https://shop.zelos.club/`; its domain and DNS are unchanged.

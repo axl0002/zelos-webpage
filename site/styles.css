@@ -1,4 +1,16 @@
 /* Zelos Static HTML Styles */
+:root {
+  color-scheme: dark;
+  --site-background: hsl(0, 0%, 8%);
+  --site-foreground: hsl(0, 0%, 98%);
+  --site-surface: hsl(0, 0%, 11%);
+  --site-card-border: hsl(0, 0%, 18%);
+  --site-muted: hsl(0, 0%, 60%);
+  --site-background-deep: hsl(0, 0%, 6%);
+  --site-divider: hsl(0, 0%, 14%);
+  --site-border: hsl(0, 0%, 20%);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -7,8 +19,8 @@
 
 body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    background-color: hsl(0, 0%, 8%);
-    color: hsl(0, 0%, 98%);
+    background-color: var(--site-background);
+    color: var(--site-foreground);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -27,7 +39,7 @@ body {
 
 /* Navigation Styles */
 .nav-bar {
-    border-bottom: 1px solid hsl(0, 0%, 20%);
+    border-bottom: 1px solid var(--site-border);
     background-color: hsla(0, 0%, 8%, 0.95);
     backdrop-filter: blur(10px);
     position: sticky;
@@ -72,7 +84,7 @@ body {
 .logo-text {
     font-size: 1.25rem;
     font-weight: 700;
-    color: hsl(0, 0%, 98%);
+    color: var(--site-foreground);
     letter-spacing: -0.025em;
 }
 
@@ -107,7 +119,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: radial-gradient(ellipse at 50% 0%, hsl(0, 0%, 16%) 0%, hsl(0, 0%, 6%) 70%);
+    background: radial-gradient(ellipse at 50% 0%, hsl(0, 0%, 16%) 0%, var(--site-background-deep) 70%);
     padding: 2rem 0;
 }
 
@@ -135,7 +147,7 @@ body {
 
 .hero-description {
     font-size: 1.125rem;
-    color: hsl(0, 0%, 60%);
+    color: var(--site-muted);
     margin-bottom: 2.5rem;
     max-width: 520px;
     line-height: 1.7;
@@ -176,8 +188,8 @@ body {
 
 /* Button Styles */
 .btn-primary {
-    background-color: hsl(0, 0%, 98%);
-    color: hsl(0, 0%, 8%);
+    background-color: var(--site-foreground);
+    color: var(--site-background);
     border: none;
     padding: 1.5rem 2rem;
     font-size: 1.125rem;
@@ -196,7 +208,7 @@ body {
 .btn-secondary {
     background-color: transparent;
     color: hsl(0, 0%, 75%);
-    border: 1px solid hsl(0, 0%, 20%);
+    border: 1px solid var(--site-border);
     padding: 1.5rem 2rem;
     font-size: 1.125rem;
     font-weight: 500;
@@ -206,7 +218,7 @@ body {
 }
 
 .btn-secondary:hover {
-    color: hsl(0, 0%, 98%);
+    color: var(--site-foreground);
     background-color: hsl(0, 0%, 22%);
 }
 
@@ -217,7 +229,7 @@ body {
 /* Features Section */
 .features-section {
     padding: 5rem 1.5rem;
-    background-color: hsl(0, 0%, 8%);
+    background-color: var(--site-background);
 }
 
 .features-container {
@@ -229,7 +241,7 @@ body {
     text-align: center;
     font-size: 2rem;
     font-weight: 700;
-    color: hsl(0, 0%, 98%);
+    color: var(--site-foreground);
     margin-bottom: 3rem;
     letter-spacing: -0.02em;
 }
@@ -247,8 +259,8 @@ body {
 }
 
 .feature-card {
-    background-color: hsl(0, 0%, 11%);
-    border: 1px solid hsl(0, 0%, 18%);
+    background-color: var(--site-surface);
+    border: 1px solid var(--site-card-border);
     border-radius: 1rem;
     padding: 2rem 1.5rem;
     text-align: center;
@@ -275,22 +287,22 @@ body {
 .feature-title {
     font-size: 1.125rem;
     font-weight: 600;
-    color: hsl(0, 0%, 98%);
+    color: var(--site-foreground);
     margin-bottom: 0.75rem;
 }
 
 .feature-text {
     font-size: 0.938rem;
-    color: hsl(0, 0%, 60%);
+    color: var(--site-muted);
     line-height: 1.6;
 }
 
 /* Social Proof Section */
 .proof-section {
     padding: 4rem 1.5rem;
-    background-color: hsl(0, 0%, 6%);
-    border-top: 1px solid hsl(0, 0%, 14%);
-    border-bottom: 1px solid hsl(0, 0%, 14%);
+    background-color: var(--site-background-deep);
+    border-top: 1px solid var(--site-divider);
+    border-bottom: 1px solid var(--site-divider);
 }
 
 .proof-container {
@@ -320,7 +332,7 @@ body {
 .proof-number {
     font-size: 2rem;
     font-weight: 700;
-    color: hsl(0, 0%, 98%);
+    color: var(--site-foreground);
     letter-spacing: -0.02em;
 }
 
@@ -335,7 +347,7 @@ body {
 /* Bottom CTA Section */
 .cta-section {
     padding: 5rem 1.5rem;
-    background: radial-gradient(ellipse at 50% 100%, hsl(0, 0%, 14%) 0%, hsl(0, 0%, 8%) 70%);
+    background: radial-gradient(ellipse at 50% 100%, var(--site-divider) 0%, var(--site-background) 70%);
     text-align: center;
 }
 
@@ -347,14 +359,14 @@ body {
 .cta-title {
     font-size: 2.25rem;
     font-weight: 700;
-    color: hsl(0, 0%, 98%);
+    color: var(--site-foreground);
     margin-bottom: 1rem;
     letter-spacing: -0.02em;
 }
 
 .cta-description {
     font-size: 1.125rem;
-    color: hsl(0, 0%, 60%);
+    color: var(--site-muted);
     margin-bottom: 2.5rem;
     line-height: 1.6;
 }
@@ -371,8 +383,8 @@ body {
 /* Footer */
 .site-footer {
     padding: 2.5rem 1.5rem;
-    background-color: hsl(0, 0%, 6%);
-    border-top: 1px solid hsl(0, 0%, 14%);
+    background-color: var(--site-background-deep);
+    border-top: 1px solid var(--site-divider);
     text-align: center;
 }
 
@@ -421,7 +433,7 @@ body {
 .page-title {
     font-size: 2.5rem;
     font-weight: 700;
-    color: hsl(0, 0%, 98%);
+    color: var(--site-foreground);
     margin-bottom: 1rem;
 }
 
@@ -447,7 +459,7 @@ body {
 .page-title {
   font-size: 2.5rem;
   font-weight: 700;
-  color: hsl(0, 0%, 98%);
+  color: var(--site-foreground);
   margin-bottom: 1rem;
 }
 
@@ -464,7 +476,7 @@ body {
 .support-card,
 .stat-card {
   background-color: hsl(0, 0%, 12%);
-  border: 1px solid hsl(0, 0%, 20%);
+  border: 1px solid var(--site-border);
   border-radius: 0.75rem;
   padding: 1.5rem;
   margin-bottom: 2rem;
@@ -474,7 +486,7 @@ body {
 .info-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: hsl(0, 0%, 98%);
+  color: var(--site-foreground);
   margin-bottom: 1rem;
 }
 
@@ -495,7 +507,7 @@ body {
   display: flex;
   align-items: stretch;
   background-color: hsl(0, 0%, 12%);
-  border: 1px solid hsl(0, 0%, 20%);
+  border: 1px solid var(--site-border);
   border-radius: 0.75rem;
   padding: 1.5rem;
   margin-bottom: 2rem;
@@ -552,14 +564,14 @@ body {
   gap: 0.5rem;
   text-decoration: none;
   padding: 0.5rem 0.75rem;
-  border: 1px solid hsl(0, 0%, 20%);
+  border: 1px solid var(--site-border);
   border-radius: 0.5rem;
   color: hsl(0, 0%, 90%);
   transition: all 0.2s ease;
 }
 
 .social-btn:hover {
-  background-color: hsl(0, 0%, 20%);
+  background-color: var(--site-border);
 }
 
 .social-btn svg {
@@ -588,7 +600,7 @@ body {
 
 .value-item {
   background-color: hsl(0, 0%, 10%);
-  border: 1px solid hsl(0, 0%, 18%);
+  border: 1px solid var(--site-card-border);
   border-radius: 0.75rem;
   padding: 1rem;
 }
@@ -618,7 +630,7 @@ body {
     left: 50%;
     transform: translateX(-50%);
     width: 1px;
-    background-color: hsl(0, 0%, 20%);
+    background-color: var(--site-border);
     pointer-events: none;
   }
 
@@ -636,7 +648,7 @@ body {
   position: relative;
   margin: 0;
   padding-left: 1.75rem;
-  border-left: 2px solid hsl(0, 0%, 20%);
+  border-left: 2px solid var(--site-border);
 }
 
 .timeline li {
@@ -650,15 +662,15 @@ body {
   top: 0.45rem;
   width: 10px;
   height: 10px;
-  background-color: hsl(0, 0%, 98%);
+  background-color: var(--site-foreground);
   border-radius: 50%;
-  box-shadow: 0 0 0 3px hsl(0, 0%, 20%);
+  box-shadow: 0 0 0 3px var(--site-border);
 }
 
 .t-content .t-title {
   font-size: 1rem;
   font-weight: 600;
-  color: hsl(0, 0%, 98%);
+  color: var(--site-foreground);
   margin-bottom: 0.25rem;
 }
 
@@ -678,7 +690,7 @@ body {
 }
 
 .help-section {
-  border-bottom: 1px solid hsl(0, 0%, 20%);
+  border-bottom: 1px solid var(--site-border);
   padding-bottom: 1rem;
 }
 
@@ -690,7 +702,7 @@ body {
 .help-title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: hsl(0, 0%, 98%);
+  color: var(--site-foreground);
   margin-bottom: 0.5rem;
 }
 
@@ -793,7 +805,7 @@ body {
 
 .stat-card {
     background: linear-gradient(180deg, hsl(0, 0%, 15%), hsl(0, 0%, 10%));
-    border: 1px solid hsl(0, 0%, 20%);
+    border: 1px solid var(--site-border);
     border-radius: 0.75rem;
     padding: 1.5rem;
     text-align: center;
@@ -823,11 +835,169 @@ body {
 .stat-number {
     font-size: 3rem;
     font-weight: 700;
-    color: hsl(0, 0%, 98%);
+    color: var(--site-foreground);
     margin-bottom: 0.5rem;
 }
 
 .stat-description {
     color: hsl(0, 0%, 55%);
     font-size: 0.875rem;
+}
+
+/* Support and legal pages share the landing page's type, palette and chrome. */
+.document-page {
+  width: 100%;
+  margin: 0 auto;
+  padding: clamp(2.5rem, 6vw, 4.5rem) 1.5rem;
+  color: hsl(0, 0%, 75%);
+  overflow-wrap: anywhere;
+}
+
+.support-page {
+  max-width: 1008px;
+}
+
+.legal-page {
+  max-width: 816px;
+  line-height: 1.8;
+}
+
+.document-page .page-header {
+  margin-bottom: 2.5rem;
+}
+
+.document-page .page-title {
+  font-size: clamp(2rem, 5vw, 2.5rem);
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+.document-page .page-subtitle {
+  color: var(--site-muted);
+  font-size: 1rem;
+}
+
+.document-page .page-intro {
+  margin-top: 1.5rem;
+  text-align: left;
+}
+
+.document-page > section + section {
+  margin-top: 1.5rem;
+}
+
+.legal-page > section + section {
+  margin-top: 2rem;
+}
+
+.legal-page > section:not(.document-card) {
+  padding-top: 2rem;
+  border-top: 1px solid var(--site-divider);
+}
+
+.document-page section[id] {
+  scroll-margin-top: 6rem;
+}
+
+.document-card {
+  min-width: 0;
+  padding: 1.75rem;
+  background-color: var(--site-surface);
+  border: 1px solid var(--site-card-border);
+  border-radius: 1rem;
+}
+
+.document-page h2,
+.document-page h3 {
+  color: var(--site-foreground);
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.document-page h2 {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  letter-spacing: -0.015em;
+}
+
+.document-page h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+.document-page p + p,
+.document-page ul + p,
+.document-page p + ul {
+  margin-top: 1rem;
+}
+
+.document-page ul {
+  padding-left: 1.25rem;
+}
+
+.document-page li + li {
+  margin-top: 0.5rem;
+}
+
+.document-page a {
+  color: var(--site-foreground);
+  text-decoration: underline;
+  text-decoration-color: hsl(0, 0%, 45%);
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color 0.2s ease;
+}
+
+.document-page a:hover {
+  text-decoration-color: currentColor;
+}
+
+.document-page a:focus-visible,
+.nav-bar a:focus-visible,
+.site-footer a:focus-visible {
+  outline: 2px solid var(--site-foreground);
+  outline-offset: 5px;
+  border-radius: 2px;
+}
+
+.document-muted {
+  color: var(--site-muted);
+}
+
+.document-notice {
+  padding: 1rem 1.25rem;
+  border-left: 3px solid hsl(0, 0%, 55%);
+  border-radius: 0 0.5rem 0.5rem 0;
+  background-color: var(--site-surface);
+  font-size: 0.9375rem;
+}
+
+.document-toc ul {
+  list-style: none;
+  padding: 0;
+}
+
+.support-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.footer-links a[aria-current="page"] {
+  color: var(--site-foreground);
+}
+
+@media (max-width: 639px) {
+  .document-page {
+    padding-right: 1rem;
+    padding-left: 1rem;
+  }
+
+  .document-card {
+    padding: 1.25rem;
+  }
+
+  .support-grid {
+    grid-template-columns: 1fr;
+  }
 }
