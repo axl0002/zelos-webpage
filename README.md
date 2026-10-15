@@ -3,34 +3,32 @@
 `admin/` is one Node/Next.js deployment serving the existing static landing website
 at `/` and the ranking-review dashboard at `/admin`. The original landing HTML,
 styles, images and fonts are included in `admin/public/`. The existing `site/`
-folder is retained unchanged so Cloudflare can continue serving the current
-static deployment during the transition. A test keeps both copies identical.
+folder is retained as the original static source. A test keeps both copies identical.
 Privacy, Terms, Support, Stats, About and Equipment keep their existing `.html`
 URLs; extensionless versions also work. Shop links still point to the separate
 Shopify store at `https://shop.zelos.club/`; its domain and DNS are unchanged.
 The admin uses only Zelos Supabase (`obnirsfjxcvyyiocwaii`) and published media at
 `media.zelos.club`. The old Firebase admin pages/endpoints have been removed from
-this branch; their source remains in Git. Deployment still requires pushing these
-changes and configuring the Vercel project as described below.
+this branch; their source remains in Git.
 
-## Current hosting and transition
+## Production hosting
 
-The current public landing site is hosted by the `zelos-webpage` Cloudflare Worker,
-with `zelos.club` bound as its custom domain, while the Vercel project
-uses `zelos-webpage.vercel.app`. Cloudflare remains the DNS provider. Pushing this
-branch does not move the custom domain between hosts.
+Vercel serves `https://zelos.club/` and `https://zelos.club/admin` from the `main`
+branch, using project `zelos-webpage`, root directory `admin`, and the Next.js
+preset. Cloudflare remains the DNS provider. The former Cloudflare Worker and
+its domain binding are no longer present; there is no Pages deployment.
 
-Until the domain is connected to Vercel, use
-`ADMIN_ORIGIN=https://zelos-webpage.vercel.app` for deployments served from that
-hostname. After a successful Vercel deployment, add `zelos.club` (and `www` if
-used) to that project and use the exact DNS records Vercel provides. Set the
-production `ADMIN_ORIGIN` to `https://zelos.club` and redeploy for the cutover.
-Also add `support.zelos.club`, currently a CNAME to the apex, to the Vercel project.
-The application redirects that hostname to `https://zelos.club/support`.
-Keep Shopify, media, CDN, email, and other unrelated DNS records unchanged.
-The supplied DNS export omits the apex record managed by the Worker binding.
-The live DNS has a read-only, proxied `AAAA 100::` record for this binding; detach
-the Worker custom domain only when the Vercel deployment is ready for cutover.
+`www.zelos.club` redirects to the apex. `support.zelos.club` is also a production
+project domain and redirects to `https://zelos.club/support`. All three domains
+have HTTPS. The apex A records and the two subdomain CNAME records are DNS-only
+and use Vercel's recommended values. Shopify, media, CDN, email, and other
+unrelated DNS records were preserved.
+
+Production uses `ADMIN_ORIGIN=https://zelos.club`. The public Supabase URL and
+anon key are configured in Vercel for production, preview, and development;
+preview requests use their own origin. Supabase Auth allows the production
+`/admin/auth/callback` URL while retaining the mobile and localhost callbacks.
+Use the custom domain for production admin reviews.
 
 ## Run the admin locally
 
@@ -162,7 +160,7 @@ npm run build
 npm audit
 ```
 
-Validation completed: 68 isolated UI/API/configuration tests, TypeScript and an
+Validation completed: 71 isolated UI/API/configuration tests, TypeScript and an
 optimized build. Isolated production HTTP checks also verified 35 public
 routes/assets against their original bytes, anonymous admin redirects, and
 unauthenticated API rejection. Tests cover password login, non-admin rejection,
