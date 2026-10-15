@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="assets/z_app_icon.png">
+    <link rel="apple-touch-icon" href="assets/z_app_icon.png">
+    <title>Stats - Zelos Calisthenics App</title>
+    <meta name="description" content="Real-time statistics and insights into the Zelos calisthenics community.">
+
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <img src="assets/z_app_icon.png" alt="Zelos icon" class="logo-img">
+            </a>
+
+            <div class="nav-links">
+                <a href="stats.html" class="nav-button">Stats</a>
+                <a href="https://shop.zelos.club/" class="nav-button">Shop</a>
+                <!-- <a href="equipment.html" class="nav-button">Equipment</a> -->
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <p class="page-subtitle">Real-time insights into the Zelos community</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-title">Total Users</h3>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number" id="totalUserCount"></div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-title">Skills uploaded</h3>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number" id="totalSkillCount"></div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-title">Votes casted</h3>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number" id="totalVoteCount"></div>
+                </div>
+            </div>
+        </div>
+        <div class="page-header">
+            <p class="page-subtitle" id="updated"></p>
+            <p class="page-subtitle" id="note"></p>
+        </div>
+    </main>
+
+
+    <script type="module">
+        // Firebase v10 (modular) CDN imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // --- replace these with your real config values (safe to expose) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbDf2XYrRSW9X7LNqEsXS2Y4hX480BVrM",
+            authDomain: "zelos-prod.firebaseapp.com",
+            projectId: "zelos-prod",
+            storageBucket: "zelos-prod.firebasestorage.app",
+            messagingSenderId: "462185352306",
+            appId: "1:462185352306:web:74e259c44aabfc4a9b46eb",
+            measurementId: "G-1MK1Q9G8LB"
+        };
+
+        // Your reCAPTCHA v3 **site key** (public)
+        const RECAPTCHA_SITE_KEY = "6LfGBc8rAAAAAGEpdmhwno-b83rJ9t8msAjZc_D7";
+
+        // Init app
+        const app = initializeApp(firebaseConfig);
+
+        // IMPORTANT: Initialize App Check BEFORE using Firestore
+        initializeAppCheck(app, {
+            provider: new ReCaptchaV3Provider(RECAPTCHA_SITE_KEY),
+            isTokenAutoRefreshEnabled: true,
+        });
+
+        // Now Firestore
+        const db = getFirestore(app);
+
+        const totalUserCountEl = document.getElementById("totalUserCount");
+        const totalSkillCountEl = document.getElementById("totalSkillCount");
+        const totalVoteCountEl = document.getElementById("totalVoteCount");
+        const updatedEl = document.getElementById("updated");
+        const noteEl = document.getElementById("note");
+
+        function fmtNow() {
+            return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date());
+        }
+
+        // Direct doc read (rules allow get; do not query the collection)
+        const ref = doc(db, "meta", "appStats");
+
+        onSnapshot(ref, (snap) => {
+            const data = snap.data();
+            if (data) {
+                if (typeof data.userCount !== "number") {
+                    totalUserCountEl.textContent = "—";
+                    updatedEl.innerHTML = '<span class="error">No data found at meta/appStats</span>';
+                } else {
+                    totalUserCountEl.textContent = data.userCount.toLocaleString();
+                }
+
+                if (typeof data.totalSkillCount !== "number") {
+                    totalSkillCountEl.textContent = "—";
+                    updatedEl.innerHTML = '<span class="error">No data found at meta/appStats</span>';
+                } else {
+                    totalSkillCountEl.textContent = data.totalSkillCount.toLocaleString();
+                }
+
+                if (typeof data.totalVoteCount !== "number") {
+                    totalVoteCountEl.textContent = "—";
+                    updatedEl.innerHTML = '<span class="error">No data found at meta/appStats</span>';
+                } else {
+                    totalVoteCountEl.textContent = data.totalVoteCount.toLocaleString();
+                }
+            }
+            updatedEl.textContent = `Updated ${fmtNow()}`;
+            noteEl.textContent = ""; // clear any previous warnings
+        }, (err) => {
+            console.error(err);
+            totalUserCountEl.textContent = "—";
+            totalSkillCountEl.textContent = "—";
+            updatedEl.innerHTML = `<span class="error">${err.code || "Error"}: ${err.message}</span>`;
+            noteEl.textContent = "If App Check is enforced, ensure this domain is allowed and App Check is initialized before Firestore.";
+        });
+    </script>
+</body>
+
+</html>

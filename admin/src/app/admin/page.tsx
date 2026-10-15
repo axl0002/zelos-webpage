@@ -19,7 +19,7 @@ export default async function AdminHome() {
       </main>
     );
   if (auth.response)
-    redirect(auth.response.status === 401 ? "/login" : "/login?error=access");
+    redirect(auth.response.status === 401 ? "/admin/login" : "/admin/login?error=access");
   return (
     <ReviewDashboard
       boards={auth.context!.boards}

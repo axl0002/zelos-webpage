@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock("../src/lib/supabase/client", () => ({ browserClient: () => mocks }));
 vi.mock("next/navigation", () => ({ useRouter: () => mocks }));
-import Login from "../src/app/login/page";
+import Login from "../src/app/admin/login/page";
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.auth.signInWithPassword.mockResolvedValue({ error: null });
@@ -28,7 +28,7 @@ it("signs in using password and checks admin role before navigation", async () =
     "password",
   );
   await submit();
-  await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith("/"));
+  await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith("/admin"));
   expect(mocks.auth.signInWithPassword).toHaveBeenCalledWith({
     email: "admin@example.test",
     password: "test-password",

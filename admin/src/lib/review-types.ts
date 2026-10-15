@@ -45,7 +45,7 @@ export type Candidate = {
   value: number | null;
   note: string;
   reviewed_at: string | null;
-  result: { active: boolean } | null;
+  result: { active: boolean; automatic?: boolean } | null;
 };
 export type QueuePage = {
   items: Candidate[];
@@ -54,6 +54,8 @@ export type QueuePage = {
 export type Decision = {
   post_id: string;
   revision: number;
+  // The existing RPC calls a terminal ranking rejection "skip". Keep its
+  // wire value compatible; the dashboard presents it as "Reject ranking".
   decision: "approve" | "skip";
   board_id: string | null;
   value: number | null;

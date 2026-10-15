@@ -1,11 +1,34 @@
 # Zelos website
 
-`site/` is the existing static landing website. `admin/` is a separate Node/Next.js
-application mounted at `/admin` for reviewing copied training clips for rankings.
+`admin/` is one Node/Next.js deployment serving the existing static landing website
+at `/` and the ranking-review dashboard at `/admin`. The original landing HTML,
+styles, images and fonts are included in `admin/public/`. The existing `site/`
+folder is retained unchanged so Cloudflare can continue serving the current
+static deployment during the transition. A test keeps both copies identical.
+Privacy, Terms, Support, Stats, About and Equipment keep their existing `.html`
+URLs; extensionless versions also work. Shop links still point to the separate
+Shopify store at `https://shop.zelos.club/`; its domain and DNS are unchanged.
 The admin uses only Zelos Supabase (`obnirsfjxcvyyiocwaii`) and published media at
 `media.zelos.club`. The old Firebase admin pages/endpoints have been removed from
-this branch; their source remains in Git. The public landing site's existing
-files and production hosting have not been changed.
+this branch; their source remains in Git. Deployment still requires pushing these
+changes and configuring the Vercel project as described below.
+
+## Current hosting and transition
+
+The current public landing site is hosted on Cloudflare, while the Vercel project
+uses `zelos-webpage.vercel.app`. Cloudflare remains the DNS provider. Pushing this
+branch does not move the custom domain between hosts.
+
+Until the domain is connected to Vercel, use
+`ADMIN_ORIGIN=https://zelos-webpage.vercel.app` for deployments served from that
+hostname. After a successful Vercel deployment, add `zelos.club` (and `www` if
+used) to that project and use the exact DNS records Vercel provides. Set the
+production `ADMIN_ORIGIN` to `https://zelos.club` and redeploy for the cutover.
+Also preserve `support.zelos.club`, currently a CNAME to the apex, by configuring
+that hostname on Vercel to redirect to `https://zelos.club/support` at cutover.
+Keep Shopify, media, CDN, email, and other unrelated DNS records unchanged.
+The supplied DNS export has no apex A/AAAA/CNAME record, so check the live
+Cloudflare DNS and Pages/Workers domain bindings before changing its routing.
 
 ## Run the admin locally
 
@@ -19,31 +42,22 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open **http://localhost:3004/admin**. Development assets use `.next-dev/`;
+Open **http://localhost:3004/** for the landing page or
+**http://localhost:3004/admin** for the dashboard. Development assets use `.next-dev/`;
 production builds use `.next/`, so a build does not overwrite the active dev
 server's styles or script chunks. Keep `.env.local` out of Git. Only the public
 Supabase URL/key and the application origin are needed.
 
-The landing site remains independently served at `/`. Every request beginning
-with `/admin` (including `/admin/_next`, `/admin/api`, and `/admin/auth`) must be
-forwarded to the Node process **without stripping the `/admin` prefix**.
-`next.config.js` owns that base path. Example reverse-proxy location:
-
-```nginx
-location /admin {
-    proxy_pass http://127.0.0.1:3004;
-    proxy_http_version 1.1;
-    proxy_set_header Host $host;
-    proxy_set_header X-Forwarded-Proto $scheme;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-}
-```
+The Next.js router owns `/admin`, `/admin/api`, and `/admin/auth`; there is no
+global `basePath`. Static landing pages and assets are served from the root,
+including `/assets`, `/fonts`, and `/styles.css`. Session middleware and private
+cache headers apply only to `/admin` routes. The public site retains its existing
+HTML metadata and runs without Supabase session checks.
 
 For hosted deployment, set `ADMIN_ORIGIN` to the exact HTTPS origin, add its
-`/admin/auth/callback` URL to Supabase Auth's redirect allow-list, build with the
-public Supabase environment, and run the Node app behind HTTPS. Public deployment
-and hosting changes have not been performed. Do not cache authenticated responses
-in a reverse proxy/CDN.
+`/admin/auth/callback` URL to Supabase Auth's redirect allow-list, and deploy the
+whole `admin/` app behind HTTPS. Do not cache authenticated responses in a reverse
+proxy/CDN.
 
 ## Authentication and authorization
 
@@ -80,28 +94,40 @@ actions require authorization.
 For Vercel, configure the project root as `admin`, use the Next.js framework
 preset, and set the three variables in `admin/.env.example` for each deployment
 environment. `ADMIN_ORIGIN` must match that environment's exact HTTPS origin,
-without a path or trailing slash. Configure routing separately if the landing
-site and admin app use different hosting projects. A Git push alone does not set
-environment variables or route the landing site's `/admin` path.
+without a path or trailing slash (`https://zelos.club` after the domain cutover).
+Assign `zelos.club` to this project at cutover: the build includes both public pages and
+the dashboard, so a second admin project or reverse proxy is unnecessary. Keep
+the existing `shop.zelos.club` DNS records pointing to Shopify. A Git push alone
+does not set environment variables or domain assignments.
 
 ## Review workflow
 
 1. **Scan training clips** reads bounded batches of eligible, already-imported
    Supabase posts. It matches exercise names/variants in title and description,
    plus retained structured exercise tags. Generic mentions can suggest several
-   exercises. Suggestions are intentionally candidates, not classifications.
+   exercises. Candidates whose title or description contains `assist`, `assisted`,
+   `assit`, `band`, `bands`, or `banded` are automatically rejected for ranking.
+   Matching ignores case and handles separators such as `band-assisted`, while
+   keeping words such as `unassisted` distinct. Automatic rejections save the
+   matched words in review history and leave the post as Training. Completed
+   decisions are preserved. The scan reports elapsed time and rejection totals.
 2. Select a clip and watch it. The video uses 720p first, then smaller/other
    renditions, then the original, with fallback on playback errors. Only the
-   selected video loads metadata. Use the speed control to inspect reps/form.
+   selected video loads and autoplays muted. Use the player controls for sound
+   and the speed control to inspect reps/form.
 3. Choose the exercise and active progression. **The result starts blank.** Count
-   completed reps or whole hold seconds from the video. Add notes/timestamps.
-4. Click **Approve ranking** and confirm approval in the dialog. If the athlete
+   completed reps or whole hold seconds from the video. Notes/timestamps are optional.
+4. Click **Approve ranking** to save the review immediately. If the athlete
    already has a current entry, it is preserved unless the reviewer explicitly
    chooses replacement.
-5. Skip unsuitable clips with a reason. Skipped posts remain training clips.
-   Approved/Skipped filters provide read-only decision history. Rescanning never
+5. Click **Reject ranking** to save a rejection immediately; notes are optional.
+   Rejected clips remain training posts.
+   Approved/Rejected filters provide read-only decision history. Rescanning never
    resets completed decisions. Editing a completed decision is deliberately not
    exposed; correct fields before approval.
+6. Each successful decision immediately opens the next buffered clip. The queue
+   refills in the background and keeps the current video and inputs mounted.
+   Failed saves preserve the current clip and inputs for retry.
 
 No automated scan changes a post type or leaderboard result. The scan excludes
 banned/held/deleted users, removed/hidden/deleted/unpublished posts, already-ranked
@@ -134,10 +160,13 @@ npm run build
 npm audit
 ```
 
-Validation completed: 34 isolated UI/API/configuration tests, 355 isolated SQL
-assertions in the backend repository, TypeScript and optimized build, and zero
-dependency audit findings. Tests cover password login, non-admin rejection,
+Validation completed: 68 isolated UI/API/configuration tests, TypeScript and an
+optimized build. Isolated production HTTP checks also verified 35 public
+routes/assets against their original bytes, anonymous admin redirects, and
+unauthenticated API rejection. Tests cover password login, non-admin rejection,
 temporary Auth failures, review-input preservation and real Supabase SSR clients
-with mocked HTTP, including chunked cookie refresh propagation. Backend/API checks
+with mocked HTTP, including chunked cookie refresh propagation. Landing-route
+tests check existing HTML links, Shopify destinations, assets and session
+middleware boundaries without executing public page scripts. Backend/API checks
 confirm unauthenticated private-data requests return 401 and cross-origin
 mutations return 403. No live UI tests are required or run.

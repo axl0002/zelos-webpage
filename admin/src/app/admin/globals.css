@@ -505,6 +505,16 @@ textarea {
 .notice.error {
   background: #fcf0ef;
 }
+.rejection-guidance h3 {
+  color: var(--ink);
+}
+.rejection-guidance ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+.rejection-guidance li + li {
+  margin-top: 3px;
+}
 .decision-actions {
   display: flex;
   gap: 8px;

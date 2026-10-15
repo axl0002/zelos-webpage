@@ -33,39 +33,56 @@ export default function ReviewDashboard({
     [search, setSearch] = useState("");
   const [cursor, setCursor] = useState<string | null>(null),
     [history, setHistory] = useState<(string | null)[]>([]);
-  const [page, setPage] = useState<QueuePage | null>(null),
-    [selected, setSelected] = useState<string | null>(null);
+  const [{ page, selected }, setQueue] = useState<{
+    page: QueuePage | null;
+    selected: string | null;
+  }>({ page: null, selected: null });
   const [loading, setLoading] = useState(true),
     [error, setError] = useState(""),
     [notice, setNotice] = useState("");
-  const [refresh, setRefresh] = useState(0),
+  const [refresh, setRefresh] = useState({ revision: 0, background: false }),
+    [refreshing, setRefreshing] = useState(false),
     [scanning, setScanning] = useState(false),
     [scanProgress, setScanProgress] = useState("");
   const scanAbort = useRef<AbortController | null>(null);
+  const loadedQuery = useRef<string | null>(null);
+  const queryEpoch = useRef(0);
+  function reload(background = false) {
+    queryEpoch.current++;
+    setRefresh((v) => ({ revision: v.revision + 1, background }));
+  }
   const exercises = [
     ...new Map(boards.map((b) => [b.exercise_id, b.exercise_name])).entries(),
   ];
   useEffect(() => () => scanAbort.current?.abort(), []);
   useEffect(() => {
     const abort = new AbortController();
-    setLoading(true);
-    setError("");
+    const epoch = ++queryEpoch.current;
+    const current = () => !abort.signal.aborted && epoch === queryEpoch.current;
     const q = new URLSearchParams({ status, exercise, q: search });
     if (cursor) q.set("after", cursor);
+    setLoading(!refresh.background || loadedQuery.current !== q.toString());
+    setRefreshing(true);
+    setError("");
     api<QueuePage>(`review?${q}`, undefined, abort.signal)
       .then((data) => {
-        setPage(data);
-        setSelected((old) =>
-          data.items.slice(0, 20).some((c) => c.post_id === old)
-            ? old
+        if (!current()) return;
+        loadedQuery.current = q.toString();
+        setQueue((old) => ({
+          page: data,
+          selected: data.items.slice(0, 20).some((c) => c.post_id === old.selected)
+            ? old.selected
             : data.items[0]?.post_id || null,
-        );
+        }));
       })
       .catch((e) => {
-        if (!abort.signal.aborted) setError(e.message);
+        if (current()) setError(e.message);
       })
       .finally(() => {
-        if (!abort.signal.aborted) setLoading(false);
+        if (current()) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       });
     return () => abort.abort();
   }, [status, exercise, search, cursor, refresh]);
@@ -73,7 +90,8 @@ export default function ReviewDashboard({
     action();
     setCursor(null);
     setHistory([]);
-    setSelected(null);
+    setQueue((old) => ({ ...old, selected: null }));
+    reload();
   }
   async function scan() {
     const abort = new AbortController();
@@ -81,46 +99,73 @@ export default function ReviewDashboard({
     setScanning(true);
     setError("");
     setNotice("");
+    const started = performance.now();
     let after: string | null = null,
       scanned = 0,
-      queued = 0;
+      queued = 0,
+      rejected = 0;
     try {
       while (true) {
         const result: {
           cursor: string | null;
           scanned: number;
           queued: number;
+          auto_rejected?: number;
           has_more: boolean;
         } = await api("review/scan", { after }, abort.signal);
         scanned += result.scanned;
         queued += result.queued;
+        rejected += result.auto_rejected ?? 0;
         setScanProgress(
-          `${scanned.toLocaleString()} clips checked · ${queued.toLocaleString()} candidates added or refreshed`,
+          `${scanned.toLocaleString()} clips checked · ${queued.toLocaleString()} candidates added or refreshed · ${rejected.toLocaleString()} automatically rejected`,
         );
         if (!result.has_more) break;
         after = result.cursor;
       }
       setNotice(
-        `Scan complete. ${scanned.toLocaleString()} imported training clips checked; ${queued.toLocaleString()} candidates added or refreshed. No rankings were changed.`,
+        `Scan complete in ${((performance.now() - started) / 1000).toFixed(1)}s. ${scanned.toLocaleString()} imported training clips checked; ${queued.toLocaleString()} candidates added or refreshed; ${rejected.toLocaleString()} automatically rejected for assistance keywords.`,
       );
     } catch (e) {
       if (!abort.signal.aborted) setError((e as Error).message);
     } finally {
       if (!abort.signal.aborted) {
         setScanning(false);
-        setRefresh((v) => v + 1);
+        reload(true);
       }
     }
   }
-  const saved = useCallback((action: string, active: boolean) => {
+  const saved = useCallback((postId: string, action: string, active: boolean) => {
+    // Invalidate older responses immediately, before React runs effect cleanup.
+    queryEpoch.current++;
     setNotice(
       action === "skip"
-        ? "Clip skipped. The original post is unchanged."
+        ? "Ranking rejected. The clip remains a training post."
         : active
           ? "Approved and added to the athlete’s leaderboard."
           : "Approved as a ranked clip. The athlete’s current leaderboard entry was preserved.",
     );
-    setRefresh((v) => v + 1);
+    setQueue((old) => {
+      if (!old.page) return old;
+      const index = old.page.items.findIndex((c) => c.post_id === postId && c.status === "pending");
+      if (index < 0) return old;
+      const items = old.page.items.filter((c) => c.post_id !== postId);
+      const completedStatus = action === "approve" ? "approved" : "skipped";
+      return {
+        page: {
+          ...old.page,
+          items,
+          stats: {
+            ...old.page.stats,
+            pending: Math.max(0, old.page.stats.pending - 1),
+            [completedStatus]: old.page.stats[completedStatus] + 1,
+          },
+        },
+        selected: old.selected === postId
+          ? (items[index] ?? items[0])?.post_id ?? null
+          : old.selected,
+      };
+    });
+    setRefresh((v) => ({ revision: v.revision + 1, background: true }));
   }, []);
   const candidate = page?.items
     .slice(0, 20)
@@ -185,7 +230,7 @@ export default function ReviewDashboard({
             {error}{" "}
             <button
               className="button text"
-              onClick={() => setRefresh((v) => v + 1)}
+              onClick={() => reload(true)}
             >
               Retry
             </button>
@@ -203,7 +248,7 @@ export default function ReviewDashboard({
                   ? "Awaiting review"
                   : key === "approved"
                     ? "Approved"
-                    : "Skipped"}
+                    : "Rejected"}
               </span>
               <strong>{page ? page.stats[key].toLocaleString() : "—"}</strong>
             </button>
@@ -215,7 +260,7 @@ export default function ReviewDashboard({
               ? "Review queue"
               : status === "approved"
                 ? "Approved clips"
-                : "Skipped clips"}
+                : "Rejected rankings"}
           </h2>
           <div className="filter-controls">
             <select
@@ -248,7 +293,7 @@ export default function ReviewDashboard({
             </form>
             <button
               className="button secondary"
-              onClick={() => setRefresh((v) => v + 1)}
+              onClick={() => reload()}
               disabled={loading}
             >
               Refresh
@@ -268,7 +313,7 @@ export default function ReviewDashboard({
                 <button
                   key={c.post_id}
                   className={`candidate ${selected === c.post_id ? "selected" : ""}`}
-                  onClick={() => setSelected(c.post_id)}
+                  onClick={() => setQueue((old) => ({ ...old, selected: c.post_id }))}
                 >
                   {c.poster_url ? (
                     <img src={c.poster_url} alt="" loading="lazy" />
@@ -288,7 +333,7 @@ export default function ReviewDashboard({
             ) : (
               <div className="empty">
                 <span>✓</span>
-                <h3>No clips in this view</h3>
+                <h3>{refreshing ? "Loading next clips…" : "No clips in this view"}</h3>
                 <p>
                   Try another filter or scan the copied training clips for more
                   candidates.
@@ -327,11 +372,11 @@ export default function ReviewDashboard({
                 key={`${candidate.post_id}:${candidate.revision}`}
                 candidate={candidate}
                 boards={boards}
-                onSaved={saved}
+                onSaved={(action, active) => saved(candidate.post_id, action, active)}
               />
             ) : (
               <div className="empty">
-                <h3>A little attention. A fairer ranking.</h3>
+                <h3>{refreshing ? "Loading next clip…" : "A little attention. A fairer ranking."}</h3>
                 <p>
                   Select a clip to watch it and check its exercise, progression
                   and result.
@@ -388,8 +433,7 @@ export function CandidateReview({
     [note, setNote] = useState(c.note || "");
   const [replace, setReplace] = useState(false);
   const [busy, setBusy] = useState(false),
-    [error, setError] = useState(""),
-    [confirm, setConfirm] = useState<"approve" | "skip" | null>(null);
+    [error, setError] = useState("");
   const [source, setSource] = useState(0);
   const urls = mediaUrls(c);
   const video = useRef<HTMLVideoElement>(null);
@@ -417,20 +461,20 @@ export function CandidateReview({
     setValue("");
     setReplace(false);
   }
-  async function decide() {
-    if (!confirm || busy) return;
+  async function decide(action: Decision["decision"]) {
+    if (busy || !editable || (action === "approve" && !valid)) return;
     setBusy(true);
     setError("");
     const decision: Decision = {
       post_id: c.post_id,
       revision: c.revision,
-      decision: confirm,
-      board_id: confirm === "approve" ? boardId : null,
-      value: confirm === "approve" ? numeric : null,
+      decision: action,
+      board_id: action === "approve" ? boardId : null,
+      value: action === "approve" ? numeric : null,
       note,
-      // The final approval dialog confirms the review for the existing API.
-      watched: confirm === "approve",
-      replace_current: confirm === "approve" && !!current && replace,
+      // Clicking Approve ranking confirms the review for the existing API.
+      watched: action === "approve",
+      replace_current: action === "approve" && !!current && replace,
     };
     try {
       const result = await api<{ active: boolean }>(
@@ -438,11 +482,9 @@ export function CandidateReview({
         decision,
       );
       video.current?.pause();
-      onSaved(confirm, result.active);
-      setConfirm(null);
+      onSaved(action, result.active);
     } catch (e) {
       setError((e as Error).message);
-      setConfirm(null);
     } finally {
       setBusy(false);
     }
@@ -457,7 +499,11 @@ export function CandidateReview({
           <h2>{c.title || "Untitled clip"}</h2>
         </div>
         <span className="badge">
-          {c.status === "pending" ? "Needs a human check" : c.status}
+          {c.status === "pending"
+            ? "Needs a human check"
+            : c.status === "skipped"
+              ? "Rejected"
+              : "Approved"}
         </span>
       </div>
       <div className="clip-grid">
@@ -470,13 +516,15 @@ export function CandidateReview({
                 src={urls[source]}
                 poster={c.poster_url || undefined}
                 controls
+                autoPlay
+                muted
                 playsInline
-                preload="metadata"
+                preload="auto"
                 onError={() => setSource((s) => s + 1)}
               />
             ) : (
               <p role="alert">
-                Video unavailable. Skip this clip or try again later.
+                Video unavailable. Try again later, or reject its ranking.
               </p>
             )}
           </div>
@@ -526,7 +574,7 @@ export function CandidateReview({
           {!editable ? (
             <div className="notice">
               <h3>
-                {c.status === "approved" ? "Approved ranking" : "Skipped"}
+                {c.status === "approved" ? "Approved ranking" : c.result?.automatic ? "Automatically rejected" : "Ranking rejected"}
               </h3>
               <p>
                 {boards.find((b) => b.id === c.board_id)?.name} {c.value ?? ""}
@@ -619,14 +667,14 @@ export function CandidateReview({
                 </div>
               )}
               <label htmlFor="notes">
-                Review notes <span className="muted">(required to skip)</span>
+                Review notes <span className="muted">(optional)</span>
               </label>
               <textarea
                 id="notes"
                 maxLength={1000}
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="Useful timestamps, form notes, or a reason to skip…"
+                placeholder="Useful timestamps, form notes, or a reason to reject the ranking…"
                 disabled={busy}
               />
               {error && (
@@ -634,22 +682,32 @@ export function CandidateReview({
                   {error}
                 </p>
               )}
+              <div className="rejection-guidance small muted">
+                <h3>Common reasons to reject</h3>
+                <ul>
+                  <li>Compilation of clips (single clip submissions only)</li>
+                  <li>Video speed has been adjusted</li>
+                  <li>Assisted exercise (using bands)</li>
+                  <li>Bad form</li>
+                </ul>
+              </div>
               <div className="decision-actions">
                 <button
                   className="button secondary"
-                  disabled={busy || !note.trim()}
-                  onClick={() => setConfirm("skip")}
+                  disabled={busy}
+                  onClick={() => decide("skip")}
                 >
-                  Skip clip
+                  Reject ranking
                 </button>
                 <button
                   className="button primary"
                   disabled={busy || !valid}
-                  onClick={() => setConfirm("approve")}
+                  onClick={() => decide("approve")}
                 >
                   Approve ranking ↗
                 </button>
               </div>
+              {busy && <p role="status" className="small muted">Saving review…</p>}
               <p className="small muted">
                 Results are never inferred from the description. One clip can
                 rank in one exercise.
@@ -658,55 +716,6 @@ export function CandidateReview({
           )}
         </div>
       </div>
-      {confirm && (
-        <div className="dialog-backdrop">
-          <section
-            className="dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="confirm-title"
-          >
-            <h2 id="confirm-title">
-              {confirm === "approve"
-                ? "Approve this ranking?"
-                : "Skip this clip?"}
-            </h2>
-            <p>
-              {confirm === "approve"
-                ? `${board?.name} · ${numeric}${board?.metric === "seconds" ? "s" : " reps"} for ${c.username}.`
-                : "The clip stays a training post. Your reason is saved in the review history."}
-            </p>
-            {confirm === "approve" && current && (
-              <p className="warning">
-                {replace
-                  ? "This will replace the athlete’s current entry for this exercise."
-                  : "Their current leaderboard entry will be preserved."}
-              </p>
-            )}
-            <div className="decision-actions">
-              <button
-                autoFocus
-                className="button secondary"
-                onClick={() => setConfirm(null)}
-                disabled={busy}
-              >
-                Cancel
-              </button>
-              <button
-                className="button primary"
-                onClick={decide}
-                disabled={busy}
-              >
-                {busy
-                  ? "Saving…"
-                  : confirm === "approve"
-                    ? "Confirm approval"
-                    : "Confirm skip"}
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
     </article>
   );
 }

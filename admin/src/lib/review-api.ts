@@ -42,7 +42,6 @@ export function parseDecision(value: unknown): Decision | null {
     d.decision === "skip" &&
     (d.board_id !== null ||
       d.value !== null ||
-      !d.note.trim() ||
       d.replace_current)
   )
     return null;
@@ -60,7 +59,9 @@ export function rpcFailure(error: { code?: string; message?: string }) {
     hold_too_short:
       "The video must be at least one second longer than the claimed hold.",
     video_review_required: "Confirm that you watched and checked the clip.",
-    skip_reason_required: "Add a reason for skipping this clip.",
+    invalid_decision: "Check the review details and try again.",
+    assisted_exercise_not_eligible:
+      "This clip mentions assistance and is not eligible for ranking. Scan the queue to apply the automatic rejection.",
     admin_required: "This account does not have admin access.",
   };
   return NextResponse.json(

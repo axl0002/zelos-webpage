@@ -7,13 +7,25 @@ module.exports = (phase) => {
   return {
     // Keep validation builds from replacing the running dev server’s CSS/chunks.
     distDir: phase === PHASE_DEVELOPMENT_SERVER ? ".next-dev" : ".next",
-    basePath: "/admin",
     output: "standalone",
     poweredByHeader: false,
+    async rewrites() {
+      return [
+        { source: "/", destination: "/index.html" },
+        ...["about", "support", "stats", "equipment"].map((page) => ({
+          source: `/${page}`,
+          destination: `/${page}.html`,
+        })),
+        ...["privacy", "terms"].flatMap((page) => [
+          { source: `/${page}`, destination: `/legal/${page}.html` },
+          { source: `/legal/${page}`, destination: `/legal/${page}.html` },
+        ]),
+      ];
+    },
     async headers() {
       return [
         {
-          source: "/:path*",
+          source: "/admin/:path*",
           headers: [
             { key: "X-Frame-Options", value: "DENY" },
             { key: "X-Content-Type-Options", value: "nosniff" },

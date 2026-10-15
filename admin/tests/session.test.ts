@@ -12,7 +12,7 @@ vi.mock("next/headers", () => ({
   }),
 }));
 import { middleware } from "../src/middleware";
-import { POST as decide } from "../src/app/api/review/decision/route";
+import { POST as decide } from "../src/app/admin/api/review/decision/route";
 
 const project = "https://obnirsfjxcvyyiocwaii.supabase.co";
 const cookieName = "sb-obnirsfjxcvyyiocwaii-auth-token";

@@ -7,9 +7,9 @@ vi.mock("../src/lib/supabase/server", () => ({
   serverClient: async () => client,
 }));
 import { requireAdmin } from "../src/lib/require-admin";
-import { GET } from "../src/app/api/review/route";
-import { POST as scan } from "../src/app/api/review/scan/route";
-import { POST as decide } from "../src/app/api/review/decision/route";
+import { GET } from "../src/app/admin/api/review/route";
+import { POST as scan } from "../src/app/admin/api/review/scan/route";
+import { POST as decide } from "../src/app/admin/api/review/decision/route";
 beforeEach(() => {
   vi.resetAllMocks();
   delete process.env.ADMIN_ORIGIN;
@@ -25,6 +25,21 @@ const request = (
     body: JSON.stringify(body),
   });
 describe("server authorization", () => {
+  it("sends an empty optional rejection note to the RPC without inventing a reason", async () => {
+    client.auth.getUser.mockResolvedValue({ data: { user: { id: "admin" } }, error: null });
+    client.rpc
+      .mockResolvedValueOnce({ data: { boards: [] }, error: null })
+      .mockResolvedValueOnce({ data: { active: false }, error: null });
+    const res = await decide(request("review/decision", {
+      post_id: "clip", revision: 1, decision: "skip", board_id: null,
+      value: null, note: "", watched: false, replace_current: false,
+    }));
+    expect(res.status).toBe(200);
+    expect(client.rpc).toHaveBeenLastCalledWith("admin_decide_rank_candidate", {
+      target_post: "clip", expected_revision: 1, decision: "skip", selected_board: null,
+      measured_value: null, review_note: "", watched_video: false, replace_current: false,
+    });
+  });
   it("retries a temporary identity-check failure before saving an approval once", async () => {
     client.auth.getUser
       .mockResolvedValueOnce({

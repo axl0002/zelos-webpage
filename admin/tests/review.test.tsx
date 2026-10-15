@@ -83,17 +83,23 @@ describe("input boundary", () => {
     expect(parseDecision({ ...decision, revision: 0 })).toBeNull();
     expect(parseDecision(decision)).toEqual(decision);
   });
-  it("requires a reason for a skip and no hidden rank mutation", () => {
+  it("allows optional rejection notes and no hidden rank mutation", () => {
     expect(parseDecision({ ...decision, decision: "skip" })).toBeNull();
-    expect(
-      parseDecision({
+    for (const note of ["", "   ", "No clear set"]) {
+      const rejection = {
         ...decision,
         decision: "skip",
         board_id: null,
         value: null,
-        note: "No clear set",
-      }),
-    ).not.toBeNull();
+        note,
+        watched: false,
+      };
+      expect(parseDecision(rejection)).toEqual(rejection);
+      expect(parseDecision({ ...rejection, replace_current: true })).toBeNull();
+      expect(parseDecision({ ...rejection, board_id: "pull-up" })).toBeNull();
+      expect(parseDecision({ ...rejection, value: 12 })).toBeNull();
+      expect(parseDecision({ ...rejection, note: "x".repeat(1001) })).toBeNull();
+    }
   });
   it("only plays safe R2 URLs and prefers 720p", () => {
     expect(
@@ -121,7 +127,7 @@ describe("input boundary", () => {
     ).toEqual([]);
   });
 });
-it("starts blank and only approves measured reviewed values after confirmation", async () => {
+it("starts blank and saves valid approvals once without a confirmation dialog", async () => {
   const saved = vi.fn();
   const fetch = vi
     .fn()
@@ -137,9 +143,14 @@ it("starts blank and only approves measured reviewed values after confirmation",
   ).toBe(true);
   fireEvent.change(count, { target: { value: "12" } });
   expect(screen.queryByRole("checkbox")).toBeNull();
-  fireEvent.click(screen.getByText("Approve ranking ↗"));
   expect(fetch).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByText("Confirm approval"));
+  fireEvent.click(screen.getByText("Approve ranking ↗"));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect((screen.getByText("Approve ranking ↗") as HTMLButtonElement).disabled).toBe(true);
+  expect((screen.getByText("Reject ranking") as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.click(screen.getByText("Approve ranking ↗"));
+  fireEvent.click(screen.getByText("Reject ranking"));
+  expect(fetch).toHaveBeenCalledTimes(1);
   await waitFor(() => expect(saved).toHaveBeenCalledWith("approve", true));
   expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual(decision);
 });
@@ -163,7 +174,6 @@ it("keeps counts and notes after a server conflict", async () => {
     target: { value: "Checked at 00:05" },
   });
   fireEvent.click(screen.getByText("Approve ranking ↗"));
-  fireEvent.click(screen.getByText("Confirm approval"));
   await screen.findByRole("alert");
   expect(
     (screen.getByLabelText("Completed reps") as HTMLInputElement).value,
@@ -171,6 +181,38 @@ it("keeps counts and notes after a server conflict", async () => {
   expect(
     (screen.getByLabelText(/Review notes/) as HTMLTextAreaElement).value,
   ).toBe("Checked at 00:05");
+});
+it.each(["", "Range of motion is not visible"])("rejects ranking with optional notes %j without submitting a measurement", async (note) => {
+  const saved = vi.fn();
+  const fetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({ active: false }),
+  });
+  vi.stubGlobal("fetch", fetch);
+  render(<CandidateReview candidate={candidate} boards={boards} onSaved={saved} />);
+  expect(screen.queryByRole("button", { name: /skip/i })).toBeNull();
+  const reject = screen.getByRole("button", { name: "Reject ranking" }) as HTMLButtonElement;
+  expect(reject.disabled).toBe(false);
+  fireEvent.change(screen.getByLabelText("Completed reps"), { target: { value: "12" } });
+  fireEvent.change(screen.getByLabelText(/Review notes/), {
+    target: { value: note },
+  });
+  expect(fetch).not.toHaveBeenCalled();
+  fireEvent.click(reject);
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(reject.disabled).toBe(true);
+  fireEvent.click(reject);
+  expect(fetch).toHaveBeenCalledTimes(1);
+  await waitFor(() => expect(saved).toHaveBeenCalledWith("skip", false));
+  expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
+    ...decision,
+    decision: "skip",
+    board_id: null,
+    value: null,
+    note,
+    watched: false,
+    replace_current: false,
+  });
 });
 it("keeps the review after a temporary session-check failure and allows a manual retry", async () => {
   const saved = vi.fn();
@@ -185,14 +227,12 @@ it("keeps the review after a temporary session-check failure and allows a manual
   fireEvent.change(screen.getByLabelText("Completed reps"), { target: { value: "12" } });
   fireEvent.change(screen.getByLabelText(/Review notes/), { target: { value: "Checked at 00:05" } });
   fireEvent.click(screen.getByText("Approve ranking ↗"));
-  fireEvent.click(screen.getByText("Confirm approval"));
   expect((await screen.findByRole("alert")).textContent).toContain("temporarily unavailable");
   expect(saved).not.toHaveBeenCalled();
   expect(fetch).toHaveBeenCalledTimes(1);
   expect((screen.getByLabelText("Completed reps") as HTMLInputElement).value).toBe("12");
   expect((screen.getByLabelText(/Review notes/) as HTMLTextAreaElement).value).toBe("Checked at 00:05");
   fireEvent.click(screen.getByText("Approve ranking ↗"));
-  fireEvent.click(screen.getByText("Confirm approval"));
   await waitFor(() => expect(saved).toHaveBeenCalledWith("approve", true));
   expect(fetch.mock.calls[1][1].body).toBe(fetch.mock.calls[0][1].body);
 });

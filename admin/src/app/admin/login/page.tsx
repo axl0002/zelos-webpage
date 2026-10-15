@@ -46,7 +46,7 @@ export default function Login() {
         return;
       }
       setPassword("");
-      router.replace("/");
+      router.replace("/admin");
       router.refresh();
     } catch {
       setError("Could not connect. Please try again.");

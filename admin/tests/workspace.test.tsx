@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 const mocks = vi.hoisted(() => ({ requireAdmin: vi.fn(), redirect: vi.fn() }));
 vi.mock("../src/lib/require-admin", () => ({ requireAdmin: mocks.requireAdmin }));
 vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
-import AdminHome from "../src/app/page";
+import AdminHome from "../src/app/admin/page";
 afterEach(() => {
   cleanup();
   vi.resetAllMocks();
@@ -20,7 +20,7 @@ it("offers retry instead of sending a signed-in admin to login during an outage"
 });
 
 it.each([
-  [401, "/login"], [403, "/login?error=access"],
+  [401, "/admin/login"], [403, "/admin/login?error=access"],
 ])("still redirects authentication/authorization failure %i", async (status, destination) => {
   mocks.requireAdmin.mockResolvedValue({ response: NextResponse.json({}, { status }) });
   mocks.redirect.mockImplementation(() => { throw new Error("redirect"); });
