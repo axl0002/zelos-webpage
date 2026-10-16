@@ -44,9 +44,6 @@ export default function ScoreWeightTable({
               {exercises.map((exercise) => (
                 <th scope="col" key={exercise}>
                   {exercise}
-                  {boards.some((w) => w.exercise === exercise && w.availability === "coming_soon") && (
-                    <span className="scoring-status">Coming soon</span>
-                  )}
                   <span className="scoring-measure">
                     {boards.find((w) => w.exercise === exercise)!.metric === "seconds"
                       ? "Hold (seconds)"

@@ -192,11 +192,12 @@ exercises are excluded. Data/connection failures show an unavailable state rathe
 than presenting a hardcoded old formula as current.
 
 Weights are finite, non-negative relative values with no ceiling of 100. The
-comparison tables show enabled progressions and explicitly labelled coming-soon
-exercises, with exercises as columns and a shared ascending weight scale including
-empty rows. Coming-soon weights are provisional and cannot earn points; these
-exercises are excluded from the calculator. Disabled progressions are omitted
-from the tables, while the public JSON retains their metadata.
+comparison tables show configured exercises as columns and a shared ascending
+weight scale including empty rows. Upcoming skills are included in the tables
+and hypothetical calculator without status labels; availability is shown only in
+the app, where upcoming exercises cannot be submitted or earn points. Disabled
+progressions are omitted from the tables and calculator, while the public JSON
+retains their metadata.
 
 Weights and configuration come from Supabase on each page request. The public JSON
 may be cached for up to 60 seconds. Configuration/catalogue changes advance the

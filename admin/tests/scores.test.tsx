@@ -73,10 +73,10 @@ it("compares every enabled progression at its weight and excludes disabled progr
     .toEqual(Array.from({ length: 49 }, (_, i) => 10 + i * 5));
   expect(within(push).getByRole("rowheader", { name: "15" }).closest("tr")?.textContent).toBe("15");
   expect(screen.queryByText("Disabled")).toBeNull();
-  expect(screen.getAllByText("Coming soon")).toHaveLength(7);
+  expect(screen.queryByText(/coming soon|coming-soon/i)).toBeNull();
   const pull = screen.getByRole("table", { name: "All pull exercise and progression weights" });
   expect(within(pull).getByRole("rowheader", { name: "250" }).closest("tr")?.textContent).toContain("Full");
-  expect(within(screen.getByLabelText("Exercise / progression")).queryByRole("option", { name: /SAT/ })).toBeNull();
+  expect(within(screen.getByLabelText("Exercise / progression")).getByRole("option", { name: /SAT/ })).toBeTruthy();
   expect(
     screen
       .getByRole("link", { name: /View scoring rules/ })
