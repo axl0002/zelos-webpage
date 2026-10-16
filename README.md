@@ -181,7 +181,7 @@ mutations return 403. No live UI tests are required or run.
 ## Public scoring guide
 
 `https://zelos.club/scoring` is a public Server Component explaining exercise-record
-points, each publicly listed progression weight (including disabled boards), ties,
+points, each enabled progression weight, ties,
 small-board smoothing, discipline totals and worked examples. Its calculator runs
 only in the visitor's browser. It uses the same shared document styles as privacy,
 support and terms. The old `/scores` URLs permanently redirect to `/scoring`. The page and `/scoring/rules.json` read the same
@@ -190,6 +190,13 @@ key. They do not use admin sessions, privileged keys, athlete records or write A
 The RPC takes no parameters and has an explicit field allowlist. Hidden draft
 exercises are excluded. Data/connection failures show an unavailable state rather
 than presenting a hardcoded old formula as current.
+
+Weights are finite, non-negative relative values with no ceiling of 100. The
+comparison tables show enabled progressions and explicitly labelled coming-soon
+exercises, with exercises as columns and a shared ascending weight scale including
+empty rows. Coming-soon weights are provisional and cannot earn points; these
+exercises are excluded from the calculator. Disabled progressions are omitted
+from the tables, while the public JSON retains their metadata.
 
 Weights and configuration come from Supabase on each page request. The public JSON
 may be cached for up to 60 seconds. Configuration/catalogue changes advance the

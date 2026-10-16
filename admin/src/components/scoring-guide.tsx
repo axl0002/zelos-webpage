@@ -112,19 +112,18 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
         <div>
           <h2>2. Exercise and Progression Weights</h2>
           <p>
-            These are the current configured weights for every publicly listed
-            board. Weights express progression difficulty in the scoring system;
+            These are the current weights for enabled progressions and
+            provisional weights for coming-soon exercises.
+            Weights express progression difficulty in the scoring system;
             they are adjustable policy choices, not a scientific measure of
             strength.
           </p>
         </div>
-        <p className="document-muted">
-          {active.length} active boards · {rules.weights.length - active.length}{" "}
-          disabled boards. Disabled boards contribute no points.
-        </p>
         <p>
           Weights run from lowest to highest down the left. Each column is an
           exercise; progressions on the same row have the same weight.
+          Coming-soon exercises do not accept submissions or contribute points
+          until they are released. SAT means straight-arm touch.
         </p>
         <ScoreWeightTable rules={rules} discipline="push" />
         <ScoreWeightTable rules={rules} discipline="pull" />
@@ -271,6 +270,16 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
           <h2>5. Scoring Rules</h2>
         </div>
         <div>
+          <div>
+            <h3>Can a progression have a weight above 100?</h3>
+            <p>
+              Yes. Weights are relative scoring values, not percentages or a
+              scale capped at 100. Harder skills can be assigned higher weights
+              as they are added. For example, a weight of 150 with a scoring
+              factor of 0.75 gives 112.5 points. Adding a higher weight does not
+              require rescaling existing weights.
+            </p>
+          </div>
           <div>
             <h3>Why can my points change without a new record?</h3>
             <p>

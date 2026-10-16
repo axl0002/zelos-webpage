@@ -22,7 +22,7 @@ afterEach(() => {
 });
 it("calculates known results, bounds, zero smoothing and competition ties", () => {
   expect(recordPoints(100, 10, 1, 10)).toBe(75);
-  expect(recordPoints(100, 10, 5, 10)).toBe(55);
+  expect(recordPoints(100, 10, 5, 10)).toBeCloseTo(55);
   expect(recordPoints(85, 1, 1, 10)).toBeCloseTo(46.36363636);
   expect(recordPoints(85, 10, 1, 0)).toBe(85);
   expect(recordPoints(100, 10, 3, 10)).toBe(65);
@@ -45,7 +45,7 @@ it("calculates known results, bounds, zero smoothing and competition ties", () =
   ])
     expect(recordPoints(85, n, r, 10)).toBeNull();
 });
-it("shows every public weight and marks disabled boards", () => {
+it("compares every enabled progression at its weight and excludes disabled progressions", () => {
   render(<ScoringGuide rules={rules} />);
   for (const discipline of ["push", "pull"]) {
     const table = screen.getByRole("table", {
@@ -55,18 +55,28 @@ it("shows every public weight and marks disabled boards", () => {
     const rows = within(table).getAllByRole("row").slice(1);
     const weights = rows.map((row) => Number(within(row).getByRole("rowheader").textContent));
     expect(weights).toEqual([...weights].sort((a, b) => a - b));
-    for (const board of rules.weights.filter((w) => w.discipline === discipline)) {
+    for (const board of rules.weights.filter((w) => w.discipline === discipline && w.enabled)) {
       const column = headers.findIndex((header) => header.textContent?.startsWith(board.exercise));
       expect(column).toBeGreaterThan(0);
       const row = rows.find((row) => within(row).getByRole("rowheader").textContent === String(board.weight))!;
       const cell = within(row).getAllByRole("cell")[column - 1];
       expect(cell.textContent).toContain(board.progression || board.exercise);
-      if (!board.enabled) expect(cell.textContent).toContain("Disabled");
     }
   }
-  expect(screen.getAllByText("Disabled")).toHaveLength(
-    rules.weights.filter((w) => !w.enabled).length,
-  );
+  const push = screen.getByRole("table", { name: "All push exercise and progression weights" });
+  const pressColumn = within(push).getAllByRole("columnheader").findIndex((header) => header.textContent?.startsWith("Planche Press"));
+  for (const weight of [35, 50]) {
+    const row = within(push).getByRole("rowheader", { name: String(weight) }).closest("tr")!;
+    expect(within(row).getAllByRole("cell")[pressColumn - 1].textContent).toBe("");
+  }
+  expect(within(push).getAllByRole("rowheader").map((header) => Number(header.textContent)))
+    .toEqual(Array.from({ length: 49 }, (_, i) => 10 + i * 5));
+  expect(within(push).getByRole("rowheader", { name: "15" }).closest("tr")?.textContent).toBe("15");
+  expect(screen.queryByText("Disabled")).toBeNull();
+  expect(screen.getAllByText("Coming soon")).toHaveLength(7);
+  const pull = screen.getByRole("table", { name: "All pull exercise and progression weights" });
+  expect(within(pull).getByRole("rowheader", { name: "250" }).closest("tr")?.textContent).toContain("Full");
+  expect(within(screen.getByLabelText("Exercise / progression")).queryByRole("option", { name: /SAT/ })).toBeNull();
   expect(
     screen
       .getByRole("link", { name: /View scoring rules/ })
@@ -95,6 +105,34 @@ it("calculator updates locally and rejects impossible or partial inputs", () => 
   });
   expect(screen.getByText(/Enter a whole-number/)).toBeTruthy();
   expect(fetch).not.toHaveBeenCalled();
+});
+it("accepts higher weights in the public contract, comparison tables and calculator", () => {
+  const higher = parseScoreRules({
+    ...fixture,
+    weights: fixture.weights.map((w) => ({
+      ...w,
+      weight: w.id === "planche-hold-full" ? 150 : w.weight,
+    })),
+  });
+  expect(recordPoints(150, 10, 1, 10)).toBe(112.5);
+  expect(recordPoints(200, 10, 1, 10)).toBe(150);
+  // Calculate the fraction first so a valid large weight does not overflow
+  // from multiplication by the board size before division.
+  expect(recordPoints(Number.MAX_VALUE, 10, 1, 10)).toBe(Number.MAX_VALUE * 0.75);
+  render(<ScoringGuide rules={higher} />);
+  const table = screen.getByRole("table", { name: "All push exercise and progression weights" });
+  const row = within(table).getByRole("rowheader", { name: "150" }).closest("tr")!;
+  const column = within(table).getAllByRole("columnheader")
+    .findIndex((header) => header.textContent?.startsWith("Planche Hold"));
+  expect(within(row).getAllByRole("cell")[column - 1].textContent).toBe("Full");
+  expect(document.querySelector(".score-calculator-output strong")?.textContent).toBe("112.50");
+  for (const weight of [-1, NaN, Infinity, -Infinity]) {
+    expect(recordPoints(weight, 10, 1, 10)).toBeNull();
+    expect(() => parseScoreRules({
+      ...fixture,
+      weights: [{ ...fixture.weights[0], weight }],
+    })).toThrow();
+  }
 });
 it("uses changed settings and weights for examples and top-K totals", () => {
   const changed = parseScoreRules({
