@@ -11,7 +11,8 @@
       "enabled": true,
       "exercise": "Pull Up",
       "discipline": "pull",
-      "progression": null
+      "progression": null,
+      "availability": "active"
     },
     {
       "id": "muscle-up",
@@ -21,7 +22,8 @@
       "enabled": true,
       "exercise": "Muscle Up",
       "discipline": "pull",
-      "progression": null
+      "progression": null,
+      "availability": "active"
     },
     {
       "id": "front-lever-hold-tuck",
@@ -31,7 +33,8 @@
       "enabled": true,
       "exercise": "Front Lever Hold",
       "discipline": "pull",
-      "progression": "Tuck"
+      "progression": "Tuck",
+      "availability": "active"
     },
     {
       "id": "front-lever-hold-adv-tuck",
@@ -41,7 +44,8 @@
       "enabled": true,
       "exercise": "Front Lever Hold",
       "discipline": "pull",
-      "progression": "Adv Tuck"
+      "progression": "Adv Tuck",
+      "availability": "active"
     },
     {
       "id": "front-lever-hold-straddle",
@@ -51,7 +55,8 @@
       "enabled": true,
       "exercise": "Front Lever Hold",
       "discipline": "pull",
-      "progression": "Straddle"
+      "progression": "Straddle",
+      "availability": "active"
     },
     {
       "id": "front-lever-hold-full",
@@ -61,7 +66,8 @@
       "enabled": true,
       "exercise": "Front Lever Hold",
       "discipline": "pull",
-      "progression": "Full"
+      "progression": "Full",
+      "availability": "active"
     },
     {
       "id": "front-lever-press-tuck",
@@ -71,7 +77,8 @@
       "enabled": false,
       "exercise": "Front Lever Press",
       "discipline": "pull",
-      "progression": "Tuck"
+      "progression": "Tuck",
+      "availability": "disabled"
     },
     {
       "id": "front-lever-press-adv-tuck",
@@ -81,7 +88,8 @@
       "enabled": true,
       "exercise": "Front Lever Press",
       "discipline": "pull",
-      "progression": "Adv Tuck"
+      "progression": "Adv Tuck",
+      "availability": "active"
     },
     {
       "id": "front-lever-press-straddle",
@@ -91,7 +99,8 @@
       "enabled": true,
       "exercise": "Front Lever Press",
       "discipline": "pull",
-      "progression": "Straddle"
+      "progression": "Straddle",
+      "availability": "active"
     },
     {
       "id": "front-lever-press-full",
@@ -101,7 +110,8 @@
       "enabled": true,
       "exercise": "Front Lever Press",
       "discipline": "pull",
-      "progression": "Full"
+      "progression": "Full",
+      "availability": "active"
     },
     {
       "id": "front-lever-pull-up-tuck",
@@ -111,7 +121,8 @@
       "enabled": false,
       "exercise": "Front Lever Pull Up",
       "discipline": "pull",
-      "progression": "Tuck"
+      "progression": "Tuck",
+      "availability": "disabled"
     },
     {
       "id": "front-lever-pull-up-adv-tuck",
@@ -121,7 +132,8 @@
       "enabled": true,
       "exercise": "Front Lever Pull Up",
       "discipline": "pull",
-      "progression": "Adv Tuck"
+      "progression": "Adv Tuck",
+      "availability": "active"
     },
     {
       "id": "front-lever-pull-up-straddle",
@@ -131,7 +143,8 @@
       "enabled": true,
       "exercise": "Front Lever Pull Up",
       "discipline": "pull",
-      "progression": "Straddle"
+      "progression": "Straddle",
+      "availability": "active"
     },
     {
       "id": "front-lever-pull-up-full",
@@ -141,7 +154,63 @@
       "enabled": true,
       "exercise": "Front Lever Pull Up",
       "discipline": "pull",
-      "progression": "Full"
+      "progression": "Full",
+      "availability": "active"
+    },
+    {
+      "id": "front-lever-touch-adv-tuck",
+      "name": "Front Lever Touch · Adv Tuck",
+      "metric": "seconds",
+      "weight": 65,
+      "enabled": false,
+      "exercise": "Front Lever Touch",
+      "discipline": "pull",
+      "progression": "Adv Tuck",
+      "availability": "coming_soon"
+    },
+    {
+      "id": "front-lever-touch-straddle",
+      "name": "Front Lever Touch · Straddle",
+      "metric": "seconds",
+      "weight": 95,
+      "enabled": false,
+      "exercise": "Front Lever Touch",
+      "discipline": "pull",
+      "progression": "Straddle",
+      "availability": "coming_soon"
+    },
+    {
+      "id": "front-lever-touch-full",
+      "name": "Front Lever Touch · Full",
+      "metric": "seconds",
+      "weight": 130,
+      "enabled": false,
+      "exercise": "Front Lever Touch",
+      "discipline": "pull",
+      "progression": "Full",
+      "availability": "coming_soon"
+    },
+    {
+      "id": "wide-touch-hold-full",
+      "name": "Wide Touch Hold · Full",
+      "metric": "seconds",
+      "weight": 175,
+      "enabled": false,
+      "exercise": "Wide Touch Hold",
+      "discipline": "pull",
+      "progression": "Full",
+      "availability": "coming_soon"
+    },
+    {
+      "id": "sat-full",
+      "name": "SAT · Full",
+      "metric": "seconds",
+      "weight": 250,
+      "enabled": false,
+      "exercise": "SAT",
+      "discipline": "pull",
+      "progression": "Full",
+      "availability": "coming_soon"
     },
     {
       "id": "dip",
@@ -151,7 +220,8 @@
       "enabled": true,
       "exercise": "Dip",
       "discipline": "push",
-      "progression": null
+      "progression": null,
+      "availability": "active"
     },
     {
       "id": "planche-hold-tuck",
@@ -161,7 +231,8 @@
       "enabled": true,
       "exercise": "Planche Hold",
       "discipline": "push",
-      "progression": "Tuck"
+      "progression": "Tuck",
+      "availability": "active"
     },
     {
       "id": "planche-hold-adv-tuck",
@@ -171,7 +242,8 @@
       "enabled": true,
       "exercise": "Planche Hold",
       "discipline": "push",
-      "progression": "Adv Tuck"
+      "progression": "Adv Tuck",
+      "availability": "active"
     },
     {
       "id": "planche-hold-straddle",
@@ -181,7 +253,8 @@
       "enabled": true,
       "exercise": "Planche Hold",
       "discipline": "push",
-      "progression": "Straddle"
+      "progression": "Straddle",
+      "availability": "active"
     },
     {
       "id": "planche-hold-full",
@@ -191,7 +264,8 @@
       "enabled": true,
       "exercise": "Planche Hold",
       "discipline": "push",
-      "progression": "Full"
+      "progression": "Full",
+      "availability": "active"
     },
     {
       "id": "planche-press-tuck",
@@ -201,7 +275,8 @@
       "enabled": false,
       "exercise": "Planche Press",
       "discipline": "push",
-      "progression": "Tuck"
+      "progression": "Tuck",
+      "availability": "disabled"
     },
     {
       "id": "planche-press-adv-tuck",
@@ -211,7 +286,8 @@
       "enabled": false,
       "exercise": "Planche Press",
       "discipline": "push",
-      "progression": "Adv Tuck"
+      "progression": "Adv Tuck",
+      "availability": "disabled"
     },
     {
       "id": "planche-press-straddle",
@@ -221,7 +297,8 @@
       "enabled": true,
       "exercise": "Planche Press",
       "discipline": "push",
-      "progression": "Straddle"
+      "progression": "Straddle",
+      "availability": "active"
     },
     {
       "id": "planche-press-full",
@@ -231,7 +308,8 @@
       "enabled": true,
       "exercise": "Planche Press",
       "discipline": "push",
-      "progression": "Full"
+      "progression": "Full",
+      "availability": "active"
     },
     {
       "id": "planche-push-up-tuck",
@@ -241,7 +319,8 @@
       "enabled": true,
       "exercise": "Planche Push Up",
       "discipline": "push",
-      "progression": "Tuck"
+      "progression": "Tuck",
+      "availability": "active"
     },
     {
       "id": "planche-push-up-adv-tuck",
@@ -251,7 +330,8 @@
       "enabled": true,
       "exercise": "Planche Push Up",
       "discipline": "push",
-      "progression": "Adv Tuck"
+      "progression": "Adv Tuck",
+      "availability": "active"
     },
     {
       "id": "planche-push-up-straddle",
@@ -261,7 +341,8 @@
       "enabled": true,
       "exercise": "Planche Push Up",
       "discipline": "push",
-      "progression": "Straddle"
+      "progression": "Straddle",
+      "availability": "active"
     },
     {
       "id": "planche-push-up-full",
@@ -271,13 +352,91 @@
       "enabled": true,
       "exercise": "Planche Push Up",
       "discipline": "push",
-      "progression": "Full"
+      "progression": "Full",
+      "availability": "active"
+    },
+    {
+      "id": "wide-planche-hold-straddle",
+      "name": "Wide Planche Hold · Straddle",
+      "metric": "seconds",
+      "weight": 85,
+      "enabled": false,
+      "exercise": "Wide Planche Hold",
+      "discipline": "push",
+      "progression": "Straddle",
+      "availability": "coming_soon"
+    },
+    {
+      "id": "wide-planche-hold-full",
+      "name": "Wide Planche Hold · Full",
+      "metric": "seconds",
+      "weight": 130,
+      "enabled": false,
+      "exercise": "Wide Planche Hold",
+      "discipline": "push",
+      "progression": "Full",
+      "availability": "coming_soon"
+    },
+    {
+      "id": "wide-planche-press-straddle",
+      "name": "Wide Planche Press · Straddle",
+      "metric": "reps",
+      "weight": 100,
+      "enabled": false,
+      "exercise": "Wide Planche Press",
+      "discipline": "push",
+      "progression": "Straddle",
+      "availability": "coming_soon"
+    },
+    {
+      "id": "wide-planche-press-full",
+      "name": "Wide Planche Press · Full",
+      "metric": "reps",
+      "weight": 160,
+      "enabled": false,
+      "exercise": "Wide Planche Press",
+      "discipline": "push",
+      "progression": "Full",
+      "availability": "coming_soon"
+    },
+    {
+      "id": "wide-planche-push-up-straddle",
+      "name": "Wide Planche Push Up · Straddle",
+      "metric": "reps",
+      "weight": 95,
+      "enabled": false,
+      "exercise": "Wide Planche Push Up",
+      "discipline": "push",
+      "progression": "Straddle",
+      "availability": "coming_soon"
+    },
+    {
+      "id": "wide-planche-push-up-full",
+      "name": "Wide Planche Push Up · Full",
+      "metric": "reps",
+      "weight": 150,
+      "enabled": false,
+      "exercise": "Wide Planche Push Up",
+      "discipline": "push",
+      "progression": "Full",
+      "availability": "coming_soon"
+    },
+    {
+      "id": "maltese-full",
+      "name": "Maltese · Full",
+      "metric": "seconds",
+      "weight": 200,
+      "enabled": false,
+      "exercise": "Maltese",
+      "discipline": "push",
+      "progression": "Full",
+      "availability": "coming_soon"
     }
   ],
   "revision": 1,
   "algorithm": "rank_percentile_v1",
   "smoothing": 10,
-  "updated_at": "2026-10-16T00:00:00Z",
+  "updated_at": "2026-10-16T02:46:03Z",
   "schema_version": 1,
   "formula_version": 1
 }

@@ -7,6 +7,7 @@ export type ScoreWeight = {
   metric: "reps" | "seconds";
   weight: number;
   enabled: boolean;
+  availability?: "active" | "coming_soon" | "disabled";
 };
 export type ScoreRules = {
   schema_version: 1;
@@ -55,9 +56,11 @@ export function parseScoreRules(value: unknown): ScoreRules {
         !["push", "pull"].includes(w.discipline) ||
         !["reps", "seconds"].includes(w.metric) ||
         typeof w.enabled !== "boolean" ||
+        (w.availability !== undefined &&
+          (!["active", "coming_soon", "disabled"].includes(w.availability) ||
+           w.enabled !== (w.availability === "active"))) ||
         !finite(w.weight) ||
-        w.weight < 0 ||
-        w.weight > 100,
+        w.weight < 0,
     ) ||
     new Set(r.weights.map((w) => w.id)).size !== r.weights.length
   )
@@ -82,6 +85,7 @@ export function parseScoreRules(value: unknown): ScoreRules {
       metric: w.metric,
       weight: w.weight,
       enabled: w.enabled,
+      availability: w.availability ?? (w.enabled ? "active" : "disabled"),
     })),
   };
 }
@@ -94,7 +98,6 @@ export function recordPoints(
   if (
     ![weight, participants, rank, smoothing].every(Number.isFinite) ||
     weight < 0 ||
-    weight > 100 ||
     !Number.isSafeInteger(participants) ||
     participants < 1 ||
     !Number.isSafeInteger(rank) ||
@@ -104,8 +107,8 @@ export function recordPoints(
   )
     return null;
   return (
-    (weight * (participants - rank + 1 + smoothing * 0.5)) /
-    (participants + smoothing)
+    weight * ((participants - rank + 1 + smoothing * 0.5) /
+    (participants + smoothing))
   );
 }
 export const formatPoints = (points: number) =>

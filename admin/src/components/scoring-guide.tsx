@@ -1,5 +1,6 @@
 import { formatPoints, recordPoints, type ScoreRules } from "@/lib/score-rules";
 import ScoreCalculator from "./score-calculator";
+import ScoreWeightTable from "./score-weight-table";
 export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
   const active = rules.weights.filter((w) => w.enabled);
   const example = active.find((w) => w.id === "planche-hold-full") ?? active[0];
@@ -111,65 +112,21 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
         <div>
           <h2>2. Exercise and Progression Weights</h2>
           <p>
-            These are the current configured weights for every publicly listed
-            board. Weights express progression difficulty in the scoring system;
+            These are the current weights for enabled progressions and
+            provisional weights for coming-soon exercises.
+            Weights express progression difficulty in the scoring system;
             they are adjustable policy choices, not a scientific measure of
             strength.
           </p>
         </div>
-        <p className="document-muted">
-          {active.length} active boards · {rules.weights.length - active.length}{" "}
-          disabled boards. Disabled boards contribute no points.
+        <p>
+          Weights run from lowest to highest down the left. Each column is an
+          exercise; progressions on the same row have the same weight.
+          Coming-soon exercises do not accept submissions or contribute points
+          until they are released. SAT means straight-arm touch.
         </p>
-        <div>
-          {(["push", "pull"] as const).map((d) => (
-            <div key={d}>
-              <h3>{d === "push" ? "Push" : "Pull"}</h3>
-              <div className="scoring-table-scroll">
-                <table>
-                  <caption className="visually-hidden">
-                    All {d} exercise and progression weights
-                  </caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Exercise / progression</th>
-                      <th scope="col">Measure</th>
-                      <th scope="col" className="scoring-number">
-                        Weight
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rules.weights
-                      .filter((w) => w.discipline === d)
-                      .map((w) => (
-                        <tr
-                          key={w.id}
-                          className={w.enabled ? "" : "scoring-disabled"}
-                        >
-                          <th scope="row">
-                            {w.exercise}
-                            {w.progression && (
-                              <span className="scoring-progression">
-                                {w.progression}
-                              </span>
-                            )}
-                            {!w.enabled && (
-                              <span className="scoring-status">Disabled</span>
-                            )}
-                          </th>
-                          <td>
-                            {w.metric === "seconds" ? "Hold (s)" : "Reps"}
-                          </td>
-                          <td className="scoring-number">{w.weight}</td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          ))}
-        </div>
+        <ScoreWeightTable rules={rules} discipline="push" />
+        <ScoreWeightTable rules={rules} discipline="pull" />
       </section>
       <section id="examples">
         <div>
@@ -313,6 +270,16 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
           <h2>5. Scoring Rules</h2>
         </div>
         <div>
+          <div>
+            <h3>Can a progression have a weight above 100?</h3>
+            <p>
+              Yes. Weights are relative scoring values, not percentages or a
+              scale capped at 100. Harder skills can be assigned higher weights
+              as they are added. For example, a weight of 150 with a scoring
+              factor of 0.75 gives 112.5 points. Adding a higher weight does not
+              require rescaling existing weights.
+            </p>
+          </div>
           <div>
             <h3>Why can my points change without a new record?</h3>
             <p>
