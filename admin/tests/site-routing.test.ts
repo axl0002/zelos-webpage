@@ -41,6 +41,12 @@ it.each(["/", "/support", "/support.html"])("redirects the support hostname at %
   expect(response.headers.get("location")).toBe("https://zelos.club/support");
 });
 
+it.each(["", "/rules.json"])("redirects the old scoring URL at /scores%s", async (suffix) => {
+  const { response } = await resolvePublicUrl(`${origin}/scores${suffix}`);
+  expect(response.status).toBe(308);
+  expect(response.headers.get("location")).toBe(`${origin}/scoring${suffix}`);
+});
+
 it("keeps the static source and deployed public assets identical", () => {
   const legacyDirectory = fileURLToPath(new URL("../../site", import.meta.url));
   const files = (directory: string) => readdirSync(directory, { recursive: true })
@@ -70,8 +76,8 @@ it.each(pages)("keeps %s and its linked local pages/assets public and available"
       const target = new URL(reference, url);
       if (target.origin !== origin) continue;
       const { path: asset } = await resolvePublicUrl(target.href);
-      if (asset === "/scores") {
-        expect(statSync(fileURLToPath(new URL("../src/app/scores/page.tsx", import.meta.url))).isFile()).toBe(true);
+      if (asset === "/scoring") {
+        expect(statSync(fileURLToPath(new URL("../src/app/scoring/page.tsx", import.meta.url))).isFile()).toBe(true);
       } else {
         expect(statSync(join(publicDirectory, decodeURIComponent(asset))).isFile(), target.href).toBe(true);
       }

@@ -17,7 +17,7 @@ export default function ScoreCalculator({ rules }: { rules: ScoreRules }) {
     ? recordPoints(current.weight, n, r, rules.smoothing)
     : null;
   return (
-    <div className="score-calculator">
+    <div className="document-card score-calculator">
       <div className="score-calculator-inputs">
         <label htmlFor="score-board">Exercise / progression</label>
         <select
@@ -58,7 +58,7 @@ export default function ScoreCalculator({ rules }: { rules: ScoreRules }) {
             />
           </div>
         </div>
-        <p className="scores-muted">
+        <p className="document-muted">
           Use the worldwide position and athlete count for this progression and
           gender. This is an illustration, not a prediction of your current
           rank.
@@ -76,7 +76,7 @@ export default function ScoreCalculator({ rules }: { rules: ScoreRules }) {
           </p>
         ) : (
           <>
-            <span className="scores-eyebrow">Record points</span>
+            <span className="document-muted">Record points</span>
             <strong>{formatPoints(points)}</strong>
             <p>
               {current!.weight} × ({n} − {r} + 1 + {rules.smoothing} × 0.5) ÷ (

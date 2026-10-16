@@ -180,10 +180,11 @@ mutations return 403. No live UI tests are required or run.
 
 ## Public scoring guide
 
-`https://zelos.club/scores` is a public Server Component explaining exercise-record
+`https://zelos.club/scoring` is a public Server Component explaining exercise-record
 points, each publicly listed progression weight (including disabled boards), ties,
 small-board smoothing, discipline totals and worked examples. Its calculator runs
-only in the visitor's browser. The page and `/scores/rules.json` read the same
+only in the visitor's browser. It uses the same shared document styles as privacy,
+support and terms. The old `/scores` URLs permanently redirect to `/scoring`. The page and `/scoring/rules.json` read the same
 validated `get_public_score_rules()` response using the existing public Supabase
 key. They do not use admin sessions, privileged keys, athlete records or write APIs.
 The RPC takes no parameters and has an explicit field allowlist. Hidden draft

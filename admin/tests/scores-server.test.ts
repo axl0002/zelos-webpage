@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { getPublicScoreRules } from "../src/lib/score-rules.server";
-import { GET } from "../src/app/scores/rules.json/route";
+import { GET } from "../src/app/scoring/rules.json/route";
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
 import { config } from "../src/middleware";
 import fixture from "./fixtures/score-rules.json";
@@ -35,7 +35,7 @@ it("fetches only the fixed read-only public RPC without session cookies or user 
       },
     }),
   );
-  for (const path of ["/scores", "/scores/rules.json"])
+  for (const path of ["/scoring", "/scoring/rules.json"])
     expect(
       unstable_doesMiddlewareMatch({
         config,
