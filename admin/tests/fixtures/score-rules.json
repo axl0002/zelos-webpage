@@ -1,0 +1,283 @@
+{
+  "prior": 0.5,
+  "top_k": 5,
+  "formula": "W * (N - R + 1 + S * 0.5) / (N + S)",
+  "weights": [
+    {
+      "id": "pull-up",
+      "name": "Pull Up",
+      "metric": "reps",
+      "weight": 10,
+      "enabled": true,
+      "exercise": "Pull Up",
+      "discipline": "pull",
+      "progression": null
+    },
+    {
+      "id": "muscle-up",
+      "name": "Muscle Up",
+      "metric": "reps",
+      "weight": 30,
+      "enabled": true,
+      "exercise": "Muscle Up",
+      "discipline": "pull",
+      "progression": null
+    },
+    {
+      "id": "front-lever-hold-tuck",
+      "name": "Front Lever Hold · Tuck",
+      "metric": "seconds",
+      "weight": 20,
+      "enabled": true,
+      "exercise": "Front Lever Hold",
+      "discipline": "pull",
+      "progression": "Tuck"
+    },
+    {
+      "id": "front-lever-hold-adv-tuck",
+      "name": "Front Lever Hold · Adv Tuck",
+      "metric": "seconds",
+      "weight": 35,
+      "enabled": true,
+      "exercise": "Front Lever Hold",
+      "discipline": "pull",
+      "progression": "Adv Tuck"
+    },
+    {
+      "id": "front-lever-hold-straddle",
+      "name": "Front Lever Hold · Straddle",
+      "metric": "seconds",
+      "weight": 55,
+      "enabled": true,
+      "exercise": "Front Lever Hold",
+      "discipline": "pull",
+      "progression": "Straddle"
+    },
+    {
+      "id": "front-lever-hold-full",
+      "name": "Front Lever Hold · Full",
+      "metric": "seconds",
+      "weight": 85,
+      "enabled": true,
+      "exercise": "Front Lever Hold",
+      "discipline": "pull",
+      "progression": "Full"
+    },
+    {
+      "id": "front-lever-press-tuck",
+      "name": "Front Lever Press · Tuck",
+      "metric": "reps",
+      "weight": 35,
+      "enabled": false,
+      "exercise": "Front Lever Press",
+      "discipline": "pull",
+      "progression": "Tuck"
+    },
+    {
+      "id": "front-lever-press-adv-tuck",
+      "name": "Front Lever Press · Adv Tuck",
+      "metric": "reps",
+      "weight": 50,
+      "enabled": true,
+      "exercise": "Front Lever Press",
+      "discipline": "pull",
+      "progression": "Adv Tuck"
+    },
+    {
+      "id": "front-lever-press-straddle",
+      "name": "Front Lever Press · Straddle",
+      "metric": "reps",
+      "weight": 70,
+      "enabled": true,
+      "exercise": "Front Lever Press",
+      "discipline": "pull",
+      "progression": "Straddle"
+    },
+    {
+      "id": "front-lever-press-full",
+      "name": "Front Lever Press · Full",
+      "metric": "reps",
+      "weight": 100,
+      "enabled": true,
+      "exercise": "Front Lever Press",
+      "discipline": "pull",
+      "progression": "Full"
+    },
+    {
+      "id": "front-lever-pull-up-tuck",
+      "name": "Front Lever Pull Up · Tuck",
+      "metric": "reps",
+      "weight": 30,
+      "enabled": false,
+      "exercise": "Front Lever Pull Up",
+      "discipline": "pull",
+      "progression": "Tuck"
+    },
+    {
+      "id": "front-lever-pull-up-adv-tuck",
+      "name": "Front Lever Pull Up · Adv Tuck",
+      "metric": "reps",
+      "weight": 45,
+      "enabled": true,
+      "exercise": "Front Lever Pull Up",
+      "discipline": "pull",
+      "progression": "Adv Tuck"
+    },
+    {
+      "id": "front-lever-pull-up-straddle",
+      "name": "Front Lever Pull Up · Straddle",
+      "metric": "reps",
+      "weight": 65,
+      "enabled": true,
+      "exercise": "Front Lever Pull Up",
+      "discipline": "pull",
+      "progression": "Straddle"
+    },
+    {
+      "id": "front-lever-pull-up-full",
+      "name": "Front Lever Pull Up · Full",
+      "metric": "reps",
+      "weight": 95,
+      "enabled": true,
+      "exercise": "Front Lever Pull Up",
+      "discipline": "pull",
+      "progression": "Full"
+    },
+    {
+      "id": "dip",
+      "name": "Dip",
+      "metric": "reps",
+      "weight": 10,
+      "enabled": true,
+      "exercise": "Dip",
+      "discipline": "push",
+      "progression": null
+    },
+    {
+      "id": "planche-hold-tuck",
+      "name": "Planche Hold · Tuck",
+      "metric": "seconds",
+      "weight": 20,
+      "enabled": true,
+      "exercise": "Planche Hold",
+      "discipline": "push",
+      "progression": "Tuck"
+    },
+    {
+      "id": "planche-hold-adv-tuck",
+      "name": "Planche Hold · Adv Tuck",
+      "metric": "seconds",
+      "weight": 35,
+      "enabled": true,
+      "exercise": "Planche Hold",
+      "discipline": "push",
+      "progression": "Adv Tuck"
+    },
+    {
+      "id": "planche-hold-straddle",
+      "name": "Planche Hold · Straddle",
+      "metric": "seconds",
+      "weight": 55,
+      "enabled": true,
+      "exercise": "Planche Hold",
+      "discipline": "push",
+      "progression": "Straddle"
+    },
+    {
+      "id": "planche-hold-full",
+      "name": "Planche Hold · Full",
+      "metric": "seconds",
+      "weight": 85,
+      "enabled": true,
+      "exercise": "Planche Hold",
+      "discipline": "push",
+      "progression": "Full"
+    },
+    {
+      "id": "planche-press-tuck",
+      "name": "Planche Press · Tuck",
+      "metric": "reps",
+      "weight": 35,
+      "enabled": false,
+      "exercise": "Planche Press",
+      "discipline": "push",
+      "progression": "Tuck"
+    },
+    {
+      "id": "planche-press-adv-tuck",
+      "name": "Planche Press · Adv Tuck",
+      "metric": "reps",
+      "weight": 50,
+      "enabled": false,
+      "exercise": "Planche Press",
+      "discipline": "push",
+      "progression": "Adv Tuck"
+    },
+    {
+      "id": "planche-press-straddle",
+      "name": "Planche Press · Straddle",
+      "metric": "reps",
+      "weight": 70,
+      "enabled": true,
+      "exercise": "Planche Press",
+      "discipline": "push",
+      "progression": "Straddle"
+    },
+    {
+      "id": "planche-press-full",
+      "name": "Planche Press · Full",
+      "metric": "reps",
+      "weight": 100,
+      "enabled": true,
+      "exercise": "Planche Press",
+      "discipline": "push",
+      "progression": "Full"
+    },
+    {
+      "id": "planche-push-up-tuck",
+      "name": "Planche Push Up · Tuck",
+      "metric": "reps",
+      "weight": 30,
+      "enabled": true,
+      "exercise": "Planche Push Up",
+      "discipline": "push",
+      "progression": "Tuck"
+    },
+    {
+      "id": "planche-push-up-adv-tuck",
+      "name": "Planche Push Up · Adv Tuck",
+      "metric": "reps",
+      "weight": 45,
+      "enabled": true,
+      "exercise": "Planche Push Up",
+      "discipline": "push",
+      "progression": "Adv Tuck"
+    },
+    {
+      "id": "planche-push-up-straddle",
+      "name": "Planche Push Up · Straddle",
+      "metric": "reps",
+      "weight": 65,
+      "enabled": true,
+      "exercise": "Planche Push Up",
+      "discipline": "push",
+      "progression": "Straddle"
+    },
+    {
+      "id": "planche-push-up-full",
+      "name": "Planche Push Up · Full",
+      "metric": "reps",
+      "weight": 95,
+      "enabled": true,
+      "exercise": "Planche Push Up",
+      "discipline": "push",
+      "progression": "Full"
+    }
+  ],
+  "revision": 1,
+  "algorithm": "rank_percentile_v1",
+  "smoothing": 10,
+  "updated_at": "2026-10-16T00:00:00Z",
+  "schema_version": 1,
+  "formula_version": 1
+}

@@ -177,3 +177,26 @@ tests check existing HTML links, Shopify destinations, assets and session
 middleware boundaries without executing public page scripts. Backend/API checks
 confirm unauthenticated private-data requests return 401 and cross-origin
 mutations return 403. No live UI tests are required or run.
+
+## Public scoring guide
+
+`https://zelos.club/scores` is a public Server Component explaining exercise-record
+points, each publicly listed progression weight (including disabled boards), ties,
+small-board smoothing, discipline totals and worked examples. Its calculator runs
+only in the visitor's browser. The page and `/scores/rules.json` read the same
+validated `get_public_score_rules()` response using the existing public Supabase
+key. They do not use admin sessions, privileged keys, athlete records or write APIs.
+The RPC takes no parameters and has an explicit field allowlist. Hidden draft
+exercises are excluded. Data/connection failures show an unavailable state rather
+than presenting a hardcoded old formula as current.
+
+Weights and configuration come from Supabase on each page request. The public JSON
+may be cached for up to 60 seconds. Configuration/catalogue changes advance the
+publication revision/date automatically. Formula/aggregation changes must update
+the documented algorithm, explanation, calculator, parity tests and the backend's
+implementation hashes together; an unmatched implementation fails closed. Do not
+refresh hashes without checking the public explanation. The backend migration is
+`app_public_score_rules` in the canonical CalisthenicsRanker Supabase repository.
+Follow `AGENTS.md` and run `scores*.test.ts*`, `site-routing.test.ts`, TypeScript,
+the production build and the isolated PostgreSQL `app_public_score_rules.sql`
+permission/formula tests for changes to this contract.

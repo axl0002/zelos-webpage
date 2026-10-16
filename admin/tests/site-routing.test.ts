@@ -70,7 +70,11 @@ it.each(pages)("keeps %s and its linked local pages/assets public and available"
       const target = new URL(reference, url);
       if (target.origin !== origin) continue;
       const { path: asset } = await resolvePublicUrl(target.href);
-      expect(statSync(join(publicDirectory, decodeURIComponent(asset))).isFile(), target.href).toBe(true);
+      if (asset === "/scores") {
+        expect(statSync(fileURLToPath(new URL("../src/app/scores/page.tsx", import.meta.url))).isFile()).toBe(true);
+      } else {
+        expect(statSync(join(publicDirectory, decodeURIComponent(asset))).isFile(), target.href).toBe(true);
+      }
       expect(unstable_doesMiddlewareMatch({ config: middlewareConfig, url: target.href })).toBe(false);
     }
     if (["/", "/index.html", "/stats", "/stats.html", "/about", "/about.html", "/equipment", "/equipment.html"].includes(pathname)) {
