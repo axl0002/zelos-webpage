@@ -984,6 +984,16 @@ body {
 }
 
 /* Scoring uses the document layout above; these rules only format its data. */
+.scoring-page {
+  max-width: 1200px;
+}
+
+.scoring-page > :not(#weights) {
+  max-width: 768px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .scoring-equation {
   display: flex;
   flex-wrap: wrap;
@@ -1023,6 +1033,11 @@ body {
   overflow-x: auto;
 }
 
+.scoring-table-scroll:focus-visible {
+  outline: 2px solid var(--site-foreground);
+  outline-offset: 3px;
+}
+
 .scoring-page table {
   width: 100%;
   border-collapse: collapse;
@@ -1046,17 +1061,36 @@ body {
   color: var(--site-foreground);
 }
 
-.scoring-number {
-  text-align: right;
+.scoring-page .scoring-weight-table {
+  table-layout: fixed;
+  min-width: 720px;
 }
 
-.scoring-progression,
+.scoring-weight-table th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  width: 76px;
+  background: var(--site-background);
+  border-right: 1px solid var(--site-divider);
+}
+
+.scoring-weight-table td {
+  border-right: 1px solid var(--site-divider);
+}
+
+.scoring-weight-table td > div + div {
+  margin-top: 0.5rem;
+}
+
+.scoring-measure,
 .scoring-status {
   display: block;
   font-size: 0.875rem;
 }
 
 .scoring-status,
+.scoring-measure,
 .scoring-disabled,
 .scoring-page caption {
   color: var(--site-muted);

@@ -51,22 +51,17 @@ it("shows every public weight and marks disabled boards", () => {
     const table = screen.getByRole("table", {
       name: `All ${discipline} exercise and progression weights`,
     });
-    expect(within(table).getAllByRole("row")).toHaveLength(
-      rules.weights.filter((w) => w.discipline === discipline).length + 1,
-    );
-    for (const weight of rules.weights.filter(
-      (w) => w.discipline === discipline,
-    )) {
-      const row = within(table)
-        .getAllByRole("row")
-        .find(
-          (row) =>
-            row.textContent?.includes(weight.exercise) &&
-            (!weight.progression ||
-              row.textContent?.includes(weight.progression)),
-        );
-      expect(row?.textContent).toContain(String(weight.weight));
-      if (!weight.enabled) expect(row?.textContent).toContain("Disabled");
+    const headers = within(table).getAllByRole("columnheader");
+    const rows = within(table).getAllByRole("row").slice(1);
+    const weights = rows.map((row) => Number(within(row).getByRole("rowheader").textContent));
+    expect(weights).toEqual([...weights].sort((a, b) => a - b));
+    for (const board of rules.weights.filter((w) => w.discipline === discipline)) {
+      const column = headers.findIndex((header) => header.textContent?.startsWith(board.exercise));
+      expect(column).toBeGreaterThan(0);
+      const row = rows.find((row) => within(row).getByRole("rowheader").textContent === String(board.weight))!;
+      const cell = within(row).getAllByRole("cell")[column - 1];
+      expect(cell.textContent).toContain(board.progression || board.exercise);
+      if (!board.enabled) expect(cell.textContent).toContain("Disabled");
     }
   }
   expect(screen.getAllByText("Disabled")).toHaveLength(
