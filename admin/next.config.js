@@ -17,6 +17,11 @@ module.exports = (phase) => {
           destination: "https://zelos.club/support",
           permanent: true,
         },
+        {
+          source: "/scores/:path*",
+          destination: "/scoring/:path*",
+          permanent: true,
+        },
       ];
     },
     async rewrites() {

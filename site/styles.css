@@ -844,7 +844,7 @@ body {
     font-size: 0.875rem;
 }
 
-/* Support and legal pages share the landing page's type, palette and chrome. */
+/* Support, legal and scoring pages share the same document styles. */
 .document-page {
   width: 100%;
   margin: 0 auto;
@@ -981,6 +981,161 @@ body {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.5rem;
+}
+
+/* Scoring uses the document layout above; these rules only format its data. */
+.scoring-equation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  color: var(--site-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.scoring-fraction {
+  display: inline-flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.scoring-fraction > span:first-child {
+  padding: 0 0.25rem 0.25rem;
+  border-bottom: 1px solid var(--site-muted);
+}
+
+.scoring-variables {
+  margin-bottom: 1.5rem;
+}
+
+.scoring-variables dt {
+  margin-top: 1rem;
+  font-weight: 600;
+  color: var(--site-foreground);
+}
+
+.scoring-variables dt span {
+  margin-left: 0.5rem;
+}
+
+.scoring-table-scroll {
+  overflow-x: auto;
+}
+
+.scoring-page table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.scoring-page th,
+.scoring-page td {
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid var(--site-divider);
+  vertical-align: top;
+}
+
+.scoring-page th {
+  font-weight: 500;
+}
+
+.scoring-page thead th {
+  color: var(--site-foreground);
+}
+
+.scoring-number {
+  text-align: right;
+}
+
+.scoring-progression,
+.scoring-status {
+  display: block;
+  font-size: 0.875rem;
+}
+
+.scoring-status,
+.scoring-disabled,
+.scoring-page caption {
+  color: var(--site-muted);
+}
+
+.scoring-page caption {
+  text-align: left;
+  padding: 1rem 0 0.5rem;
+}
+
+.scoring-worked {
+  font-variant-numeric: tabular-nums;
+}
+
+.scoring-example-result {
+  display: block;
+  margin: 0.5rem 0 1rem;
+  color: var(--site-foreground);
+}
+
+.score-calculator {
+  margin-top: 1.5rem;
+}
+
+.score-calculator label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.score-calculator select,
+.score-calculator input {
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  color: var(--site-foreground);
+  background: var(--site-background);
+  border: 1px solid var(--site-border);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+}
+
+.score-calculator :focus-visible {
+  outline: 2px solid var(--site-foreground);
+  outline-offset: 3px;
+}
+
+.score-input-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.score-calculator-output {
+  border-top: 1px solid var(--site-border);
+  padding-top: 1rem;
+  margin-top: 1.5rem;
+}
+
+.score-calculator-output strong {
+  display: block;
+  color: var(--site-foreground);
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.document-skip {
+  position: absolute;
+  top: -5rem;
+  left: 1rem;
+  z-index: 100;
+  background: var(--site-foreground);
+  color: var(--site-background);
+  padding: 0.75rem;
+}
+
+.document-skip:focus {
+  top: 0.5rem;
 }
 
 .footer-links a[aria-current="page"] {

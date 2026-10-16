@@ -1,6 +1,6 @@
 # Public scoring transparency
 
-Keep `/scores` accurate whenever changing the record-points formula, weights,
+Keep `/scoring` accurate whenever changing the record-points formula, weights,
 aggregation, tie rules, or eligibility. Its source is the read-only
 `get_public_score_rules()` RPC in the canonical mobile/backend Supabase migrations.
 

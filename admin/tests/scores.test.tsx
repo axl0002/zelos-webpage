@@ -76,7 +76,7 @@ it("shows every public weight and marks disabled boards", () => {
     screen
       .getByRole("link", { name: /View scoring rules/ })
       .getAttribute("href"),
-  ).toBe("/scores/rules.json");
+  ).toBe("/scoring/rules.json");
 });
 it("calculator updates locally and rejects impossible or partial inputs", () => {
   const fetch = vi.fn();
@@ -113,14 +113,14 @@ it("uses changed settings and weights for examples and top-K totals", () => {
   });
   render(<ScoringGuide rules={changed} />);
   expect(
-    screen.getByRole("heading", { name: "Your best 2 count" }),
+    screen.getByText(/Your best 2 exercise scores count/),
   ).toBeTruthy();
   expect(
     screen.getByText("Weight 80, 10 athletes, first place, smoothing 0."),
   ).toBeTruthy();
   expect(
     screen.getByRole("heading", {
-      name: "Keep your highest 2 exercise scores.",
+      name: "Discipline total: your highest 2 exercise scores",
     }),
   ).toBeTruthy();
   const rows = within(

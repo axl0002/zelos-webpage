@@ -23,60 +23,43 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
     .reduce((sum, r) => sum + r.points, 0);
   return (
     <>
-      <nav className="scores-jump" aria-label="On this page">
-        <a href="#formula">The formula</a>
-        <a href="#weights">All weights</a>
-        <a href="#examples">Examples</a>
-        <a href="#calculator">Try it</a>
-        <a href="#questions">Questions</a>
-      </nav>
-      <section className="scores-overview" aria-label="How scoring works">
-        <article>
-          <span>01</span>
-          <h2>One record per exercise</h2>
-          <p>
+      <section className="document-card">
+        <h2>Quick Summary</h2>
+        <ul>
+          <li>
             Your current eligible record represents each exercise. Different
             progressions of the same exercise do not stack.
-          </p>
-        </article>
-        <article>
-          <span>02</span>
-          <h2>Performance becomes points</h2>
-          <p>
+          </li>
+          <li>
             Your worldwide position within the same progression and gender
             determines your share of its weight.
-          </p>
-        </article>
-        <article>
-          <span>03</span>
-          <h2>Your best {rules.top_k} count</h2>
-          <p>
-            Add your highest-scoring exercises in each discipline. Push and Pull
-            have separate totals and rankings.
-          </p>
-        </article>
+          </li>
+          <li>
+            Your best {rules.top_k} exercise scores count in each discipline.
+            Push and Pull have separate totals and rankings.
+          </li>
+        </ul>
       </section>
-      <section id="formula" className="scores-section">
-        <div className="scores-section-heading">
-          <span className="scores-eyebrow">01 / The calculation</span>
-          <h2>A formula you can check.</h2>
+      <section id="formula">
+        <div>
+          <h2>1. The Formula</h2>
           <p>
             More reps or a longer hold improve your position. Position and
             progression weight determine the points.
           </p>
         </div>
         <div
-          className="scores-equation"
+          className="document-notice scoring-equation"
           role="math"
           aria-label="Points equals W times N minus R plus 1 plus S divided by 2, all divided by N plus S"
         >
           <span>Points = W ×</span>
-          <span className="scores-fraction">
+          <span className="scoring-fraction">
             <span>N − R + 1 + S × 0.5</span>
             <span>N + S</span>
           </span>
         </div>
-        <dl className="scores-variables">
+        <dl className="scoring-variables">
           <div>
             <dt>
               W <span>Progression weight</span>
@@ -115,19 +98,18 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
             </dd>
           </div>
         </dl>
-        <aside className="scores-note">
-          <h3>Weight is not points per rep.</h3>
+        <aside className="document-notice">
           <p>
-            A weight of 85 does not mean 85 points for every second held. It
+            <strong>What the weight means:</strong> A weight of 85 does not mean
+            85 points for every second held. It
             scales the result of the formula. A larger lead in reps or seconds
             only adds points if it improves your position.
           </p>
         </aside>
       </section>
-      <section id="weights" className="scores-section">
-        <div className="scores-section-heading">
-          <span className="scores-eyebrow">02 / Every weight</span>
-          <h2>Same rules. Published weights.</h2>
+      <section id="weights">
+        <div>
+          <h2>2. Exercise and Progression Weights</h2>
           <p>
             These are the current configured weights for every publicly listed
             board. Weights express progression difficulty in the scoring system;
@@ -135,15 +117,15 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
             strength.
           </p>
         </div>
-        <p className="scores-table-meta">
+        <p className="document-muted">
           {active.length} active boards · {rules.weights.length - active.length}{" "}
           disabled boards. Disabled boards contribute no points.
         </p>
-        <div className="scores-weight-grid">
+        <div>
           {(["push", "pull"] as const).map((d) => (
-            <div key={d} className="scores-weight-card">
+            <div key={d}>
               <h3>{d === "push" ? "Push" : "Pull"}</h3>
-              <div className="scores-table-scroll">
+              <div className="scoring-table-scroll">
                 <table>
                   <caption className="visually-hidden">
                     All {d} exercise and progression weights
@@ -152,7 +134,7 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
                     <tr>
                       <th scope="col">Exercise / progression</th>
                       <th scope="col">Measure</th>
-                      <th scope="col" className="scores-number">
+                      <th scope="col" className="scoring-number">
                         Weight
                       </th>
                     </tr>
@@ -163,23 +145,23 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
                       .map((w) => (
                         <tr
                           key={w.id}
-                          className={w.enabled ? "" : "scores-disabled"}
+                          className={w.enabled ? "" : "scoring-disabled"}
                         >
                           <th scope="row">
                             {w.exercise}
                             {w.progression && (
-                              <span className="scores-progression">
+                              <span className="scoring-progression">
                                 {w.progression}
                               </span>
                             )}
                             {!w.enabled && (
-                              <span className="scores-status">Disabled</span>
+                              <span className="scoring-status">Disabled</span>
                             )}
                           </th>
                           <td>
                             {w.metric === "seconds" ? "Hold (s)" : "Reps"}
                           </td>
-                          <td className="scores-number">{w.weight}</td>
+                          <td className="scoring-number">{w.weight}</td>
                         </tr>
                       ))}
                   </tbody>
@@ -189,29 +171,27 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
           ))}
         </div>
       </section>
-      <section id="examples" className="scores-section">
-        <div className="scores-section-heading">
-          <span className="scores-eyebrow">03 / Worked examples</span>
-          <h2>Follow the points.</h2>
+      <section id="examples">
+        <div>
+          <h2>3. Worked Examples</h2>
           <p>
             These examples use the published weights above and hypothetical
             leaderboard positions.
           </p>
         </div>
         {example && (
-          <div className="scores-example-grid">
-            <article className="scores-example">
-              <span className="scores-eyebrow">A record score</span>
+          <div>
+            <article>
               <h3>{example.name}</h3>
               <p>
                 Weight {example.weight}, 10 athletes, first place, smoothing{" "}
                 {rules.smoothing}.
               </p>
-              <p className="scores-worked">
+              <p className="scoring-worked">
                 {example.weight} × (10 − 1 + 1 + {rules.smoothing} × 0.5) ÷ (10
                 + {rules.smoothing})
               </p>
-              <strong className="scores-example-result">
+              <strong className="scoring-example-result">
                 {formatPoints(
                   recordPoints(example.weight, 10, 1, rules.smoothing)!,
                 )}{" "}
@@ -244,20 +224,17 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
                 </tbody>
               </table>
             </article>
-            <article className="scores-example">
-              <span className="scores-eyebrow">
-                Why small boards are smoothed
-              </span>
-              <h3>First out of one.</h3>
+            <article>
+              <h3>A board with one athlete</h3>
               <p>
                 With the same weight of {example.weight}, being the only athlete
                 on a board earns:
               </p>
-              <p className="scores-worked">
+              <p className="scoring-worked">
                 {example.weight} × (1 − 1 + 1 + {rules.smoothing} × 0.5) ÷ (1 +{" "}
                 {rules.smoothing})
               </p>
-              <strong className="scores-example-result">
+              <strong className="scoring-example-result">
                 {formatPoints(
                   recordPoints(example.weight, 1, 1, rules.smoothing)!,
                 )}{" "}
@@ -271,10 +248,9 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
           </div>
         )}
         {totals.length > 0 && (
-          <article className="scores-total-example">
+          <article>
             <div>
-              <span className="scores-eyebrow">Your discipline total</span>
-              <h3>Keep your highest {rules.top_k} exercise scores.</h3>
+              <h3>Discipline total: your highest {rules.top_k} exercise scores</h3>
               <p>
                 Here is a hypothetical Pull athlete. Each board has 10 athletes.
                 Only one progression per exercise is counted.
@@ -283,11 +259,11 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
                 If you have fewer than {rules.top_k} eligible exercises, all of
                 them count. Scores are added before rounding.
               </p>
-              <strong className="scores-example-result">
+              <strong className="scoring-example-result">
                 {formatPoints(total)} <span>Pull points</span>
               </strong>
             </div>
-            <div className="scores-table-scroll">
+            <div className="scoring-table-scroll">
               <table>
                 <caption>Hypothetical Pull records</caption>
                 <thead>
@@ -301,12 +277,12 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
                   {totals.map((r, i) => (
                     <tr
                       key={r.w.id}
-                      className={i < rules.top_k ? "" : "scores-disabled"}
+                      className={i < rules.top_k ? "" : "scoring-disabled"}
                     >
                       <th scope="row">
                         {r.w.name}
                         {i >= rules.top_k && (
-                          <span className="scores-status">
+                          <span className="scoring-status">
                             Outside best {rules.top_k}
                           </span>
                         )}
@@ -321,10 +297,9 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
           </article>
         )}
       </section>
-      <section id="calculator" className="scores-section">
-        <div className="scores-section-heading">
-          <span className="scores-eyebrow">04 / Try the maths</span>
-          <h2>Calculate a record score.</h2>
+      <section id="calculator">
+        <div>
+          <h2>4. Points Calculator</h2>
           <p>
             Choose a progression, set a board size and change your position. The
             calculation happens here in your browser and does not submit a
@@ -333,59 +308,58 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
         </div>
         <ScoreCalculator rules={rules} />
       </section>
-      <section id="questions" className="scores-section">
-        <div className="scores-section-heading">
-          <span className="scores-eyebrow">05 / The details that matter</span>
-          <h2>No hidden scoring rules.</h2>
+      <section id="questions">
+        <div>
+          <h2>5. Scoring Rules</h2>
         </div>
-        <div className="scores-faq">
-          <details>
-            <summary>Why can my points change without a new record?</summary>
+        <div>
+          <div>
+            <h3>Why can my points change without a new record?</h3>
             <p>
               Your score is relative to the other eligible athletes on your
               progression board. New records, improved results or removed
               results can change its size or your position. Weights and scoring
               rules can also be updated. There is currently no time-based decay.
             </p>
-          </details>
-          <details>
-            <summary>How are ties handled?</summary>
+          </div>
+          <div>
+            <h3>How are ties handled?</h3>
             <p>
               Equal rep counts or hold times share the same position and points.
               Positions use competition ranking: 1, 1, 3, rather than 1, 1, 2.
               The achievement time and record ID give tied rows a stable display
               order; they do not break a points tie.
             </p>
-          </details>
-          <details>
-            <summary>Do country filters change my points?</summary>
+          </div>
+          <div>
+            <h3>Do country filters change my points?</h3>
             <p>
               No. Points use worldwide positions within the same progression and
               gender. A country filter changes the displayed rank within that
               country, while keeping your points the same.
             </p>
-          </details>
-          <details>
-            <summary>Does blocking someone change points?</summary>
+          </div>
+          <div>
+            <h3>Does blocking someone change points?</h3>
             <p>
               Blocking can hide an athlete from your view. It does not remove
               their eligible record from the worldwide scoring group or
               recalculate everyone’s points.
             </p>
-          </details>
-          <details>
-            <summary>
+          </div>
+          <div>
+            <h3>
               Can I earn points from every progression of an exercise?
-            </summary>
+            </h3>
             <p>
               Only your current selected eligible record for an exercise counts.
               For example, Tuck Planche and Full Planche do not both contribute
               to your total. Moving progression replaces the exercise’s current
               scoring entry; historical clips can remain available.
             </p>
-          </details>
-          <details>
-            <summary>Which records are eligible?</summary>
+          </div>
+          <div>
+            <h3>Which records are eligible?</h3>
             <p>
               A record must be the athlete’s current entry, with a published,
               visible and playable clip, on an enabled board and exercise. The
@@ -394,11 +368,11 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
               a ranking issue alone does not remove its points; a confirmed
               review can.
             </p>
-          </details>
-          <details>
-            <summary>
+          </div>
+          <div>
+            <h3>
               Does voting, popularity or money affect these points?
-            </summary>
+            </h3>
             <p>
               This formula uses the recorded performance rank, board size,
               progression weight and smoothing value. Likes, followers, votes
@@ -406,19 +380,19 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
               points for Push and Pull, rather than any separate voting or
               battle rating.
             </p>
-          </details>
-          <details>
-            <summary>
+          </div>
+          <div>
+            <h3>
               Why might the app show a slightly different decimal?
-            </summary>
+            </h3>
             <p>
               The app displays points to one decimal place. Examples here show
               two. Ranking and totals use unrounded values, so two displayed
               totals can look equal even when their underlying scores differ.
             </p>
-          </details>
-          <details>
-            <summary>What happens when the rules change?</summary>
+          </div>
+          <div>
+            <h3>What happens when the rules change?</h3>
             <p>
               The weights and settings here are read from the scoring
               configuration. Their publication revision and update date change
@@ -431,27 +405,23 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
               is pending, the app can show an updating notice while the new
               totals are prepared.
             </p>
-          </details>
+          </div>
         </div>
       </section>
-      <section className="scores-source">
-        <div>
-          <h2>Check the rules yourself.</h2>
-          <p>
-            The machine-readable rules contain the same formula, settings and
-            weights used on this page. They contain no athlete records.
-          </p>
-        </div>
-        <a className="scores-download" href="/scores/rules.json">
-          View scoring rules (JSON) ↗
-        </a>
+      <section className="document-card">
+        <h2>Scoring Data</h2>
+        <p>
+          The machine-readable rules contain the same formula, settings and
+          weights used on this page. They contain no athlete records.
+        </p>
+        <p><a href="/scoring/rules.json">View scoring rules (JSON)</a></p>
+        <p className="document-muted">
+          Questions about scoring?{" "}
+          <a href="mailto:support@zelos.club?subject=Scoring%20question">
+            Contact support.
+          </a>
+        </p>
       </section>
-      <p className="scores-feedback">
-        Found something unclear?{" "}
-        <a href="mailto:support@zelos.club?subject=Scoring%20question">
-          Ask us about scoring.
-        </a>
-      </p>
     </>
   );
 }
