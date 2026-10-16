@@ -47,6 +47,7 @@ it("calculates known results, bounds, zero smoothing and competition ties", () =
 });
 it("compares every enabled progression at its weight and excludes disabled progressions", () => {
   render(<ScoringGuide rules={rules} />);
+  fireEvent.click(screen.getByRole("checkbox", { name: "Hide empty rows" }));
   for (const discipline of ["push", "pull"]) {
     const table = screen.getByRole("table", {
       name: `All ${discipline} exercise and progression weights`,
@@ -83,6 +84,33 @@ it("compares every enabled progression at its weight and excludes disabled progr
       .getAttribute("href"),
   ).toBe("/scoring/rules.json");
 });
+it("hides empty rows by default and toggles both tables without dropping progressions or fetching", () => {
+  const fetch = vi.fn();
+  vi.stubGlobal("fetch", fetch);
+  render(<ScoringGuide rules={rules} />);
+  const toggle = screen.getByRole("checkbox", { name: "Hide empty rows" }) as HTMLInputElement;
+  expect(toggle.checked).toBe(true);
+  const rows = (discipline: string) => within(screen.getByRole("table", {
+    name: `All ${discipline} exercise and progression weights`,
+  })).getAllByRole("rowheader").map((header) => Number(header.textContent));
+  const occupied = (discipline: string) => [...new Set(rules.weights
+    .filter((w) => w.discipline === discipline && (w.enabled || w.availability === "coming_soon"))
+    .map((w) => w.weight))].sort((a, b) => a - b);
+  for (const discipline of ["push", "pull"]) expect(rows(discipline)).toEqual(occupied(discipline));
+  const progressionText = () => [...document.querySelectorAll(".scoring-weight-table tbody td")]
+    .map((cell) => cell.textContent).filter(Boolean);
+  const before = progressionText();
+  fireEvent.click(toggle);
+  expect(toggle.checked).toBe(false);
+  expect(rows("push")).toContain(15);
+  expect(rows("push")).toEqual(rows("pull"));
+  expect(progressionText()).toEqual(before);
+  fireEvent.click(toggle);
+  for (const discipline of ["push", "pull"]) expect(rows(discipline)).toEqual(occupied(discipline));
+  expect(progressionText()).toEqual(before);
+  expect(fetch).not.toHaveBeenCalled();
+});
+
 it("calculator updates locally and rejects impossible or partial inputs", () => {
   const fetch = vi.fn();
   vi.stubGlobal("fetch", fetch);

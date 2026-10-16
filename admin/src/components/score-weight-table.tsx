@@ -3,9 +3,11 @@ import type { ScoreRules } from "@/lib/score-rules";
 export default function ScoreWeightTable({
   rules,
   discipline,
+  hideEmptyRows = false,
 }: {
   rules: ScoreRules;
   discipline: "push" | "pull";
+  hideEmptyRows?: boolean;
 }) {
   const enabled = rules.weights.filter((w) => w.enabled || w.availability === "coming_soon");
   const boards = enabled.filter((w) => w.discipline === discipline);
@@ -17,15 +19,18 @@ export default function ScoreWeightTable({
   // Keep a usable scale for very large future weights without limiting weights.
   const step = Math.max(5, 5 * Math.ceil((high - low) / 500 / 5));
   const count = Math.min(500, Math.floor((high - low) / step));
-  const weights = [...new Set([
+  const scale = [...new Set([
     ...Array.from({ length: count + 1 }, (_, i) => low + i * step),
     ...values,
   ])].sort((a, b) => a - b);
+  const occupiedWeights = new Set(boards.map((w) => w.weight));
+  const weights = hideEmptyRows ? scale.filter((weight) => occupiedWeights.has(weight)) : scale;
   const title = discipline === "push" ? "Push" : "Pull";
   return (
-    <div>
+    <div className="scoring-weight-group">
       <h3>{title}</h3>
       <div
+        id={`${discipline}-weights`}
         className="scoring-table-scroll"
         role="region"
         aria-label={`${title} weight comparison`}

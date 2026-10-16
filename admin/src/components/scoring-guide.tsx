@@ -1,6 +1,6 @@
 import { formatPoints, recordPoints, type ScoreRules } from "@/lib/score-rules";
 import ScoreCalculator from "./score-calculator";
-import ScoreWeightTable from "./score-weight-table";
+import ScoreWeightTables from "./score-weight-tables";
 export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
   const active = rules.weights.filter((w) => w.enabled);
   const example = active.find((w) => w.id === "planche-hold-full") ?? active[0];
@@ -123,8 +123,7 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
           exercise; progressions on the same row have the same weight.
           SAT means straight-arm touch.
         </p>
-        <ScoreWeightTable rules={rules} discipline="push" />
-        <ScoreWeightTable rules={rules} discipline="pull" />
+        <ScoreWeightTables rules={rules} />
       </section>
       <section id="examples">
         <div>

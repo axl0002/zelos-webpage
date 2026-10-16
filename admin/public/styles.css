@@ -1066,6 +1066,46 @@ body {
   min-width: 720px;
 }
 
+.scoring-row-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 44px;
+  margin: 1rem 0 1.5rem;
+  color: var(--site-foreground);
+  cursor: pointer;
+}
+
+.scoring-row-toggle input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--site-foreground);
+}
+
+.scoring-row-toggle input:focus-visible {
+  outline: 2px solid var(--site-foreground);
+  outline-offset: 4px;
+}
+
+.scoring-weight-groups {
+  display: grid;
+  gap: 3rem;
+}
+
+.scoring-weight-group {
+  min-width: 0;
+}
+
+.document-page .scoring-weight-group h3 {
+  margin-top: 0;
+}
+
+.scoring-page .scoring-weight-table th,
+.scoring-page .scoring-weight-table td {
+  padding: 0.25rem 0.5rem;
+  line-height: 1.4;
+}
+
 .scoring-weight-table th:first-child {
   position: sticky;
   left: 0;
