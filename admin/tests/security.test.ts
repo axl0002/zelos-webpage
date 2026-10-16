@@ -25,6 +25,21 @@ const request = (
     body: JSON.stringify(body),
   });
 describe("server authorization", () => {
+  it("explains a single-exercise rejection from the approval guard", async () => {
+    client.auth.getUser.mockResolvedValue({ data: { user: { id: "admin" } }, error: null });
+    client.rpc
+      .mockResolvedValueOnce({ data: { boards: [] }, error: null })
+      .mockResolvedValueOnce({ data: null, error: { code: "22023", message: "single_exercise_required" } });
+    const res = await decide(request("review/decision", {
+      post_id: "clip", revision: 1, decision: "approve", board_id: "pull-up",
+      value: 5, note: "", watched: true, replace_current: false,
+    }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toContain("mentions a combo or has multiple exercise tags");
+    expect(client.rpc.mock.calls.map(([name]) => name)).toEqual([
+      "admin_rank_review_context", "admin_decide_rank_candidate",
+    ]);
+  });
   it("sends an empty optional rejection note to the RPC without inventing a reason", async () => {
     client.auth.getUser.mockResolvedValue({ data: { user: { id: "admin" } }, error: null });
     client.rpc

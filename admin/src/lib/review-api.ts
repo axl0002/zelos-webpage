@@ -64,6 +64,8 @@ export function rpcFailure(error: { code?: string; message?: string }) {
       "This clip mentions assistance and is not eligible for ranking. Scan the queue to apply the automatic rejection.",
     ranking_keywords_not_eligible:
       "This clip mentions bad form or added weight and is not eligible for ranking. Scan the queue to apply the automatic rejection.",
+    single_exercise_required:
+      "Ranking requires a single exercise. This clip mentions a combo or has multiple exercise tags. Scan the queue to apply the automatic rejection.",
     admin_required: "This account does not have admin access.",
   };
   return NextResponse.json(
