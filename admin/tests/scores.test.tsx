@@ -66,7 +66,7 @@ it("compares every enabled progression at its weight and excludes disabled progr
   }
   const push = screen.getByRole("table", { name: "All push exercise and progression weights" });
   const pressColumn = within(push).getAllByRole("columnheader").findIndex((header) => header.textContent?.startsWith("Planche Press"));
-  for (const weight of [35, 50]) {
+  for (const weight of rules.weights.filter((w) => w.exercise === "Planche Press" && !w.enabled).map((w) => w.weight)) {
     const row = within(push).getByRole("rowheader", { name: String(weight) }).closest("tr")!;
     expect(within(row).getAllByRole("cell")[pressColumn - 1].textContent).toBe("");
   }
