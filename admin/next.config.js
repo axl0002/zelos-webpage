@@ -18,6 +18,11 @@ module.exports = (phase) => {
           permanent: true,
         },
         {
+          source: "/scores",
+          destination: "/scoring",
+          permanent: true,
+        },
+        {
           source: "/scores/:path*",
           destination: "/scoring/:path*",
           permanent: true,

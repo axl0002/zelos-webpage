@@ -112,8 +112,7 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
         <div>
           <h2>2. Exercise and Progression Weights</h2>
           <p>
-            These are the current weights for enabled progressions and
-            provisional weights for coming-soon exercises.
+            These are the configured exercise and progression weights.
             Weights express progression difficulty in the scoring system;
             they are adjustable policy choices, not a scientific measure of
             strength.
@@ -122,8 +121,7 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
         <p>
           Weights run from lowest to highest down the left. Each column is an
           exercise; progressions on the same row have the same weight.
-          Coming-soon exercises do not accept submissions or contribute points
-          until they are released. SAT means straight-arm touch.
+          SAT means straight-arm touch.
         </p>
         <ScoreWeightTable rules={rules} discipline="push" />
         <ScoreWeightTable rules={rules} discipline="pull" />

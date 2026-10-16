@@ -191,12 +191,12 @@
       "availability": "coming_soon"
     },
     {
-      "id": "wide-touch-hold-full",
-      "name": "Wide Touch Hold · Full",
+      "id": "wide-front-lever-touch-full",
+      "name": "Wide Front Lever Touch · Full",
       "metric": "seconds",
       "weight": 175,
       "enabled": false,
-      "exercise": "Wide Touch Hold",
+      "exercise": "Wide Front Lever Touch",
       "discipline": "pull",
       "progression": "Full",
       "availability": "coming_soon"

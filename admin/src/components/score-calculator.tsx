@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { formatPoints, recordPoints, type ScoreRules } from "@/lib/score-rules";
 export default function ScoreCalculator({ rules }: { rules: ScoreRules }) {
-  const choices = rules.weights.filter((w) => w.enabled);
+  const choices = rules.weights.filter((w) => w.enabled || w.availability === "coming_soon");
   const [board, setBoard] = useState(
     choices.find((w) => w.id === "planche-hold-full")?.id ??
       choices[0]?.id ??
