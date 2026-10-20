@@ -773,3 +773,10 @@ textarea {
     font-size: 10px;
   }
 }
+
+.ranking-flag-detail { display: flex; flex-direction: column; gap: 16px; }
+.ranking-flag-detail video { width: 100%; max-height: 560px; background: #111; border-radius: 12px; }
+
+.review-queue-links { display: flex; flex-wrap: wrap; gap: 12px 20px; margin: 0 0 24px; font-size: 13px; }
+.review-queue-links [aria-current="page"] { font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+.review-rule-copy { white-space: pre-wrap; overflow-wrap: anywhere; }

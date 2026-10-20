@@ -35,6 +35,7 @@ export function parseDecision(value: unknown): Decision | null {
       !d.board_id ||
       !Number.isSafeInteger(d.value) ||
       d.value! < 1 ||
+      d.value! > 2147483647 ||
       !d.watched)
   )
     return null;
@@ -58,7 +59,10 @@ export function rpcFailure(error: { code?: string; message?: string }) {
       "Choose an active progression and enter a valid whole-number result.",
     hold_too_short:
       "The video must be at least one second longer than the claimed hold.",
+    hold_too_long:
+      "This new hold upload is more than 5 seconds longer than the claim. Ask the uploader to trim it in the app and submit a new clip.",
     video_review_required: "Confirm that you watched and checked the clip.",
+    invalid_rule_choices: "These rules changed. Refresh the queue and select the rules again.",
     invalid_decision: "Check the review details and try again.",
     assisted_exercise_not_eligible:
       "This clip mentions assistance and is not eligible for ranking. Scan the queue to apply the automatic rejection.",
