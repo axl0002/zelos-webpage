@@ -1,4 +1,5 @@
 "use client";
+import ReviewQueueNav from "./review-queue-nav";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Board, Candidate, Decision, QueuePage } from "@/lib/review-types";
 import { mediaUrls } from "@/lib/review-media";
@@ -182,6 +183,7 @@ export default function ReviewDashboard({
         </a>
         <a href="/admin/ranked-uploads" className="nav-item">Ranked uploads</a>
         <a href="/admin/ranking-flags" className="nav-item"><span>⚑</span> Ranking flags</a>
+      <a href="/admin/reports" className="nav-item">User reports</a>
         <a href="/admin/safety" className="nav-item">
           <span>◈</span> Upload safety
         </a>
@@ -219,6 +221,7 @@ export default function ReviewDashboard({
             {scanning ? "Scanning…" : "Scan training clips"}
           </button>
         </header>
+      <ReviewQueueNav active="/admin" />
         {scanning && (
           <p role="status" className="notice">
             {scanProgress ||

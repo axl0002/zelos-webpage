@@ -50,6 +50,8 @@ export function parseDecision(value: unknown): Decision | null {
 }
 export function rpcFailure(error: { code?: string; message?: string }) {
   const messages: Record<string, string> = {
+    case_unavailable: "This report is no longer available. Refresh the queue.",
+    case_conflict: "This report was already resolved or changed. Refresh the queue before deciding.",
     review_conflict:
       "Someone already reviewed or updated this clip. Refresh the queue.",
     candidate_changed_rescan:

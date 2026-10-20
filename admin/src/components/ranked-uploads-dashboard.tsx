@@ -1,4 +1,5 @@
 "use client";
+import ReviewQueueNav from "./review-queue-nav";
 import type {ExerciseRule} from "@/lib/exercise-rules";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -62,6 +63,7 @@ export default function RankedUploadsDashboard() {
       <a href="/admin" className="nav-item">Exercise review</a>
       <a href="/admin/ranked-uploads" className="nav-item active" aria-current="page">Ranked uploads</a>
       <a href="/admin/ranking-flags" className="nav-item">Ranking flags</a>
+      <a href="/admin/reports" className="nav-item">User reports</a>
       <a href="/admin/safety" className="nav-item">Upload safety</a>
     </aside>
     <main className="main">
@@ -69,10 +71,7 @@ export default function RankedUploadsDashboard() {
         <p className="eyebrow">BEFORE PUBLICATION</p><h1>Ranked uploads</h1>
         <p className="muted">Check the complete video against the exercise rules before it becomes public or earns points.</p>
       </div><button className="button secondary" disabled={loading || busy} onClick={() => void refresh()}>Refresh queue</button></header>
-      <nav className="review-queue-links" aria-label="Review queues">
-        <a href="/admin">Exercise review</a><a href="/admin/ranked-uploads" aria-current="page">Ranked uploads</a>
-        <a href="/admin/ranking-flags">Ranking flags</a><a href="/admin/safety">Upload safety</a>
-      </nav>
+      <ReviewQueueNav active="/admin/ranked-uploads" />
       {error && <p className="notice error" role="alert">{error}</p>}
       {notice && <p className="notice success" role="status">{notice}</p>}
       <div className="review-layout">
