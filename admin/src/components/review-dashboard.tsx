@@ -180,6 +180,8 @@ export default function ReviewDashboard({
         <a href="/admin" className="nav-item active">
           <span>▤</span> Exercise review
         </a>
+        <a href="/admin/ranked-uploads" className="nav-item">Ranked uploads</a>
+        <a href="/admin/ranking-flags" className="nav-item"><span>⚑</span> Ranking flags</a>
         <a href="/admin/safety" className="nav-item">
           <span>◈</span> Upload safety
         </a>
@@ -454,7 +456,8 @@ export function CandidateReview({
     !!board &&
     Number.isSafeInteger(numeric) &&
     numeric >= 1 &&
-    numeric <= board.max_value &&
+    numeric <= 2147483647 &&
+    (board.metric !== "seconds" || numeric <= board.max_value) &&
     !tooLong &&
     source < urls.length;
   function chooseExercise(id: string) {
@@ -626,7 +629,7 @@ export function CandidateReview({
                 id="result"
                 type="number"
                 min="1"
-                max={board?.max_value}
+                max={board?.metric === "seconds" ? board.max_value : undefined}
                 step="1"
                 placeholder="Count from the video"
                 value={value}

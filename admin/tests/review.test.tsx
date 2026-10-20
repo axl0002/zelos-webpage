@@ -77,7 +77,7 @@ const decision: Decision = {
 };
 describe("input boundary", () => {
   it("rejects guessed missing fractional and invalid counts", () => {
-    for (const value of [null, 0, -1, 1.5, "2", Infinity])
+    for (const value of [null, 0, -1, 1.5, "2", Infinity, 2147483648])
       expect(parseDecision({ ...decision, value })).toBeNull();
     expect(parseDecision({ ...decision, watched: false })).toBeNull();
     expect(parseDecision({ ...decision, revision: 0 })).toBeNull();
@@ -275,5 +275,25 @@ it("changing exercise clears the prior count", () => {
     (screen.getByLabelText("Hold time (whole seconds)") as HTMLInputElement)
       .value,
   ).toBe("");
+  expect((screen.getByText("Approve ranking ↗") as HTMLButtonElement).disabled).toBe(true);
+});
+
+it("accepts rep approvals above the old exercise cap while preserving hold limits", async () => {
+  const fetch = vi.fn().mockResolvedValue({ok: true, json: async () => ({active: true})});
+  vi.stubGlobal("fetch", fetch);
+  const {unmount} = render(<CandidateReview candidate={candidate} boards={boards} onSaved={vi.fn()} />);
+  const count = screen.getByLabelText("Completed reps");
+  expect(count.getAttribute("max")).toBeNull();
+  fireEvent.change(count, {target: {value: "61"}});
+  fireEvent.click(screen.getByText("Approve ranking ↗"));
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+  expect(JSON.parse(fetch.mock.calls[0][1].body).value).toBe(61);
+  unmount();
+  render(<CandidateReview candidate={{...candidate, duration_ms: 180000,
+    suggestions: [{exercise_id: "planche", name: "Planche Hold", evidence: ["title"]}]}}
+    boards={boards} onSaved={vi.fn()} />);
+  const hold = screen.getByLabelText("Hold time (whole seconds)");
+  expect(hold.getAttribute("max")).toBe("120");
+  fireEvent.change(hold, {target: {value: "121"}});
   expect((screen.getByText("Approve ranking ↗") as HTMLButtonElement).disabled).toBe(true);
 });
