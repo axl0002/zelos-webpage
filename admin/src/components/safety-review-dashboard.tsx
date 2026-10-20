@@ -1,4 +1,5 @@
 "use client";
+import ReviewQueueNav from "./review-queue-nav";
 
 import { useEffect, useRef, useState } from "react";
 import type { SafetyCase } from "@/lib/safety-review";
@@ -32,6 +33,7 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
   const [note, setNote] = useState("");
   const [confirm, setConfirm] = useState<"approve" | "reject" | null>(null);
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
   const epoch = useRef(0);
   const current = queue.find((item) => item.id === selected) ?? null;
   const awaitingReview = current && (!current.state || current.state === "review");
@@ -39,6 +41,11 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
     ? "Rejected · retained" : item.state === "failed" ? "Scan failed · retained" : "Awaiting review";
 
   async function refresh(signal?: AbortSignal) {
+    epoch.current++;
+    setPreview(null);
+    setPreviewLoading(false);
+    setWatched(false);
+    setConfirm(null);
     setLoading(true);
     setError("");
     try {
@@ -59,7 +66,17 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
     return () => controller.abort();
   }, []);
 
+  useEffect(() => {
+    epoch.current++;
+    setPreview(null);
+    setPreviewLoading(false);
+    setWatched(false);
+    setNote("");
+    setConfirm(null);
+  }, [selected]);
+
   function choose(id: string) {
+    if (savingRef.current) return;
     epoch.current++;
     setSelected(id);
     setPreview(null);
@@ -72,10 +89,13 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
   }
 
   async function openPreview() {
-    if (!current) return;
+    if (!current || savingRef.current || previewLoading) return;
     const id = current.id;
     const requestEpoch = ++epoch.current;
     setPreviewLoading(true);
+    setPreview(null);
+    setWatched(false);
+    setConfirm(null);
     setError("");
     try {
       const result = await api<{ url: string }>("/preview", { upload_id: id });
@@ -88,7 +108,8 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
   }
 
   async function decide() {
-    if (!current || !awaitingReview || !confirm || !watched) return;
+    if (!current || !awaitingReview || !confirm || !watched || preview?.id !== current.id || savingRef.current || (confirm === "reject" && !note.trim())) return;
+    savingRef.current = true;
     const id = current.id;
     setSaving(true);
     setError("");
@@ -115,6 +136,7 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
       setError((cause as Error).message);
       setConfirm(null);
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   }
@@ -127,6 +149,7 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
         <a href="/admin" className="nav-item"><span>▤</span> Exercise review</a>
         <a href="/admin/ranked-uploads" className="nav-item">Ranked uploads</a>
         <a href="/admin/ranking-flags" className="nav-item"><span>⚑</span> Ranking flags</a>
+      <a href="/admin/reports" className="nav-item">User reports</a>
         <a href="/admin/safety" className="nav-item active"><span>◈</span> Upload safety</a>
         <div className="sidebar-bottom">
           <span className="connection"><i /> Supabase</span>
@@ -151,8 +174,9 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
             <h1>Upload safety</h1>
             <p className="muted">Flagged, rejected and failed safety scans remain private for inspection.</p>
           </div>
-          <button className="button secondary" onClick={() => void refresh()} disabled={loading}>Refresh queue</button>
+          <button className="button secondary" onClick={() => void refresh()} disabled={loading || saving}>Refresh queue</button>
         </header>
+      <ReviewQueueNav active="/admin/safety" />
         {notice && <p role="status" className="notice success">{notice}</p>}
         {error && <p role="alert" className="notice error">{error}</p>}
         <div className="review-layout">
@@ -161,7 +185,7 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
             {!loading && queue.length === 0 && <p className="empty">No uploads awaiting review or retained for inspection.</p>}
             {queue.map((item) => (
               <button key={item.id} className={`candidate ${selected === item.id ? "selected" : ""}`}
-                onClick={() => choose(item.id)}>
+                disabled={saving} onClick={() => choose(item.id)}>
                 <span className="poster-placeholder">▶</span>
                 <span className="candidate-copy">
                   <strong>{item.title || (item.post_id ? "Untitled upload" : "Profile image")}</strong>
@@ -183,13 +207,13 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
                   <div className="video-frame">
                     {preview?.id === current.id
                       ? current.post_id
-                        ? <video key={preview.url} src={preview.url} controls playsInline preload="metadata" />
-                        : <img key={preview.url} src={preview.url} alt="Private profile image under review" />
+                        ? <video key={preview.url} src={preview.url} controls playsInline preload="metadata" onError={() => {setPreview(null); setWatched(false); setConfirm(null); setError("The video could not play. Open a new private link before reviewing.");}} />
+                        : <img key={preview.url} src={preview.url} alt="Private profile image under review" onError={() => {setPreview(null); setWatched(false); setConfirm(null); setError("The image could not load. Open a new private link before reviewing.");}} />
                       : <button className="button secondary" onClick={() => void openPreview()} disabled={previewLoading}>
                           {previewLoading ? "Opening…" : `Open private ${current.post_id ? "video" : "image"}`}
                         </button>}
                   </div>
-                  {preview && <button className="button text" onClick={() => void openPreview()}>Refresh video link</button>}
+                  {preview && <button className="button text" disabled={previewLoading || saving} onClick={() => void openPreview()}>Refresh video link</button>}
                   <p className="small muted">This link expires after two minutes. Refresh it if the preview stops.</p>
                 </div>
                 <div className="decision-form">
@@ -213,11 +237,11 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
                       : "The safety check did not complete. The original is retained for inspection; it has not been approved or published."}
                   </p>}
                   {awaitingReview && <><label className="check"><input type="checkbox" checked={watched}
-                    onChange={(event) => setWatched(event.target.checked)} disabled={!preview} />
+                    onChange={(event) => {setWatched(event.target.checked); setConfirm(null);}} disabled={!preview || saving} />
                     I reviewed the full {current.post_id ? "video" : "image"} and checked the flagged content.
                   </label>
                   <label htmlFor="safety-note">Review note</label>
-                  <textarea id="safety-note" value={note} onChange={(event) => setNote(event.target.value)}
+                  <textarea id="safety-note" disabled={saving} value={note} onChange={(event) => {setNote(event.target.value); setConfirm(null);}}
                     maxLength={2000} placeholder="Required if rejecting; optional if approving" />
                   <div className="decision-actions">
                     <button className="button secondary" disabled={!watched || !note.trim() || saving}

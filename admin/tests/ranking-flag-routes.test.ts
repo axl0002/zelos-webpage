@@ -31,3 +31,10 @@ it("returns frame reason and saved boundary evidence only through the admin queu
  expect(client.rpc).toHaveBeenCalledWith("admin_ranking_flags");
  expect(response.headers.get("cache-control")).toBe("private, no-store");
 });
+it("forwards an evidence-only dismissal for the database to check, never a false-viewed rejection",async()=>{
+ client.auth.getUser.mockResolvedValue({data:{user:{id:"admin"}},error:null});client.rpc.mockResolvedValue({data:[],error:null});
+ const dismiss={...decision,confirmed:false,watched_video:false,review_note:"Content no longer available"};
+ expect((await POST(request(dismiss))).status).toBe(200);
+ expect(client.rpc).toHaveBeenLastCalledWith("admin_resolve_ranking_flag",dismiss);
+ expect((await POST(request({...dismiss,confirmed:true}))).status).toBe(400);
+});

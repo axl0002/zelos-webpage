@@ -1,6 +1,6 @@
 export function mediaUrls(candidate: {
-  renditions: Record<string, string>;
-  primary_url: string;
+  renditions: Record<string, string> | null;
+  primary_url: string | null;
 }): string[] {
   const safe = (url: string) => {
     try {
@@ -15,14 +15,14 @@ export function mediaUrls(candidate: {
       return false;
     }
   };
-  const entries = Object.entries(candidate.renditions).sort(
+  const entries = Object.entries(candidate.renditions ?? {}).sort(
     ([a], [b]) =>
       (/720/.test(a) ? 0 : /480/.test(a) ? 1 : 2) -
       (/720/.test(b) ? 0 : /480/.test(b) ? 1 : 2),
   );
   return [
     ...new Set(
-      [...entries.map(([, url]) => url), candidate.primary_url].filter(safe),
+      [...entries.map(([, url]) => url), ...(candidate.primary_url ? [candidate.primary_url] : [])].filter(safe),
     ),
   ];
 }

@@ -5,7 +5,7 @@ export type RankingFlag = {
   metric: string | null; rule_violations: ExerciseRule[]; rules: ExerciseRule[];
   claimed_value: number; board_name: string; board_metric: string;
   username: string; title: string; created_at: string; submission_status: string;
-  primary_url: string; renditions: Record<string, string>;
+  primary_url: string | null; renditions: Record<string, string> | null; review_unavailable?: boolean;
   reported_hold_start_ms?: number | null; reported_hold_end_ms?: number | null;
   hold_timing?: {start_ms: number; end_ms: number; duration_ms: number} | null;
 };
@@ -36,8 +36,8 @@ export function parseRankingFlagDecision(value: unknown) {
   const d = value as Record<string, unknown>;
   const ruleIds = parseRuleIds(d.rule_ids);
   if (!ruleIds || (!d.confirmed && ruleIds.length > 0) || typeof d.report_id !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(d.report_id) ||
-    typeof d.confirmed !== "boolean" || d.watched_video !== true || typeof d.review_note !== "string" ||
+    typeof d.confirmed !== "boolean" || typeof d.watched_video !== "boolean" || (d.confirmed && d.watched_video !== true) || typeof d.review_note !== "string" ||
     d.review_note.length > 1000 || (d.confirmed && d.review_note.trim().length < 3 && ruleIds.length === 0)) return null;
   return { report_id: d.report_id, confirmed: d.confirmed,
-    review_note: d.review_note.trim(), watched_video: true, rule_ids: ruleIds };
+    review_note: d.review_note.trim(), watched_video: d.watched_video, rule_ids: ruleIds };
 }

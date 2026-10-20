@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import {rankingFlagHoldTiming, rankingReasons, type RankingFlag} from "../src/lib/ranking-flags";
 import RankingFlagsDashboard from "../src/components/ranking-flags-dashboard";
 const item: RankingFlag = {
@@ -82,4 +82,36 @@ it("validates frame evidence while retaining legacy flags without timing",()=>{
   expect(rankingFlagHoldTiming({...item,reason:"incorrect_hold_frames",reported_hold_start_ms:start,reported_hold_end_ms:end})).toBeNull();
  }
  expect(rankingFlagHoldTiming({...item,metric:"reps",reported_hold_start_ms:1000,reported_hold_end_ms:11500})).toBeNull();
+});
+it("dismisses a flag once without rejecting the ranking, then moves the completed flag out of the queue",async()=>{
+ const fetch=vi.fn(async(_path:string,o:RequestInit)=>({ok:true,json:async()=>o.method==="POST"?{ok:true}:[item]}));
+ vi.stubGlobal("fetch",fetch);render(<RankingFlagsDashboard/>);await screen.findByText("Keep arms straight.");
+ fireEvent.click(screen.getByLabelText("I watched the clip and checked the reported issue"));
+ fireEvent.click(screen.getByRole("button",{name:"Dismiss flag"}));
+ const save=screen.getByRole("button",{name:"Confirm decision"});fireEvent.click(save);fireEvent.click(save);
+ await screen.findByText("Flag dismissed. The ranking is unchanged.");
+ const calls=fetch.mock.calls.filter(([,o])=>o.method==="POST");expect(calls).toHaveLength(1);
+ expect(JSON.parse(calls[0][1].body as string)).toEqual({report_id:item.id,confirmed:false,review_note:item.details,watched_video:true,rule_ids:[]});
+ expect(screen.queryByRole("button",{name:"Reject ranking"})).toBeNull();
+});
+it("invalidates a pending ranking confirmation when playback fails",async()=>{
+ const fetch=vi.fn(async()=>({ok:true,json:async()=>[item]}));vi.stubGlobal("fetch",fetch);
+ const {container}=render(<RankingFlagsDashboard/>);await screen.findByText("Keep arms straight.");
+ fireEvent.click(screen.getByLabelText("I watched the clip and checked the reported issue"));fireEvent.click(screen.getByRole("button",{name:"Reject ranking"}));
+ expect(screen.getByRole("dialog")).toBeTruthy();fireEvent.error(container.querySelector("video")!);
+ await waitFor(()=>expect(screen.queryByRole("dialog")).toBeNull());
+ expect((screen.getByRole("button",{name:"Reject ranking"}) as HTMLButtonElement).disabled).toBe(true);
+ expect(fetch).toHaveBeenCalledTimes(1);
+});
+it("lets admins explicitly close a server-confirmed unavailable flag without pretending to watch missing media",async()=>{
+ const fetch=vi.fn(async(_path:string,o:RequestInit)=>({ok:true,json:async()=>o.method==="POST"?{ok:true}:[{...item,primary_url:null,renditions:null,review_unavailable:true,submission_status:"removed"}]}));
+ vi.stubGlobal("fetch",fetch);const {container}=render(<RankingFlagsDashboard/>);
+ await screen.findByText(/The ranked content is no longer available for review/);
+ expect(container.querySelector("video")).toBeNull();
+ fireEvent.click(screen.getByLabelText("I reviewed the available report evidence"));
+ expect((screen.getByRole("button",{name:"Reject ranking"}) as HTMLButtonElement).disabled).toBe(true);
+ fireEvent.click(screen.getByRole("button",{name:"Dismiss flag"}));fireEvent.click(screen.getByRole("button",{name:"Confirm decision"}));
+ await screen.findByText("Flag dismissed. The ranking is unchanged.");
+ const call=fetch.mock.calls.find(([,o])=>o.method==="POST")!;
+ expect(JSON.parse(call[1].body as string)).toEqual({report_id:item.id,confirmed:false,review_note:item.details,watched_video:false,rule_ids:[]});
 });

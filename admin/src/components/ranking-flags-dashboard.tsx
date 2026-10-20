@@ -1,4 +1,5 @@
 "use client";
+import ReviewQueueNav from "./review-queue-nav";
 import { useEffect, useRef, useState } from "react";
 import { mediaUrls } from "@/lib/review-media";
 import { rankingFlagHoldTiming, rankingReasons, type RankingFlag } from "@/lib/ranking-flags";
@@ -41,11 +42,13 @@ export default function RankingFlagsDashboard() {
       <a href="/admin/safety" className="nav-item">Upload safety</a>
       <a href="/admin/ranked-uploads" className="nav-item">Ranked uploads</a>
         <a href="/admin/ranking-flags" className="nav-item active">Ranking flags</a>
+      <a href="/admin/reports" className="nav-item">User reports</a>
     </aside>
     <main className="main"><header className="page-header"><div><h1>Ranking flags</h1>
       <p className="muted">Check the reported exercise, result, hold frames or form before deciding.</p></div>
       <button className="button secondary" disabled={loading || busy} onClick={() => void refresh()}>Refresh queue</button>
     </header>
+      <ReviewQueueNav active="/admin/ranking-flags" />
       {error && <p className="error" role="alert">{error}</p>}
       {notice && <p role="status">{notice}</p>}
       <div className="review-layout"><section className="queue-panel" aria-label="Ranking flags">
@@ -74,24 +77,28 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
   const validRejection = (ruleType && choices.length > 0 ? chosen.length > 0 : note.trim().length >= 3 || chosen.length > 0);
   const [watched, setWatched] = useState(false);
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
   const [confirm, setConfirm] = useState<boolean | null>(null);
   const [error, setError] = useState("");
   const urls = mediaUrls(item);
   const videoRef = useRef<HTMLVideoElement>(null);
   const timing = rankingFlagHoldTiming(item);
   const [source, setSource] = useState(0);
-  const canReject = item.submission_status === "eligible";
+  const unavailable = item.review_unavailable === true;
+  const canReject = item.submission_status === "eligible" && !unavailable;
   async function decide() {
-    if (confirm === null || saving) return;
+    if (confirm === null || savingRef.current || !watched || (!urls[source] && !unavailable) ||
+      (confirm && (!canReject || !validRejection || (frameFlag && !timing)))) return;
+    savingRef.current = true;
     setSaving(true); onBusy(true); setError("");
-    try { await api({ report_id: item.id, confirmed: confirm, review_note: note, watched_video: watched, rule_ids: confirm ? chosen.map(rule => rule.id) : [] }); onSaved(confirm); }
+    try { await api({ report_id: item.id, confirmed: confirm, review_note: note, watched_video: watched && !unavailable, rule_ids: confirm ? chosen.map(rule => rule.id) : [] }); onSaved(confirm); }
     catch (cause) { setError((cause as Error).message); setConfirm(null); }
-    finally { setSaving(false); onBusy(false); }
+    finally { savingRef.current = false; setSaving(false); onBusy(false); }
   }
   return <section className="review-panel ranking-flag-detail"><h2>{item.board_name}</h2>
     <p>{item.username} · Listed result: {item.reported_value ?? item.claimed_value} {item.metric ?? item.board_metric}</p>
     {source < urls.length ? <video ref={videoRef} key={urls[source]} controls playsInline preload="metadata" src={urls[source]}
-      aria-label="Reported clip" onError={() => { setSource(old => old + 1); setWatched(false); }} />
+      aria-label="Reported clip" onError={() => { setSource(old => old + 1); setWatched(false); setConfirm(null); }} />
       : <p role="alert">Video unavailable. Refresh the queue before reviewing.</p>}
     {timing && <div className="playback-tools" aria-label="Reported hold timing">
       <p>{timing.snapshot ? "Reported hold boundaries" : "Selected hold boundaries"} · {(timing.duration_ms / 1000).toFixed(3)} s</p>
@@ -110,9 +117,9 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
     {item.corrected_value !== null && <p>Suggested correction: {item.corrected_value} {item.metric}</p>}
     {item.rule_violations.length > 0 && <ul>{item.rule_violations.map(rule => <li key={rule.id}>{rule.text}</li>)}</ul>}
     {item.details && <p>{item.details}</p>}
-    {!canReject && <p>This result is no longer eligible for ranking. You can dismiss this flag.</p>}
-    <label><input type="checkbox" checked={watched} disabled={saving || !urls[source]}
-      onChange={event => setWatched(event.target.checked)} /> I watched the clip and checked the reported issue</label>
+    {!canReject && <p>{unavailable ? "The ranked content is no longer available for review. You can inspect the report evidence and dismiss the flag; this does not change rankings." : "This result is no longer eligible for ranking. You can dismiss this flag."}</p>}
+    <label><input type="checkbox" checked={watched} disabled={saving || (!urls[source] && !unavailable)}
+      onChange={event => {setWatched(event.target.checked); setConfirm(null);}} /> {unavailable ? "I reviewed the available report evidence" : "I watched the clip and checked the reported issue"}</label>
     {choices.length > 0 && <fieldset disabled={saving}><legend>Rules verified as not met</legend>
       {choices.map(rule => <label className="check" key={rule.id}><input type="checkbox" checked={selectedRules.includes(rule.id)}
         disabled={saving || (selectedRules.length >= 8 && !selectedRules.includes(rule.id))}
@@ -121,7 +128,7 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
     </fieldset>}
     <label htmlFor="ranking-rejection-note">Reason shown to the uploader if rejected</label>
     <textarea id="ranking-rejection-note" value={note} maxLength={1000} rows={4} disabled={saving}
-      onChange={event => setNote(event.target.value)} />
+      onChange={event => {setNote(event.target.value); setConfirm(null);}} />
     <p className="muted">Confirm only the issues you verified. Rejecting removes this result from rankings; the post and video remain available.</p>
     {error && <p role="alert" className="error">{error}</p>}
     <div className="actions"><button className="button secondary" disabled={!watched || saving}
