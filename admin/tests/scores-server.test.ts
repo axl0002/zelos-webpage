@@ -48,7 +48,10 @@ it("returns only validated public JSON and no credential fields", async () => {
     "fetch",
     vi.fn(async () => ({
       ok: true,
-      json: async () => ({ ...fixture, api_key: "secret" }),
+      json: async () => ({ ...fixture, api_key: "secret", clip_policy: {
+        ranked_hold_extra_seconds: 5, ranked_hold_min_extra_seconds: 1, scope: "new_uploads",
+        service_role_key: "private-clip-key",
+      } }),
     })),
   );
   const response = await GET();
@@ -56,7 +59,19 @@ it("returns only validated public JSON and no credential fields", async () => {
   expect(response.headers.get("x-content-type-options")).toBe("nosniff");
   const body = await response.text();
   expect(body).not.toContain("secret");
+  expect(body).not.toContain("private-clip-key");
   expect(body).not.toContain("public-test-key");
+  expect(JSON.parse(body).clip_policy).toEqual({ranked_hold_extra_seconds: 5,
+    ranked_hold_min_extra_seconds: 1, scope: "new_uploads"});
+});
+it("fails closed on malformed clip policy without exposing its contents", async () => {
+  vi.stubGlobal("fetch", vi.fn(async () => ({ok: true, json: async () => ({...fixture,
+    clip_policy: {ranked_hold_extra_seconds: 0, ranked_hold_min_extra_seconds: 1,
+      scope: "new_uploads", service_role_key: "private-clip-key"}})})));
+  const response = await GET();
+  expect(response.status).toBe(503);
+  expect(response.headers.get("cache-control")).toBe("no-store");
+  expect(await response.json()).toEqual({error: "Scoring rules are temporarily unavailable."});
 });
 it("fails closed for unavailable or unknown algorithms without leaking upstream errors", async () => {
   vi.stubGlobal(

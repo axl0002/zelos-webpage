@@ -2,6 +2,8 @@ import { formatPoints, recordPoints, type ScoreRules } from "@/lib/score-rules";
 import ScoreCalculator from "./score-calculator";
 import ScoreWeightTable from "./score-weight-table";
 export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
+  const reviewPolicy = rules.review_policy;
+  const clipPolicy = rules.clip_policy;
   const active = rules.weights.filter((w) => w.enabled);
   const example = active.find((w) => w.id === "planche-hold-full") ?? active[0];
   const pullBest = new Map<string, (typeof active)[number]>();
@@ -333,14 +335,71 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
               a ranking issue alone does not remove its points; a confirmed
               review can.
             </p>
+            {rules.claim_policy && <p>
+              Rep counts must be positive whole numbers, with no exercise-specific maximum.
+              Hold times remain subject to the progression’s configured limit and video-length rules.
+              The publication review policy below still applies to qualifying submissions.
+            </p>}
+            {clipPolicy && <div id="ranked-clip-length">
+              <h4>Video length for new hold records</h4>
+              <p>
+                A new ranked hold video must be at least {clipPolicy.ranked_hold_min_extra_seconds}
+                {" "}second{clipPolicy.ranked_hold_min_extra_seconds === 1 ? "" : "s"} longer than the claimed hold,
+                and no more than {clipPolicy.ranked_hold_extra_seconds}
+                {" "}second{clipPolicy.ranked_hold_extra_seconds === 1 ? "" : "s"} longer.
+                For a 10-second hold, the uploaded clip must be between {10 + clipPolicy.ranked_hold_min_extra_seconds}
+                {" "}and {10 + clipPolicy.ranked_hold_extra_seconds} seconds long, inclusive.
+              </p>
+              <p>
+                Use the app’s video trim tool before uploading to remove unnecessary time before
+                and after the attempt. Keep the full hold visible so its start, finish and form can be checked.
+                Rep-based ranked clips and training clips keep their three-minute limit.
+              </p>
+              <p>
+                This clip-length rule applies only to new uploads. Existing historical records
+                are unaffected by it.
+              </p>
+            </div>}
           </div>
+          {reviewPolicy && <div id="publication-review">
+            <h3>Which ranked uploads need review before publication?</h3>
+            {reviewPolicy.enabled ? <>
+              {reviewPolicy.top_percent > 0 ? <>
+                <p>
+                  New ranked uploads projected to reach the top {reviewPolicy.top_percent}%
+                  {" "}of their worldwide progression board, within the same gender,
+                  require a review before publication. Country filters do not affect this check.
+                </p>
+                <p>
+                  The review cutoff is the number of eligible athletes on the projected board
+                  multiplied by {reviewPolicy.top_percent}% and rounded up to a whole number.
+                  The projection includes the new result and replaces that athlete’s current
+                  result for this comparison. For example, a board with 11 athletes has a
+                  cutoff of rank {Math.ceil(11 * reviewPolicy.top_percent / 100)}.
+                  Equal results share a competition rank, so all ties at the cutoff require review;
+                  the number reviewed can exceed {reviewPolicy.top_percent}%.
+                </p>
+              </> : <p>The percentage-based review threshold is currently disabled.</p>}
+              {reviewPolicy.always_review_boards.length > 0 && <>
+                <p>Every ranked upload on these progression boards requires review, regardless of projected position:</p>
+                <ul>{reviewPolicy.always_review_boards.map(board => <li key={board.id}>{board.name}</li>)}</ul>
+              </>}
+              <p>
+                While review is pending, the video stays private and earns no points.
+                The athlete’s existing current personal best remains in place until the new
+                upload is approved and published. A rejected upload stays private and does not
+                replace that record. Approval still requires the normal publication and eligibility checks.
+              </p>
+              <p>This policy does not make unavailable exercises eligible for ranked submission.</p>
+            </> : <p>The additional review gate for projected ranking position and specified progression boards is currently disabled. Normal safety and eligibility checks still apply.</p>}
+          </div>}
           <div>
             <h3>
               Does voting, popularity or money affect these points?
             </h3>
             <p>
               This formula uses the recorded performance rank, board size,
-              progression weight and smoothing value. Likes, followers, votes
+              progression weight and smoothing value. Likes, followers, certifications, votes
               and payments are not inputs. This guide covers exercise-record
               points for Push and Pull, rather than any separate voting or
               battle rating.

@@ -20,6 +20,20 @@ export type ScoreRules = {
   prior: 0.5;
   formula: string;
   weights: ScoreWeight[];
+  review_policy?: {
+    enabled: boolean;
+    top_percent: number;
+    always_review_boards: {id: string; name: string}[];
+  };
+  claim_policy?: {
+    reps: "positive_integer_no_exercise_maximum";
+    seconds: "positive_integer_board_maximum";
+  };
+  clip_policy?: {
+    ranked_hold_extra_seconds: number;
+    ranked_hold_min_extra_seconds: number;
+    scope: "new_uploads";
+  };
 };
 const finite = (n: unknown): n is number =>
   typeof n === "number" && Number.isFinite(n);
@@ -65,6 +79,31 @@ export function parseScoreRules(value: unknown): ScoreRules {
     new Set(r.weights.map((w) => w.id)).size !== r.weights.length
   )
     throw new Error("Scoring rules unavailable");
+  const policy = r.review_policy;
+  if (policy !== undefined && (!policy || typeof policy !== "object" ||
+    typeof policy.enabled !== "boolean" || !finite(policy.top_percent) ||
+    policy.top_percent < 0 || policy.top_percent > 100 ||
+    !Array.isArray(policy.always_review_boards) || policy.always_review_boards.length > 500 ||
+    policy.always_review_boards.some(board => !board || !text(board.id) || !text(board.name)) ||
+    new Set(policy.always_review_boards.map(board => board.id)).size !== policy.always_review_boards.length)) {
+    throw new Error("Scoring rules unavailable");
+  }
+  const claimPolicy = r.claim_policy;
+  if (claimPolicy !== undefined && (!claimPolicy || typeof claimPolicy !== "object" ||
+    claimPolicy.reps !== "positive_integer_no_exercise_maximum" ||
+    claimPolicy.seconds !== "positive_integer_board_maximum")) {
+    throw new Error("Scoring rules unavailable");
+  }
+  const clipPolicy = r.clip_policy;
+  if (clipPolicy !== undefined && (!clipPolicy || typeof clipPolicy !== "object" ||
+    clipPolicy.scope !== "new_uploads" ||
+    !Number.isSafeInteger(clipPolicy.ranked_hold_extra_seconds) ||
+    !Number.isSafeInteger(clipPolicy.ranked_hold_min_extra_seconds) ||
+    clipPolicy.ranked_hold_min_extra_seconds < 1 ||
+    clipPolicy.ranked_hold_extra_seconds < clipPolicy.ranked_hold_min_extra_seconds ||
+    clipPolicy.ranked_hold_extra_seconds > 180)) {
+    throw new Error("Scoring rules unavailable");
+  }
   // An explicit allowlist also prevents future RPC fields leaking into HTML/JSON.
   return {
     schema_version: 1,
@@ -87,6 +126,19 @@ export function parseScoreRules(value: unknown): ScoreRules {
       enabled: w.enabled,
       availability: w.availability ?? (w.enabled ? "active" : "disabled"),
     })),
+    ...(policy === undefined ? {} : {review_policy: {
+      enabled: policy.enabled,
+      top_percent: policy.top_percent,
+      always_review_boards: policy.always_review_boards.map(board => ({id: board.id, name: board.name})),
+    }}),
+    ...(claimPolicy === undefined ? {} : {claim_policy: {
+      reps: claimPolicy.reps, seconds: claimPolicy.seconds,
+    }}),
+    ...(clipPolicy === undefined ? {} : {clip_policy: {
+      ranked_hold_extra_seconds: clipPolicy.ranked_hold_extra_seconds,
+      ranked_hold_min_extra_seconds: clipPolicy.ranked_hold_min_extra_seconds,
+      scope: "new_uploads" as const,
+    }}),
   };
 }
 export function recordPoints(

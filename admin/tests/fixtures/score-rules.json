@@ -27,7 +27,7 @@
     },
     {
       "id": "front-lever-hold-tuck",
-      "name": "Front Lever Hold · Tuck",
+      "name": "Front Lever Hold \u00b7 Tuck",
       "metric": "seconds",
       "weight": 20,
       "enabled": true,
@@ -38,7 +38,7 @@
     },
     {
       "id": "front-lever-hold-adv-tuck",
-      "name": "Front Lever Hold · Adv Tuck",
+      "name": "Front Lever Hold \u00b7 Adv Tuck",
       "metric": "seconds",
       "weight": 35,
       "enabled": true,
@@ -49,7 +49,7 @@
     },
     {
       "id": "front-lever-hold-straddle",
-      "name": "Front Lever Hold · Straddle",
+      "name": "Front Lever Hold \u00b7 Straddle",
       "metric": "seconds",
       "weight": 55,
       "enabled": true,
@@ -60,7 +60,7 @@
     },
     {
       "id": "front-lever-hold-full",
-      "name": "Front Lever Hold · Full",
+      "name": "Front Lever Hold \u00b7 Full",
       "metric": "seconds",
       "weight": 85,
       "enabled": true,
@@ -71,7 +71,7 @@
     },
     {
       "id": "front-lever-press-tuck",
-      "name": "Front Lever Press · Tuck",
+      "name": "Front Lever Press \u00b7 Tuck",
       "metric": "reps",
       "weight": 35,
       "enabled": false,
@@ -82,7 +82,7 @@
     },
     {
       "id": "front-lever-press-adv-tuck",
-      "name": "Front Lever Press · Adv Tuck",
+      "name": "Front Lever Press \u00b7 Adv Tuck",
       "metric": "reps",
       "weight": 50,
       "enabled": true,
@@ -93,7 +93,7 @@
     },
     {
       "id": "front-lever-press-straddle",
-      "name": "Front Lever Press · Straddle",
+      "name": "Front Lever Press \u00b7 Straddle",
       "metric": "reps",
       "weight": 70,
       "enabled": true,
@@ -104,7 +104,7 @@
     },
     {
       "id": "front-lever-press-full",
-      "name": "Front Lever Press · Full",
+      "name": "Front Lever Press \u00b7 Full",
       "metric": "reps",
       "weight": 100,
       "enabled": true,
@@ -115,7 +115,7 @@
     },
     {
       "id": "front-lever-pull-up-tuck",
-      "name": "Front Lever Pull Up · Tuck",
+      "name": "Front Lever Pull Up \u00b7 Tuck",
       "metric": "reps",
       "weight": 30,
       "enabled": false,
@@ -126,7 +126,7 @@
     },
     {
       "id": "front-lever-pull-up-adv-tuck",
-      "name": "Front Lever Pull Up · Adv Tuck",
+      "name": "Front Lever Pull Up \u00b7 Adv Tuck",
       "metric": "reps",
       "weight": 45,
       "enabled": true,
@@ -137,7 +137,7 @@
     },
     {
       "id": "front-lever-pull-up-straddle",
-      "name": "Front Lever Pull Up · Straddle",
+      "name": "Front Lever Pull Up \u00b7 Straddle",
       "metric": "reps",
       "weight": 65,
       "enabled": true,
@@ -148,7 +148,7 @@
     },
     {
       "id": "front-lever-pull-up-full",
-      "name": "Front Lever Pull Up · Full",
+      "name": "Front Lever Pull Up \u00b7 Full",
       "metric": "reps",
       "weight": 95,
       "enabled": true,
@@ -159,7 +159,7 @@
     },
     {
       "id": "front-lever-touch-adv-tuck",
-      "name": "Front Lever Touch · Adv Tuck",
+      "name": "Front Lever Touch \u00b7 Adv Tuck",
       "metric": "seconds",
       "weight": 65,
       "enabled": false,
@@ -170,7 +170,7 @@
     },
     {
       "id": "front-lever-touch-straddle",
-      "name": "Front Lever Touch · Straddle",
+      "name": "Front Lever Touch \u00b7 Straddle",
       "metric": "seconds",
       "weight": 95,
       "enabled": false,
@@ -181,7 +181,7 @@
     },
     {
       "id": "front-lever-touch-full",
-      "name": "Front Lever Touch · Full",
+      "name": "Front Lever Touch \u00b7 Full",
       "metric": "seconds",
       "weight": 130,
       "enabled": false,
@@ -192,7 +192,7 @@
     },
     {
       "id": "wide-front-lever-touch-full",
-      "name": "Wide Front Lever Touch · Full",
+      "name": "Wide Front Lever Touch \u00b7 Full",
       "metric": "seconds",
       "weight": 175,
       "enabled": false,
@@ -203,13 +203,13 @@
     },
     {
       "id": "sat-full",
-      "name": "SAT · Full",
+      "name": "SAT",
       "metric": "seconds",
       "weight": 250,
       "enabled": false,
       "exercise": "SAT",
       "discipline": "pull",
-      "progression": "Full",
+      "progression": null,
       "availability": "coming_soon"
     },
     {
@@ -225,7 +225,7 @@
     },
     {
       "id": "planche-hold-tuck",
-      "name": "Planche Hold · Tuck",
+      "name": "Planche Hold \u00b7 Tuck",
       "metric": "seconds",
       "weight": 20,
       "enabled": true,
@@ -236,7 +236,7 @@
     },
     {
       "id": "planche-hold-adv-tuck",
-      "name": "Planche Hold · Adv Tuck",
+      "name": "Planche Hold \u00b7 Adv Tuck",
       "metric": "seconds",
       "weight": 35,
       "enabled": true,
@@ -247,7 +247,7 @@
     },
     {
       "id": "planche-hold-straddle",
-      "name": "Planche Hold · Straddle",
+      "name": "Planche Hold \u00b7 Straddle",
       "metric": "seconds",
       "weight": 55,
       "enabled": true,
@@ -258,7 +258,7 @@
     },
     {
       "id": "planche-hold-full",
-      "name": "Planche Hold · Full",
+      "name": "Planche Hold \u00b7 Full",
       "metric": "seconds",
       "weight": 85,
       "enabled": true,
@@ -269,7 +269,7 @@
     },
     {
       "id": "planche-press-tuck",
-      "name": "Planche Press · Tuck",
+      "name": "Planche Press \u00b7 Tuck",
       "metric": "reps",
       "weight": 35,
       "enabled": false,
@@ -280,7 +280,7 @@
     },
     {
       "id": "planche-press-adv-tuck",
-      "name": "Planche Press · Adv Tuck",
+      "name": "Planche Press \u00b7 Adv Tuck",
       "metric": "reps",
       "weight": 50,
       "enabled": false,
@@ -291,7 +291,7 @@
     },
     {
       "id": "planche-press-straddle",
-      "name": "Planche Press · Straddle",
+      "name": "Planche Press \u00b7 Straddle",
       "metric": "reps",
       "weight": 70,
       "enabled": true,
@@ -302,7 +302,7 @@
     },
     {
       "id": "planche-press-full",
-      "name": "Planche Press · Full",
+      "name": "Planche Press \u00b7 Full",
       "metric": "reps",
       "weight": 100,
       "enabled": true,
@@ -313,7 +313,7 @@
     },
     {
       "id": "planche-push-up-tuck",
-      "name": "Planche Push Up · Tuck",
+      "name": "Planche Push Up \u00b7 Tuck",
       "metric": "reps",
       "weight": 30,
       "enabled": true,
@@ -324,7 +324,7 @@
     },
     {
       "id": "planche-push-up-adv-tuck",
-      "name": "Planche Push Up · Adv Tuck",
+      "name": "Planche Push Up \u00b7 Adv Tuck",
       "metric": "reps",
       "weight": 45,
       "enabled": true,
@@ -335,7 +335,7 @@
     },
     {
       "id": "planche-push-up-straddle",
-      "name": "Planche Push Up · Straddle",
+      "name": "Planche Push Up \u00b7 Straddle",
       "metric": "reps",
       "weight": 65,
       "enabled": true,
@@ -346,7 +346,7 @@
     },
     {
       "id": "planche-push-up-full",
-      "name": "Planche Push Up · Full",
+      "name": "Planche Push Up \u00b7 Full",
       "metric": "reps",
       "weight": 95,
       "enabled": true,
@@ -357,7 +357,7 @@
     },
     {
       "id": "wide-planche-hold-straddle",
-      "name": "Wide Planche Hold · Straddle",
+      "name": "Wide Planche Hold \u00b7 Straddle",
       "metric": "seconds",
       "weight": 85,
       "enabled": false,
@@ -368,7 +368,7 @@
     },
     {
       "id": "wide-planche-hold-full",
-      "name": "Wide Planche Hold · Full",
+      "name": "Wide Planche Hold \u00b7 Full",
       "metric": "seconds",
       "weight": 130,
       "enabled": false,
@@ -379,7 +379,7 @@
     },
     {
       "id": "wide-planche-press-straddle",
-      "name": "Wide Planche Press · Straddle",
+      "name": "Wide Planche Press \u00b7 Straddle",
       "metric": "reps",
       "weight": 100,
       "enabled": false,
@@ -390,7 +390,7 @@
     },
     {
       "id": "wide-planche-press-full",
-      "name": "Wide Planche Press · Full",
+      "name": "Wide Planche Press \u00b7 Full",
       "metric": "reps",
       "weight": 160,
       "enabled": false,
@@ -401,7 +401,7 @@
     },
     {
       "id": "wide-planche-push-up-straddle",
-      "name": "Wide Planche Push Up · Straddle",
+      "name": "Wide Planche Push Up \u00b7 Straddle",
       "metric": "reps",
       "weight": 95,
       "enabled": false,
@@ -412,7 +412,7 @@
     },
     {
       "id": "wide-planche-push-up-full",
-      "name": "Wide Planche Push Up · Full",
+      "name": "Wide Planche Push Up \u00b7 Full",
       "metric": "reps",
       "weight": 150,
       "enabled": false,
@@ -423,13 +423,13 @@
     },
     {
       "id": "maltese-full",
-      "name": "Maltese · Full",
+      "name": "Maltese",
       "metric": "seconds",
       "weight": 200,
       "enabled": false,
       "exercise": "Maltese",
       "discipline": "push",
-      "progression": "Full",
+      "progression": null,
       "availability": "coming_soon"
     }
   ],
