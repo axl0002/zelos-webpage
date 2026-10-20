@@ -13,7 +13,7 @@ export function rankedUploadFailure(error?: {code?: string; message?: string}) {
     video_review_required: "Confirm that you watched the full video before deciding.",
     invalid_decision: "Choose a rule or add a note when rejecting.",
     invalid_rule_choices: "These rules changed. Refresh the queue and select the rules again.",
-    hold_too_long: "This hold video is more than 5 seconds longer than the claim. Reject it and ask the uploader to trim it in the app and upload again.",
+    hold_too_long: "This hold video is more than 6 seconds longer than the claim. Reject it and ask the uploader to trim it in the app and upload again.",
     hold_too_short: "This video does not cover the claimed hold plus 1 extra second. Check the claim; reject it and request a complete clip if the timing is incorrect.",
     admin_required: "This account does not have admin access.",
   };

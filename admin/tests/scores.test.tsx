@@ -246,14 +246,14 @@ it("rejects malformed review policies and strips extra fields from board policy 
   }
 });
 
-const clipPolicy = {ranked_hold_extra_seconds: 5, ranked_hold_min_extra_seconds: 1, scope: "new_uploads"};
+const clipPolicy = {ranked_hold_extra_seconds: 6, ranked_hold_min_extra_seconds: 1, scope: "new_uploads"};
 it("explains the published hold length bounds, app trimming and new-upload scope", () => {
   const published = parseScoreRules({...fixture, clip_policy: clipPolicy});
   const {rerender} = render(<ScoringGuide rules={published} />);
   const policyText = () => document.querySelector("#ranked-clip-length")!.textContent;
   expect(policyText()).toContain("at least 1 second longer than the claimed hold");
-  expect(policyText()).toContain("no more than 5 seconds longer");
-  expect(policyText()).toContain("between 11 and 15 seconds long, inclusive");
+  expect(policyText()).toContain("no more than 6 seconds longer");
+  expect(policyText()).toContain("between 11 and 16 seconds long, inclusive");
   expect(policyText()).toContain("app’s video trim tool before uploading");
   expect(policyText()).toContain("Keep the full hold visible");
   expect(policyText()).toContain("Rep-based ranked clips and training clips keep their three-minute limit");
@@ -291,7 +291,7 @@ it("rejects invalid clip policies and allows only public length settings", () =>
     {...clipPolicy, ranked_hold_extra_seconds: 0},
     {...clipPolicy, ranked_hold_min_extra_seconds: 0},
     {...clipPolicy, ranked_hold_min_extra_seconds: -1},
-    {...clipPolicy, ranked_hold_min_extra_seconds: 6},
+    {...clipPolicy, ranked_hold_min_extra_seconds: 7},
     {...clipPolicy, ranked_hold_min_extra_seconds: 1.5},
     {...clipPolicy, ranked_hold_min_extra_seconds: undefined}]) {
     expect(() => parseScoreRules({...fixture, clip_policy: value})).toThrow("Scoring rules unavailable");

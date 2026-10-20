@@ -60,7 +60,7 @@ export function rpcFailure(error: { code?: string; message?: string }) {
     hold_too_short:
       "The video must be at least one second longer than the claimed hold.",
     hold_too_long:
-      "This new hold upload is more than 5 seconds longer than the claim. Ask the uploader to trim it in the app and submit a new clip.",
+      "This new hold upload is more than 6 seconds longer than the claim. Ask the uploader to trim it in the app and submit a new clip.",
     video_review_required: "Confirm that you watched and checked the clip.",
     invalid_rule_choices: "These rules changed. Refresh the queue and select the rules again.",
     invalid_decision: "Check the review details and try again.",

@@ -81,7 +81,7 @@ it("returns safe no-store conflicts and temporary failures without leaking backe
   expect(unavailable.headers.get("cache-control")).toBe("private, no-store");
 });
 it.each([
-  ["hold_too_long", "more than 5 seconds", "trim it in the app and upload again"],
+  ["hold_too_long", "more than 6 seconds", "trim it in the app and upload again"],
   ["hold_too_short", "claimed hold plus 1 extra second", "request a complete clip"],
 ])("explains %s failures with a safe actionable response", async (code, explanation, action) => {
   client.rpc.mockImplementation(async name => name === "resolve_ranked_upload_review"
