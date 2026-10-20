@@ -21,3 +21,13 @@ it("requires same origin, viewing and explanation; strips forged fields",async()
  expect((await POST(request({...decision,owner_id:"forged"}))).status).toBe(200);expect(client.rpc).toHaveBeenLastCalledWith("admin_resolve_ranking_flag",decision);
  expect((await GET()).headers.get("cache-control")).toBe("private, no-store");
 });
+
+it("returns frame reason and saved boundary evidence only through the admin queue",async()=>{
+ const flag={id:"dddddddd-dddd-4ddd-8ddd-dddddddddddd",reason:"incorrect_hold_frames",reported_hold_start_ms:1000,reported_hold_end_ms:11500,hold_timing:{start_ms:1000,end_ms:11500,duration_ms:10500}};
+ client.auth.getUser.mockResolvedValue({data:{user:{id:"admin"}},error:null});
+ client.rpc.mockResolvedValue({data:[flag],error:null});
+ const response=await GET();expect(response.status).toBe(200);
+ expect(await response.json()).toEqual([flag]);
+ expect(client.rpc).toHaveBeenCalledWith("admin_ranking_flags");
+ expect(response.headers.get("cache-control")).toBe("private, no-store");
+});

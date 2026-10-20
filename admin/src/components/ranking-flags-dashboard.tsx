@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { mediaUrls } from "@/lib/review-media";
-import { rankingReasons, type RankingFlag } from "@/lib/ranking-flags";
+import { rankingFlagHoldTiming, rankingReasons, type RankingFlag } from "@/lib/ranking-flags";
 
 async function api<T>(body?: unknown, signal?: AbortSignal): Promise<T> {
   const response = await fetch(`/admin/api/ranking-flags${body === undefined ? "" : "/decision"}`, {
@@ -43,7 +43,7 @@ export default function RankingFlagsDashboard() {
         <a href="/admin/ranking-flags" className="nav-item active">Ranking flags</a>
     </aside>
     <main className="main"><header className="page-header"><div><h1>Ranking flags</h1>
-      <p className="muted">Check the reported exercise, result or form before deciding.</p></div>
+      <p className="muted">Check the reported exercise, result, hold frames or form before deciding.</p></div>
       <button className="button secondary" disabled={loading || busy} onClick={() => void refresh()}>Refresh queue</button>
     </header>
       {error && <p className="error" role="alert">{error}</p>}
@@ -66,7 +66,8 @@ export default function RankingFlagsDashboard() {
 function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confirmed: boolean) => void; onBusy: (busy: boolean) => void}) {
   const [note, setNote] = useState(item.details || rankingReasons[item.reason] || "");
   const ruleType = item.reason === "unacceptable_form" ? "form" : item.reason === "unacceptable_filming" ? "filming" : null;
-  const choices = item.rules.filter(rule => ruleType === null || rule.type === ruleType);
+  const frameFlag = ["incorrect_start_frame", "incorrect_end_frame", "incorrect_hold_frames"].includes(item.reason);
+  const choices = frameFlag ? [] : item.rules.filter(rule => ruleType === null || rule.type === ruleType);
   const [selectedRules, setSelectedRules] = useState<string[]>(item.rule_violations
     .filter(rule => choices.some(current => current.id === rule.id)).map(rule => rule.id));
   const chosen = choices.filter(rule => selectedRules.includes(rule.id));
@@ -76,6 +77,8 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
   const [confirm, setConfirm] = useState<boolean | null>(null);
   const [error, setError] = useState("");
   const urls = mediaUrls(item);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const timing = rankingFlagHoldTiming(item);
   const [source, setSource] = useState(0);
   const canReject = item.submission_status === "eligible";
   async function decide() {
@@ -87,9 +90,22 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
   }
   return <section className="review-panel ranking-flag-detail"><h2>{item.board_name}</h2>
     <p>{item.username} · Listed result: {item.reported_value ?? item.claimed_value} {item.metric ?? item.board_metric}</p>
-    {source < urls.length ? <video key={urls[source]} controls playsInline preload="metadata" src={urls[source]}
+    {source < urls.length ? <video ref={videoRef} key={urls[source]} controls playsInline preload="metadata" src={urls[source]}
       aria-label="Reported clip" onError={() => { setSource(old => old + 1); setWatched(false); }} />
       : <p role="alert">Video unavailable. Refresh the queue before reviewing.</p>}
+    {timing && <div className="playback-tools" aria-label="Reported hold timing">
+      <p>{timing.snapshot ? "Reported hold boundaries" : "Selected hold boundaries"} · {(timing.duration_ms / 1000).toFixed(3)} s</p>
+      {(["start_ms", "end_ms"] as const).map(boundary => <button key={boundary}
+        className="button secondary" disabled={saving || !urls[source]}
+        onClick={() => {
+          const video = videoRef.current;
+          if (video) {
+            video.pause();
+            video.currentTime = timing[boundary] / 1000;
+          }
+        }}>{boundary === "start_ms" ? "Hold start" : "Hold end"} · {(timing[boundary] / 1000).toFixed(3)} s</button>)}
+    </div>}
+    {frameFlag && !timing && <p role="alert">The reported hold boundaries are unavailable. Refresh the queue before reviewing.</p>}
     <h3>{rankingReasons[item.reason]}</h3>
     {item.corrected_value !== null && <p>Suggested correction: {item.corrected_value} {item.metric}</p>}
     {item.rule_violations.length > 0 && <ul>{item.rule_violations.map(rule => <li key={rule.id}>{rule.text}</li>)}</ul>}
@@ -110,7 +126,7 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
     {error && <p role="alert" className="error">{error}</p>}
     <div className="actions"><button className="button secondary" disabled={!watched || saving}
       onClick={() => setConfirm(false)}>Dismiss flag</button>
-      <button className="button danger" disabled={!watched || saving || !canReject || !validRejection}
+      <button className="button danger" disabled={!watched || saving || !canReject || !validRejection || (frameFlag && !timing)}
         onClick={() => setConfirm(true)}>Reject ranking</button></div>
     {confirm !== null && <div className="dialog-backdrop"><div className="dialog" role="dialog" aria-modal="true" aria-label="Confirm ranking decision">
       <h2>{confirm ? "Reject this ranking?" : "Dismiss this flag?"}</h2>

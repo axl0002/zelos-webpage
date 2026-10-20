@@ -1,7 +1,8 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {rankingFlagHoldTiming, rankingReasons, type RankingFlag} from "../src/lib/ranking-flags";
 import RankingFlagsDashboard from "../src/components/ranking-flags-dashboard";
-const item = {
+const item: RankingFlag = {
  id:"dddddddd-dddd-4ddd-8ddd-dddddddddddd",post_id:"clip",reason:"unacceptable_form",
  details:"Unacceptable form: Bent arms",corrected_value:null,reported_value:10,metric:"seconds",
  rule_violations:[{id:"10000000-0000-4000-8000-000000000001",type:"form",text:"Keep arms straight.",position:0}],
@@ -40,4 +41,45 @@ it("shows correction and blocks untrusted media",async()=>{
  vi.stubGlobal("fetch",vi.fn(async()=>({ok:true,json:async()=>[{...item,corrected_value:8.125,primary_url:"https://untrusted.test/video"}]})));
  const {container}=render(<RankingFlagsDashboard/>);await screen.findByText("Suggested correction: 8.125 seconds");
  expect(container.querySelector("video")).toBeNull();expect((screen.getByLabelText("I watched the clip and checked the reported issue") as HTMLInputElement).disabled).toBe(true);
+});
+
+for (const reason of ["incorrect_start_frame", "incorrect_end_frame", "incorrect_hold_frames"]) {
+ it(`shows and seeks exact submitted frame evidence for ${reason}`,async()=>{
+  const frame = {...item, reason, details:"Check the submitted hold frames.", rule_violations:[],
+   reported_hold_start_ms:1000,reported_hold_end_ms:11500,
+   hold_timing:{start_ms:1500,end_ms:11999,duration_ms:10499}};
+  const fetch=vi.fn(async(_input:string,options:RequestInit)=>({ok:true,json:async()=>options.method==="POST"?{ok:true}:[frame]}));
+  vi.stubGlobal("fetch",fetch);
+  const {container}=render(<RankingFlagsDashboard/>);
+  await screen.findByRole("heading",{name:rankingReasons[reason]});
+  expect(screen.getByText("Reported hold boundaries · 10.500 s")).toBeTruthy();
+  const video=container.querySelector("video")!;
+  const pause=vi.fn();Object.defineProperty(video,"pause",{value:pause});
+  fireEvent.click(screen.getByRole("button",{name:"Hold start · 1.000 s"}));
+  expect(pause).toHaveBeenCalledTimes(1);expect(video.currentTime).toBe(1);
+  fireEvent.click(screen.getByRole("button",{name:"Hold end · 11.500 s"}));
+  expect(pause).toHaveBeenCalledTimes(2);expect(video.currentTime).toBe(11.5);
+  expect((screen.getByLabelText("I watched the clip and checked the reported issue") as HTMLInputElement).checked).toBe(false);
+  expect(screen.queryByText("Rules verified as not met")).toBeNull();
+  fireEvent.click(screen.getByLabelText("I watched the clip and checked the reported issue"));
+  fireEvent.click(screen.getByRole("button",{name:"Reject ranking"}));
+  fireEvent.click(screen.getByRole("button",{name:"Confirm decision"}));
+  await screen.findByText("Ranking rejected. The uploader has been notified with your reason.");
+  expect(JSON.parse(fetch.mock.calls.find(([,o])=>o.method==="POST")![1].body as string)).toEqual({report_id:item.id,confirmed:true,review_note:frame.details,watched_video:true,rule_ids:[]});
+ });
+}
+it("keeps frame rejection disabled when reported evidence is unavailable",async()=>{
+ vi.stubGlobal("fetch",vi.fn(async()=>({ok:true,json:async()=>[{...item,reason:"incorrect_start_frame",rule_violations:[],hold_timing:{start_ms:1000,end_ms:11500,duration_ms:10500}}]})));
+ render(<RankingFlagsDashboard/>);await screen.findByText("The reported hold boundaries are unavailable. Refresh the queue before reviewing.");
+ fireEvent.click(screen.getByLabelText("I watched the clip and checked the reported issue"));
+ expect((screen.getByRole("button",{name:"Reject ranking"}) as HTMLButtonElement).disabled).toBe(true);
+ expect(screen.queryByRole("button",{name:/Hold start ·/})).toBeNull();
+});
+it("validates frame evidence while retaining legacy flags without timing",()=>{
+ expect(rankingFlagHoldTiming(item)).toBeNull();
+ expect(rankingFlagHoldTiming({...item,hold_timing:{start_ms:1000,end_ms:11500,duration_ms:10500}})).toEqual({start_ms:1000,end_ms:11500,duration_ms:10500,snapshot:false});
+ for(const [start,end] of [[-1,11500],[1000,1200],[1000.1,11500],[1000,Infinity],[1000,2147483648]]){
+  expect(rankingFlagHoldTiming({...item,reason:"incorrect_hold_frames",reported_hold_start_ms:start,reported_hold_end_ms:end})).toBeNull();
+ }
+ expect(rankingFlagHoldTiming({...item,metric:"reps",reported_hold_start_ms:1000,reported_hold_end_ms:11500})).toBeNull();
 });
