@@ -34,6 +34,9 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
   const [saving, setSaving] = useState(false);
   const epoch = useRef(0);
   const current = queue.find((item) => item.id === selected) ?? null;
+  const awaitingReview = current && (!current.state || current.state === "review");
+  const statusLabel = (item: SafetyCase) => item.state === "rejected"
+    ? "Rejected · retained" : item.state === "failed" ? "Scan failed · retained" : "Awaiting review";
 
   async function refresh(signal?: AbortSignal) {
     setLoading(true);
@@ -85,7 +88,7 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
   }
 
   async function decide() {
-    if (!current || !confirm || !watched) return;
+    if (!current || !awaitingReview || !confirm || !watched) return;
     const id = current.id;
     setSaving(true);
     setError("");
@@ -96,7 +99,9 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
         review_note: note,
       });
       epoch.current++;
-      const remaining = queue.filter((item) => item.id !== id);
+      const remaining: SafetyCase[] = confirm === "approve"
+        ? queue.filter((item) => item.id !== id)
+        : queue.map((item) => item.id === id ? { ...item, state: "rejected", review_note: note } : item);
       setQueue(remaining);
       setSelected(remaining[0]?.id ?? null);
       setPreview(null);
@@ -105,7 +110,7 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
       setConfirm(null);
       setNotice(confirm === "approve"
         ? "Approved. The worker will recheck and publish the clip."
-        : "Rejected. Private media cleanup is queued.");
+        : "Rejected. The original is retained privately for inspection.");
     } catch (cause) {
       setError((cause as Error).message);
       setConfirm(null);
@@ -120,6 +125,8 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
         <a className="brand" href="/">zelos<span> / admin</span></a>
         <p className="nav-label">CONTENT</p>
         <a href="/admin" className="nav-item"><span>▤</span> Exercise review</a>
+        <a href="/admin/ranked-uploads" className="nav-item">Ranked uploads</a>
+        <a href="/admin/ranking-flags" className="nav-item"><span>⚑</span> Ranking flags</a>
         <a href="/admin/safety" className="nav-item active"><span>◈</span> Upload safety</a>
         <div className="sidebar-bottom">
           <span className="connection"><i /> Supabase</span>
@@ -142,16 +149,16 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
           <div>
             <p className="eyebrow">HUMAN REVIEW</p>
             <h1>Upload safety</h1>
-            <p className="muted">Flagged videos and profile images stay private until reviewed.</p>
+            <p className="muted">Flagged, rejected and failed safety scans remain private for inspection.</p>
           </div>
           <button className="button secondary" onClick={() => void refresh()} disabled={loading}>Refresh queue</button>
         </header>
         {notice && <p role="status" className="notice success">{notice}</p>}
         {error && <p role="alert" className="notice error">{error}</p>}
         <div className="review-layout">
-          <section className="queue-panel" aria-label="Pending safety reviews">
+          <section className="queue-panel" aria-label="Safety reviews and retained uploads">
             {loading && queue.length === 0 && <p className="empty">Loading review queue…</p>}
-            {!loading && queue.length === 0 && <p className="empty">No uploads awaiting safety review.</p>}
+            {!loading && queue.length === 0 && <p className="empty">No uploads awaiting review or retained for inspection.</p>}
             {queue.map((item) => (
               <button key={item.id} className={`candidate ${selected === item.id ? "selected" : ""}`}
                 onClick={() => choose(item.id)}>
@@ -159,6 +166,7 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
                 <span className="candidate-copy">
                   <strong>{item.title || (item.post_id ? "Untitled upload" : "Profile image")}</strong>
                   <span>{item.post_id ? `${item.evidence?.frame_count ?? "?"} sampled frames` : "Avatar image"}</span>
+                  <span>{statusLabel(item)}</span>
                   <small>{new Date(item.created_at).toLocaleString()}</small>
                 </span>
               </button>
@@ -168,7 +176,7 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
             {!current ? <div className="empty">Select a clip to review.</div> : <>
               <div className="clip-heading">
                 <div><p className="eyebrow">PRIVATE UPLOAD</p><h2>{current.title || (current.post_id ? "Untitled upload" : "Profile image")}</h2></div>
-                <span className="badge">Awaiting review</span>
+                <span className="badge">{statusLabel(current)}</span>
               </div>
               <div className="clip-grid">
                 <div>
@@ -199,7 +207,12 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
                         </div>
                       ))}
                   </div>
-                  <label className="check"><input type="checkbox" checked={watched}
+                  {!awaitingReview && <p className="notice">
+                    {current.state === "rejected"
+                      ? `This upload was rejected and remains unpublished. ${current.review_note || ""}`
+                      : "The safety check did not complete. The original is retained for inspection; it has not been approved or published."}
+                  </p>}
+                  {awaitingReview && <><label className="check"><input type="checkbox" checked={watched}
                     onChange={(event) => setWatched(event.target.checked)} disabled={!preview} />
                     I reviewed the full {current.post_id ? "video" : "image"} and checked the flagged content.
                   </label>
@@ -212,6 +225,7 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
                     <button className="button primary" disabled={!watched || saving}
                       onClick={() => setConfirm("approve")}>Approve upload</button>
                   </div>
+                  </>}
                 </div>
               </div>
             </>}
@@ -223,7 +237,7 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
           <h2>{confirm === "approve" ? "Approve this upload?" : "Reject this upload?"}</h2>
           <p>{confirm === "approve"
             ? "The worker will reprocess the approved upload, then publish the post or profile image if processing succeeds."
-            : "The upload will stay private and its staged media will be removed."}</p>
+            : "The upload will remain unpublished. Its original will be kept privately for later inspection."}</p>
           <div className="decision-actions">
             <button className="button secondary" onClick={() => setConfirm(null)} disabled={saving}>Cancel</button>
             <button className="button primary" onClick={() => void decide()} disabled={saving}>

@@ -9,6 +9,9 @@ export type SafetyCase = {
   post_id: string | null;
   title: string | null;
   created_at: string;
+  state?: "review" | "rejected" | "failed";
+  error_code?: string | null;
+  review_note?: string | null;
   evidence: {
     provider?: string;
     frame_count?: number;
