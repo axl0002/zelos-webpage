@@ -151,6 +151,7 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
         <a href="/admin" className="nav-item"><span>▤</span> Exercise review</a>
         <a href="/admin/ranked-uploads" className="nav-item">Ranked uploads</a>
         <a href="/admin/ranking-flags" className="nav-item"><span>⚑</span> Ranking flags</a>
+      <a href="/admin/users" className="nav-item">Users</a>
       <a href="/admin/reports" className="nav-item">User reports</a>
         <a href="/admin/safety" className="nav-item active"><span>◈</span> Upload safety</a>
         <div className="sidebar-bottom">

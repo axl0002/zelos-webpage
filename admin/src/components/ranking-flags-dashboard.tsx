@@ -42,6 +42,7 @@ export default function RankingFlagsDashboard() {
       <a href="/admin/safety" className="nav-item">Upload safety</a>
       <a href="/admin/ranked-uploads" className="nav-item">Ranked uploads</a>
         <a href="/admin/ranking-flags" className="nav-item active">Ranking flags</a>
+      <a href="/admin/users" className="nav-item">Users</a>
       <a href="/admin/reports" className="nav-item">User reports</a>
     </aside>
     <main className="main"><header className="page-header"><div><h1>Ranking flags</h1>

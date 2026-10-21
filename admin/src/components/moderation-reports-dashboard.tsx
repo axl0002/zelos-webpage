@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ModerationReport } from "@/lib/moderation-reports";
 import ReviewQueueNav from "./review-queue-nav";
+import ModerationActionForm from "./moderation-action-form";
 
 async function api<T>(path = "", body?: unknown, signal?: AbortSignal): Promise<T> {
   const response = await fetch(`/admin/api/reports${path}`, {
@@ -19,12 +20,12 @@ export default function ModerationReportsDashboard() {
   const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(true), [busy, setBusy] = useState(false);
   const [error, setError] = useState(""), [notice, setNotice] = useState("");
-  async function refresh(signal?: AbortSignal) {
+  async function refresh(signal?: AbortSignal, preferredId?: string) {
     setLoading(true); setError("");
     try {
       const items = await api<ModerationReport[]>("", undefined, signal);
       if (signal?.aborted) return;
-      setQueue(items); setSelected(old => items.some(item => item.id === old) ? old : items[0]?.id ?? null);
+      setQueue(items); setSelected(old => items.some(item => item.id === (preferredId ?? old)) ? preferredId ?? old : items[0]?.id ?? null);
     } catch (cause) { if (!signal?.aborted) setError((cause as Error).message); }
     finally { if (!signal?.aborted) setLoading(false); }
   }
@@ -39,6 +40,7 @@ export default function ModerationReportsDashboard() {
       <a href="/admin" className="nav-item">Exercise review</a>
       <a href="/admin/ranked-uploads" className="nav-item">Ranked uploads</a>
       <a href="/admin/ranking-flags" className="nav-item">Ranking flags</a>
+      <a href="/admin/users" className="nav-item">Users</a>
       <a href="/admin/reports" className="nav-item active" aria-current="page">User reports</a>
       <a href="/admin/safety" className="nav-item">Upload safety</a>
     </aside>
@@ -59,15 +61,17 @@ export default function ModerationReportsDashboard() {
             <small>{new Date(item.created_at).toLocaleString()}</small></span>
         </button>)}
       </section>
-        {current ? <ReportDetail key={`${current.id}:${current.revision}:${current.state}`} item={current} onBusy={setBusy} onSaved={(confirmed, note) => {
-          setQueue(old => old.map(item => item.id === current.id ? {...item, state: confirmed ? "confirmed" : "dismissed", decision_note: note} : item));
+        {current ? <ReportDetail key={`${current.id}:${current.revision}:${current.state}`} item={current} onBusy={setBusy} onActionSaved={() => {
+          setQueue([]); setSelected(null); setNotice("Moderation action saved."); void refresh(undefined, current.id);
+        }} onSaved={(confirmed, note) => {
+          setQueue([]); setSelected(null); void refresh(undefined, current.id);
           setNotice(confirmed ? "Violation confirmed. The moderation decision was saved." : "Reports dismissed. Content hidden by these reports can be restored.");
         }} /> : <section className="review-panel"><p className="empty">Select a report to review.</p></section>}
       </div>
     </main>
   </div>;
 }
-function ReportDetail({item, onBusy, onSaved}: {item: ModerationReport; onBusy: (value: boolean) => void; onSaved: (confirmed: boolean, note: string) => void}) {
+function ReportDetail({item, onBusy, onSaved, onActionSaved}: {item: ModerationReport; onBusy: (value: boolean) => void; onSaved: (confirmed: boolean, note: string) => void; onActionSaved: () => void}) {
   const [preview, setPreview] = useState<Preview | null>(null), [opening, setOpening] = useState(false);
   const [source, setSource] = useState(0), [reviewed, setReviewed] = useState(false);
   const [note, setNote] = useState(item.decision_note ?? ""), [confirm, setConfirm] = useState<boolean | null>(null);
@@ -125,6 +129,16 @@ function ReportDetail({item, onBusy, onSaved}: {item: ModerationReport; onBusy: 
       <div className="decision-actions"><button className="button secondary" disabled={!reviewed || saving} onClick={() => setConfirm(false)}>Dismiss reports</button>
         <button className="button danger" disabled={!reviewed || !available || saving || note.trim().length < 3} onClick={() => setConfirm(true)}>Confirm violation</button></div>
     </div> : <p className="notice">Decision: {item.state}. {item.decision_note}</p>}
+    {item.context?.post_state && <p>Post status: {item.context.post_state}</p>}
+    {item.context?.owner_banned && <p>Account status: Banned</p>}
+    <ModerationActionForm onBusy={onBusy} onSaved={onActionSaved} onSubmit={async (action, reason, requestId) => {
+      await api("/action", {case_id: item.id, expected_revision: item.revision, action, reason, request_id: requestId});
+    }} actions={[
+      ...(item.context?.can_hide ? [{id: "hide", label: "Hide video", effect: "Hide this video from public feeds and rankings. An administrator can restore it later."}] : []),
+      ...(item.context?.can_restore ? [{id: "restore", label: "Restore video", effect: "Remove this manual video restriction. Other safety decisions, reports and account bans still apply."}] : []),
+      ...(item.context?.can_delete ? [{id: "delete", label: "Delete video", danger: true, effect: "Permanently remove this video from the new Zelos app and rankings. It cannot be restored. Newly uploaded media is queued for deletion; shared legacy media remains for existing app users."}] : []),
+      ...(item.context?.can_ban ? [{id: "ban", label: "Ban user", danger: true, effect: "Ban the owner of the reported content from Zelos and hide their posts from public feeds and rankings. This ban remains until an administrator removes it."}] : []),
+    ]} />
     {error && <p role="alert" className="notice error">{error}</p>}
     {confirm !== null && <div className="dialog-backdrop"><div className="dialog" role="dialog" aria-modal="true" aria-label="Confirm report decision">
       <h2>{confirm ? "Confirm this violation?" : "Dismiss these reports?"}</h2><p>{confirm ? effect : "Content hidden by these reports can be restored; other moderation decisions still apply."}</p>

@@ -63,6 +63,7 @@ export default function RankedUploadsDashboard() {
       <a href="/admin" className="nav-item">Exercise review</a>
       <a href="/admin/ranked-uploads" className="nav-item active" aria-current="page">Ranked uploads</a>
       <a href="/admin/ranking-flags" className="nav-item">Ranking flags</a>
+      <a href="/admin/users" className="nav-item">Users</a>
       <a href="/admin/reports" className="nav-item">User reports</a>
       <a href="/admin/safety" className="nav-item">Upload safety</a>
     </aside>
