@@ -1190,3 +1190,26 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Shared-profile actions use the public site's store badges and button contrast. */
+.shared-profile-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  text-align: center;
+}
+.document-page .profile-open-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--site-background);
+  text-decoration: none;
+  max-width: 100%;
+}
+.shared-profile-actions .store-badge img {
+  display: block;
+  height: 52px;
+  width: auto;
+}
