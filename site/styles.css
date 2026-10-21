@@ -1213,3 +1213,10 @@ body {
   height: 52px;
   width: auto;
 }
+
+.document-page .shared-profile-title {
+  font-size: clamp(1rem, 4.8vw, 1.5rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

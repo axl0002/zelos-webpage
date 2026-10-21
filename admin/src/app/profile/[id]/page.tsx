@@ -51,7 +51,7 @@ export default async function SharedProfile({ params, searchParams }: Props) {
     </nav>
     <main className="document-page legal-page">
       <header className="page-header">
-        <h1 className="page-title">{title}</h1>
+        <h1 className="page-title shared-profile-title">{title}</h1>
         <p className="page-intro">{description}</p>
       </header>
       <section className="document-card shared-profile-actions">
