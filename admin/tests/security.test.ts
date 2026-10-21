@@ -25,6 +25,17 @@ const request = (
     body: JSON.stringify(body),
   });
 describe("server authorization", () => {
+  it("explains queue timeouts as loading failures without claiming a review save failed", async () => {
+    client.auth.getUser.mockResolvedValue({data: {user: {id: "admin"}}, error: null});
+    client.rpc.mockResolvedValueOnce({data: {boards: []}, error: null})
+      .mockResolvedValueOnce({data: null, error: {code: "57014", message: "canceling statement due to statement timeout", details: "private query"}});
+    const res = await GET(new NextRequest("http://localhost:3004/admin/api/review"));
+    expect(res.status).toBe(503);
+    expect(res.headers.get("cache-control")).toBe("private, no-store");
+    const body = await res.text();
+    expect(body).toContain("queue took too long to load");
+    for (const hidden of ["could not be saved", "57014", "statement timeout", "private query"]) expect(body).not.toContain(hidden);
+  });
   it("sends an empty optional rejection note to the RPC without inventing a reason", async () => {
     client.auth.getUser.mockResolvedValue({ data: { user: { id: "admin" } }, error: null });
     client.rpc

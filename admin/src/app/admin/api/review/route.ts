@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     search_text: p.get("q") || "",
   });
   return error
-    ? rpcFailure(error)
+    ? rpcFailure(error, "load")
     : NextResponse.json(data, {
         headers: { "Cache-Control": "private, no-store" },
       });

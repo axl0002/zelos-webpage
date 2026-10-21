@@ -48,7 +48,7 @@ export function parseDecision(value: unknown): Decision | null {
     return null;
   return d;
 }
-export function rpcFailure(error: { code?: string; message?: string }) {
+export function rpcFailure(error: { code?: string; message?: string }, operation: "load" | "save" = "save") {
   const messages: Record<string, string> = {
     invalid_duration: "Temporary bans require a whole number of days from 1 to 3650.",
     account_restricted: "This account cannot perform moderation actions.",
@@ -83,9 +83,14 @@ export function rpcFailure(error: { code?: string; message?: string }) {
     {
       error:
         messages[error.message || ""] ||
-        "The review could not be saved. Your inputs are still here; try again.",
+        (operation === "load"
+          ? error.code === "57014"
+            ? "The review queue took too long to load. Try refreshing the queue."
+            : "The review queue could not be loaded. Try refreshing the queue."
+          : "The review could not be saved. Your inputs are still here; try again."),
     },
     {
+      headers: { "Cache-Control": "private, no-store" },
       status:
         error.code === "42501"
           ? 403
