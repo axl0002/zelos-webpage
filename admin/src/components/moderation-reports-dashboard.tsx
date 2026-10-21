@@ -118,13 +118,13 @@ function ReportDetail({item, onBusy, onSaved, onActionSaved}: {item: ModerationR
     </div> : <p className="notice">Decision: {item.state}. {item.decision_note}</p>}
     {item.context?.post_state && <p>Post status: {item.context.post_state}</p>}
     {item.context?.owner_banned && <p>Account status: Banned</p>}
-    <ModerationActionForm onBusy={onBusy} onSaved={onActionSaved} onSubmit={async (action, reason, requestId) => {
-      await api("/action", {case_id: item.id, expected_revision: item.revision, action, reason, request_id: requestId});
+    <ModerationActionForm onBusy={onBusy} onSaved={onActionSaved} onSubmit={async (action, reason, requestId, durationDays) => {
+      await api("/action", {case_id: item.id, expected_revision: item.revision, action, reason, request_id: requestId, duration_days: durationDays});
     }} actions={[
       ...(item.context?.can_hide ? [{id: "hide", label: "Hide video", effect: "Hide this video from public feeds and rankings. An administrator can restore it later."}] : []),
       ...(item.context?.can_restore ? [{id: "restore", label: "Restore video", effect: "Remove this manual video restriction. Other safety decisions, reports and account bans still apply."}] : []),
       ...(item.context?.can_delete ? [{id: "delete", label: "Delete video", danger: true, effect: "Permanently remove this video from the new Zelos app and rankings. It cannot be restored. Newly uploaded media is queued for deletion; shared legacy media remains for existing app users."}] : []),
-      ...(item.context?.can_ban ? [{id: "ban", label: "Ban user", danger: true, effect: "Ban the owner of the reported content from Zelos and hide their posts from public feeds and rankings. This ban remains until an administrator removes it."}] : []),
+      ...(item.context?.can_ban ? [{id: "ban", label: "Ban user", danger: true, effect: "Ban the owner of the reported content from Zelos and hide their posts from public feeds and rankings."}] : []),
     ]} />
     {error && <p role="alert" className="notice error">{error}</p>}
     {confirm !== null && <div className="dialog-backdrop"><div className="dialog" role="dialog" aria-modal="true" aria-label="Confirm report decision">

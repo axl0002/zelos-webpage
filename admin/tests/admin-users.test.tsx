@@ -23,7 +23,7 @@ it.each([false, true])("searches then confirms and refreshes a manual ban remova
   const confirm = within(screen.getByRole("dialog")).getByRole("button", {name: "Confirm action"}); fireEvent.click(confirm); fireEvent.click(confirm);
   await screen.findByText("Account moderation saved.");
   const calls = (fetch.mock.calls as unknown as [string, RequestInit][]).filter(([path]) => path.endsWith("/ban")); expect(calls).toHaveLength(1);
-  expect(JSON.parse(calls[0][1].body as string)).toMatchObject({user_id: user.id, banned: !unban, expected_revision: 0, reason: "Reviewed account history"});
+  expect(JSON.parse(calls[0][1].body as string)).toMatchObject({user_id: user.id, banned: !unban, expected_revision: 0, reason: "Reviewed account history", duration_days: null});
   await waitFor(() => expect(fetch.mock.calls.filter(([path]) => path.includes("?q="))).toHaveLength(2));
 });
 it("retains reason and retry identity after failure and does not claim success", async () => {
@@ -58,4 +58,38 @@ it("resets pending confirmation when switching accounts and uses the selected us
   fireEvent.click(screen.getByRole("button", {name: "Confirm action"}));
   await waitFor(() => expect(fetch.mock.calls.filter(([path]) => path.endsWith("/ban"))).toHaveLength(2));
   expect(JSON.parse(fetch.mock.calls.filter(([path]) => path.endsWith("/ban"))[1][1]?.body as string)).toMatchObject({user_id: second.id, expected_revision: 5, banned: false});
+});
+
+it("validates temporary days, confirms duration and changes retry identity when duration changes", async () => {
+  const fetch = vi.fn(async (path: string, options?: RequestInit) => ({ok: !path.endsWith("/ban"), json: async () => path.includes("?q=") ? [user] : {error: "Please try again."}}));
+  vi.stubGlobal("fetch", fetch); render(<AdminUsersDashboard />);
+  fireEvent.change(screen.getByLabelText("Username or user ID"), {target: {value: "athlete"}}); fireEvent.click(screen.getByRole("button", {name: "Search users"}));
+  await screen.findByRole("heading", {name: "athlete"}); fireEvent.change(screen.getByLabelText("Ban reason (shown to the user)"), {target: {value: "Repeated abuse"}});
+  fireEvent.change(screen.getByLabelText("Ban duration"), {target: {value: "temporary"}});
+  for (const value of ["", "0", "-1", "1.5", "3651"]) {
+    fireEvent.change(screen.getByLabelText("Number of days"), {target: {value}});
+    expect((screen.getByRole("button", {name: "Ban user"}) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText("Enter a whole number of days from 1 to 3650.")).toBeTruthy();
+  }
+  fireEvent.change(screen.getByLabelText("Number of days"), {target: {value: "7"}});
+  fireEvent.click(screen.getByRole("button", {name: "Ban user"})); expect(screen.getByText(/Ban duration: 7 days/)).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", {name: "Confirm action"})); await screen.findByRole("alert");
+  fireEvent.click(screen.getByRole("button", {name: "Cancel"}));
+  fireEvent.change(screen.getByLabelText("Number of days"), {target: {value: "14"}});
+  expect(screen.queryByRole("dialog")).toBeNull();
+  fireEvent.click(screen.getByRole("button", {name: "Ban user"})); expect(screen.getByText(/Ban duration: 14 days/)).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", {name: "Confirm action"})); await screen.findByRole("alert");
+  const bodies = fetch.mock.calls.filter(([path]) => path.endsWith("/ban")).map(([, options]) => JSON.parse(options?.body as string));
+  expect(bodies[0]).toMatchObject({duration_days: 7, user_id: user.id}); expect(bodies[1]).toMatchObject({duration_days: 14, user_id: user.id});
+  expect(bodies[0].request_id).not.toBe(bodies[1].request_id);
+});
+it.each([null, "2026-10-28T12:00:00Z"])("shows manual ban expiry %s without the indefinite Auth sentinel", async manual_ban_until => {
+  vi.stubGlobal("fetch", vi.fn(async () => ({ok: true, json: async () => [{...user, is_banned: true, manual_ban: true,
+    manual_ban_until, ban_until: "2126-10-21T12:00:00Z", can_ban: false, can_unban: true}]})));
+  const {container} = render(<AdminUsersDashboard />);
+  fireEvent.change(screen.getByLabelText("Username or user ID"), {target: {value: "athlete"}}); fireEvent.click(screen.getByRole("button", {name: "Search users"}));
+  await screen.findByRole("heading", {name: "athlete"});
+  if (manual_ban_until) expect(container.querySelector("time")?.dateTime).toBe(manual_ban_until);
+  else expect(screen.getByText("Manual ban: indefinite")).toBeTruthy();
+  expect(container.textContent).not.toContain("2126"); expect(screen.queryByLabelText("Ban duration")).toBeNull();
 });

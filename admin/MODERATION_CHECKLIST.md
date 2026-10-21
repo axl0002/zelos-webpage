@@ -16,6 +16,9 @@ Run `npm test`, `npm run typecheck`, and `npm run build` from `admin/`.
   state/revision after decisions; no client-supplied owner target.
 - Users: username/ID search, bounded public results, ban and remove manual ban,
   refreshed account state/revision, switching targets clears pending inputs.
+  Both Users and report-owner bans support indefinite or temporary 1–3650 whole
+  days; confirmation shows the duration and user-visible reason. Invalid day
+  counts, stable retries and changing duration after failure are covered.
 - Mutation routes: authenticated admin, same-origin JSON, request/revision
   validation, duplicate-submission guard, stable retry identity, no-store replies,
   SQL/error detail redaction and restricted-account protection.
@@ -38,8 +41,12 @@ Run `npm test`, `npm run typecheck`, and `npm run build` from `admin/`.
    independent safety/ban restrictions must remain. **Delete video** on another
    disposable clip and verify it stays unavailable and cannot be restored.
 5. In **Users**, search the exact disposable username (also try its UUID), ban it,
-   and verify app access/content restrictions. Remove the manual ban and verify
-   recovery. Separate strike/safety restrictions must remain in force.
+   select **Temporary**, enter a whole number of days, and confirm the duration
+   and user-facing reason. Verify the displayed end date and app restriction
+   details. Separately test **Indefinite** with no expiry. Remove the manual ban
+   and verify recovery. Separate strike/safety restrictions must remain in force.
+   Automatic expiry is covered by isolated backend fixtures; do not shorten or
+   manipulate a real athlete’s restriction as a test.
 6. Repeat **Ban user** from each supported report kind; verify the reported
    content's owner is affected, never the reporter. Confirm admin/self protection.
 7. In two admin sessions, load the same case/user; change one, then attempt a stale

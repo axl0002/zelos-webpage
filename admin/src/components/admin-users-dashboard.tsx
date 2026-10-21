@@ -37,14 +37,16 @@ export default function AdminUsersDashboard() {
       </section><section className="review-panel" aria-label="User details">
         {user ? <><h2>{user.username || "Unnamed account"}</h2><p className="muted">{user.id}</p>
           <p>Account status: {user.is_banned ? "Banned" : "Active"}</p>
-          {user.ban_until && <p>Restriction expires: {new Date(user.ban_until).toLocaleString()}</p>}
+          {user.manual_ban && <p>{user.manual_ban_until ? <>Manual ban ends: <time dateTime={user.manual_ban_until}>{new Date(user.manual_ban_until).toLocaleString()}</time></> : "Manual ban: indefinite"}</p>}
+          {!user.manual_ban && user.is_banned && user.ban_until && <p>Restriction ends: <time dateTime={user.ban_until}>{new Date(user.ban_until).toLocaleString()}</time></p>}
+          {user.manual_ban && <p className="muted small">Removing or expiring this manual ban does not remove separate safety or strike restrictions.</p>}
           <ModerationActionForm key={`${user.id}:${user.revision}`} onBusy={setBusy} onSaved={() => {setNotice("Account moderation saved."); void search(lastQuery.current, user.id);}}
             actions={[
-              ...(user.can_ban ? [{id: "ban", label: "Ban user", danger: true, effect: "Block this account from using Zelos and hide its posts from public feeds and rankings. This ban remains until an administrator removes it."}] : []),
+              ...(user.can_ban ? [{id: "ban", label: "Ban user", danger: true, effect: "Block this account from using Zelos and hide its posts from public feeds and rankings."}] : []),
               ...(user.can_unban ? [{id: "unban", label: "Remove manual ban", effect: "Remove the administrator's ban. Any separate safety or strike restrictions still apply."}] : []),
-            ]} onSubmit={async (action, reason, requestId) => {
+            ]} onSubmit={async (action, reason, requestId, durationDays) => {
               const response = await fetch("/admin/api/users/ban", {method: "POST", headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({user_id: user.id, banned: action === "ban", expected_revision: user.revision, reason, request_id: requestId})});
+                body: JSON.stringify({user_id: user.id, banned: action === "ban", expected_revision: user.revision, reason, request_id: requestId, duration_days: durationDays})});
               const data = await response.json(); if (!response.ok) throw new Error(data.error || "The account could not be updated. Please try again.");
             }} />
           {!user.can_ban && !user.can_unban && <p className="muted">This account cannot be changed here.</p>}

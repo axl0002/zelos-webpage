@@ -77,7 +77,7 @@ it.each([
   fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", {name: "Confirm action"}));
   await screen.findByText("Moderation action saved.");
   const calls = fetch.mock.calls.filter(([path]) => path.endsWith("/action")); expect(calls).toHaveLength(1);
-  expect(JSON.parse(calls[0][1]?.body as string)).toEqual({case_id: report.id, expected_revision: 3, action, reason: "Reviewed reported evidence", request_id: expect.any(String)});
+  expect(JSON.parse(calls[0][1]?.body as string)).toEqual({case_id: report.id, expected_revision: 3, action, reason: "Reviewed reported evidence", request_id: expect.any(String), duration_days: null});
   await waitFor(() => expect(fetch.mock.calls.filter(([path]) => path === "/admin/api/reports")).toHaveLength(2));
 });
 it("offers owner bans on comment and profile reports but no video actions without server capabilities", async () => {
@@ -100,4 +100,26 @@ it("clears action inputs when changing reports and refreshes revision after a de
   fireEvent.click(screen.getByRole("button", {name: "Ban user"})); fireEvent.click(screen.getByRole("button", {name: "Confirm action"}));
   await waitFor(() => expect(fetch.mock.calls.filter(([path]) => path.endsWith("/action"))).toHaveLength(1));
   expect(JSON.parse(fetch.mock.calls.find(([path]) => path.endsWith("/action"))![1].body as string)).toMatchObject({case_id: second.id, expected_revision: 9, action: "ban"});
+});
+
+it("confirms temporary report-owner bans and keeps duration out of video actions", async () => {
+  const item = {...report, context: {username: "athlete", can_ban: true, can_hide: true}};
+  const fetch = vi.fn(async (path: string, options?: RequestInit) => ({ok: true, json: async () => path.endsWith("/action") ? {ok: true} : [item]}));
+  vi.stubGlobal("fetch", fetch); render(<ModerationReportsDashboard />); await screen.findByText("Unwanted links or messages");
+  fireEvent.change(screen.getByLabelText("Action reason"), {target: {value: "Repeated abuse"}});
+  fireEvent.change(screen.getByLabelText("Ban duration"), {target: {value: "temporary"}});
+  expect((screen.getByRole("button", {name: "Ban user"}) as HTMLButtonElement).disabled).toBe(true);
+  expect((screen.getByRole("button", {name: "Hide video"}) as HTMLButtonElement).disabled).toBe(false);
+  fireEvent.change(screen.getByLabelText("Number of days"), {target: {value: "7"}});
+  fireEvent.click(screen.getByRole("button", {name: "Hide video"})); fireEvent.click(screen.getByRole("button", {name: "Confirm action"}));
+  await screen.findByText("Moderation action saved.");
+  expect(JSON.parse(fetch.mock.calls.find(([path]) => path.endsWith("/action"))![1]?.body as string)).toMatchObject({action: "hide", duration_days: null});
+  await screen.findByLabelText("Ban duration");
+  fireEvent.change(screen.getByLabelText("Action reason"), {target: {value: "Repeated abuse"}});
+  fireEvent.change(screen.getByLabelText("Ban duration"), {target: {value: "temporary"}});
+  fireEvent.change(screen.getByLabelText("Number of days"), {target: {value: "7"}});
+  fireEvent.click(screen.getByRole("button", {name: "Ban user"})); expect(screen.getByText(/Ban duration: 7 days/)).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", {name: "Confirm action"}));
+  await waitFor(() => expect(fetch.mock.calls.filter(([path]) => path.endsWith("/action"))).toHaveLength(2));
+  expect(JSON.parse(fetch.mock.calls.filter(([path]) => path.endsWith("/action"))[1][1]?.body as string)).toMatchObject({case_id: report.id, expected_revision: 3, action: "ban", duration_days: 7});
 });

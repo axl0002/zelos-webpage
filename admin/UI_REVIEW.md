@@ -38,7 +38,9 @@
   the viewport. Empty Users/Ranking flags panels now explain what to do next.
 - Admin ban reasons are explicitly marked as shown to the banned user, matching
   the new owner-only account restriction screen. Other moderation reasons remain
-  private; this change does not add timed bans or change moderation semantics.
+  private. User and report-owner bans share temporary (1–3650 whole days) or
+  indefinite controls, clear confirmation, and retry identity including duration.
+  User details show the actual manual-ban expiry, never the internal Auth sentinel.
 
 ## Verification and limits
 
@@ -46,7 +48,9 @@ Mocked UI tests render all six server pages inside the actual shared layout,
 including empty states, authorization outages, loading/error/not-found children,
 active route changes, retained sidebar DOM, sign-out failures and duplicate-click
 guards. Authentication and authorization redirects remain tested for every page.
-CSS contract checks cover mobile navigation visibility, wrapping and bounded
+Duration mocks cover both entrypoints, invalid/decimal/blank days, indefinite
+backward compatibility, expiry labels, non-ban payload rejection and changed
+duration after a failed request. CSS contract checks cover mobile navigation visibility, wrapping and bounded
 sidebar/dialog scrolling. Existing moderation API/decision suites are retained.
 
 No live UI tests or real-user moderation mutations were performed. Production
