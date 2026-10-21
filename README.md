@@ -211,3 +211,28 @@ refresh hashes without checking the public explanation. The backend migration is
 Follow `AGENTS.md` and run `scores*.test.ts*`, `site-routing.test.ts`, TypeScript,
 the production build and the isolated PostgreSQL `app_public_score_rules.sql`
 permission/formula tests for changes to this contract.
+
+## Shared app profile links
+
+Profile links use `https://app.zelos.club/profile/<supabase-user-id>`. The dedicated
+subdomain is attached to the same Vercel project and uses a DNS-only Cloudflare
+CNAME to `448048b5e1ed38f9.vercel-dns-017.com`. The main `zelos.club` website remains
+available as before.
+
+The public profile route provides an Open in Zelos button and store links without
+exposing profile data outside the app. The app retains the destination through
+sign-in/onboarding. Installed apps need the new native link configuration; this
+cannot be delivered by hot reload. Users installing from a store should tap the
+original link again afterward (there is no deferred-install link service).
+
+Both association files live under `/.well-known/` and are copied identically in
+`site/` and `admin/public/`. Apple app ID: `MK29ZT8FZ7.club.zelos.app`. Android
+package: `club.zelos.app`; its three public SHA-256 fingerprints were read from
+the existing `zelos-prod` Firebase Android app registration on 21 October 2026.
+Keep these aligned with signing certificate changes, including Play App Signing.
+Universal/App Link handling is limited to `/profile/*` in the native app setup.
+
+Validation: isolated profile-route/association tests, public-site routing tests,
+TypeScript, production build, and unauthenticated HTTP 200 checks for both JSON
+association files and a profile fallback URL. OS-level opening requires an
+updated signed device build; no live UI tests were run.

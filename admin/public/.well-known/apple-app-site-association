@@ -1,0 +1,17 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "MK29ZT8FZ7.club.zelos.app"
+        ],
+        "components": [
+          {
+            "/": "/profile/*",
+            "comment": "Shared Zelos athlete profiles"
+          }
+        ]
+      }
+    ]
+  }
+}

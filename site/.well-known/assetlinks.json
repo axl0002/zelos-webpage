@@ -1,0 +1,16 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "club.zelos.app",
+      "sha256_cert_fingerprints": [
+        "44:08:A1:84:DA:57:39:DB:87:67:6D:8C:15:39:6C:F3:5D:E3:53:71:B5:41:7C:AF:C8:FD:E8:B3:90:E0:9D:A2",
+        "40:4D:8D:EC:58:76:21:98:1E:D4:CA:46:1B:A7:A0:44:D0:3A:58:86:07:76:6C:78:24:ED:6B:91:03:4B:9C:31",
+        "25:94:68:96:72:6F:92:58:A1:42:EE:BD:07:EE:5E:02:8F:49:54:BC:C6:F3:E6:1C:F0:38:C7:24:94:70:28:B6"
+      ]
+    }
+  }
+]

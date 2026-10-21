@@ -45,6 +45,14 @@ module.exports = (phase) => {
     async headers() {
       return [
         {
+          source: "/.well-known/:path*",
+          headers: [
+            { key: "Content-Type", value: "application/json" },
+            { key: "Cache-Control", value: "public, max-age=3600" },
+            { key: "X-Content-Type-Options", value: "nosniff" },
+          ],
+        },
+        {
           source: "/admin/:path*",
           headers: [
             { key: "X-Frame-Options", value: "DENY" },
