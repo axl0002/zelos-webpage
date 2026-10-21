@@ -1,6 +1,6 @@
 "use client";
 import ReviewQueueNav from "./review-queue-nav";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { mediaUrls } from "@/lib/review-media";
 import { rankingFlagHoldTiming, rankingReasons, type RankingFlag } from "@/lib/ranking-flags";
 
@@ -84,7 +84,7 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
   const videoRef = useRef<HTMLVideoElement>(null);
   const timing = rankingFlagHoldTiming(item);
   const [source, setSource] = useState(0);
-  useEffect(() => {
+  useLayoutEffect(() => {
     // A successful refresh supplies a new evidence snapshot, even for the same
     // report. Retry its media and require review again; retain the edited note.
     setSource(0); setWatched(false); setConfirm(null); setError("");
