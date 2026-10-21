@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   try {
     const auth = await requireAdmin(); if (auth.response) return privateResponse(auth.response);
     const input = parseReportAction(await request.json().catch(() => null));
-    if (!input) return privateResponse(NextResponse.json({error: "Select a report action and provide a reason of 3–1000 characters."}, {status: 400}));
+    if (!input) return privateResponse(NextResponse.json({error: "Select a report action and provide a reason of 3–1000 characters. Temporary bans require 1–3650 whole days; other actions cannot include a duration."}, {status: 400}));
     const {error} = await auth.client.rpc("admin_moderate_safety_case", input);
     return privateResponse(error ? rpcFailure(error) : NextResponse.json({ok: true}));
   } catch { return privateResponse(rpcFailure({})); }

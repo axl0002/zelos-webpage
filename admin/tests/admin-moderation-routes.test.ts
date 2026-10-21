@@ -39,11 +39,11 @@ it("searches using a bounded query and returns only allowlisted public/moderatio
 });
 it.each([true, false])("forwards validated ban=%s with revision and retry identity only", async banned => {
   expect((await ban(request({...banInput, banned, is_admin: true, ban_until: "forever"}))).status).toBe(200);
-  expect(client.rpc).toHaveBeenLastCalledWith("admin_set_user_ban", {target_user: id, banned, expected_revision: 0, reason: banInput.reason, request_id: key});
+  expect(client.rpc).toHaveBeenLastCalledWith("admin_set_user_ban", {target_user: id, banned, expected_revision: 0, reason: banInput.reason, request_id: key, duration_days: null});
 });
 it.each(["hide", "restore", "delete", "ban"])("resolves %s targets through the report RPC, ignoring forged owners and posts", async value => {
   expect((await action(request({...actionInput, action: value, owner_id: "forged", target_id: "forged"}))).status).toBe(200);
-  expect(client.rpc).toHaveBeenLastCalledWith("admin_moderate_safety_case", {target_case: id, action: value, expected_revision: 3, reason: actionInput.reason, request_id: key});
+  expect(client.rpc).toHaveBeenLastCalledWith("admin_moderate_safety_case", {target_case: id, action: value, expected_revision: 3, reason: actionInput.reason, request_id: key, duration_days: null});
 });
 it("rejects cross-site mutation, invalid actions, reasons, revisions and retry keys", async () => {
   expect((await ban(request(banInput, "https://evil.test"))).status).toBe(403);
@@ -57,4 +57,26 @@ it.each([["40001", "review_conflict", 409], ["42501", "protected_account", 403],
   client.rpc.mockImplementation(async name => name === "admin_rank_review_context" ? {data: {}, error: null} : {error: {code, message, details: "secret SQL"}});
   const response = await action(request(actionInput)); expect(response.status).toBe(status);
   expect(response.headers.get("cache-control")).toBe("private, no-store"); expect(JSON.stringify(await response.json())).not.toContain("secret");
+});
+
+it.each([null, 1, 7, 3650])("forwards temporary or indefinite duration %s for both ban entrypoints", async duration_days => {
+  expect((await ban(request({...banInput, duration_days}))).status).toBe(200);
+  expect(client.rpc).toHaveBeenLastCalledWith("admin_set_user_ban", expect.objectContaining({duration_days}));
+  expect((await action(request({...actionInput, action: "ban", duration_days}))).status).toBe(200);
+  expect(client.rpc).toHaveBeenLastCalledWith("admin_moderate_safety_case", expect.objectContaining({duration_days}));
+});
+it.each([0, -1, 1.5, 3651, "7", "", true, {}])("rejects invalid duration %s in both entrypoints", async duration_days => {
+  expect((await ban(request({...banInput, duration_days}))).status).toBe(400);
+  expect((await action(request({...actionInput, action: "ban", duration_days}))).status).toBe(400);
+  expect(client.rpc.mock.calls.every(([name]) => name === "admin_rank_review_context")).toBe(true);
+});
+it("rejects durations for unban and every non-ban report action", async () => {
+  expect((await ban(request({...banInput, banned: false, duration_days: 7}))).status).toBe(400);
+  for (const value of ["hide", "restore", "delete"]) expect((await action(request({...actionInput, action: value, duration_days: 7}))).status).toBe(400);
+});
+it("returns actual manual expiry without leaking other account fields", async () => {
+  client.rpc.mockImplementation(async name => ({data: name === "admin_rank_review_context" ? {} : [{id, username: "athlete", revision: 1,
+    is_banned: true, manual_ban: true, manual_ban_until: "2026-10-28T12:00:00Z", ban_until: "invalid", secret: "private"}], error: null}));
+  const response = await GET(new NextRequest("http://localhost:3004/admin/api/users?q=athlete"));
+  expect(await response.json()).toEqual([expect.objectContaining({manual_ban_until: "2026-10-28T12:00:00Z", ban_until: null})]);
 });

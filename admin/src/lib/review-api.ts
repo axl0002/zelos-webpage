@@ -50,6 +50,7 @@ export function parseDecision(value: unknown): Decision | null {
 }
 export function rpcFailure(error: { code?: string; message?: string }) {
   const messages: Record<string, string> = {
+    invalid_duration: "Temporary bans require a whole number of days from 1 to 3650.",
     account_restricted: "This account cannot perform moderation actions.",
     user_unavailable: "This account is no longer available. Search again.",
     protected_account: "Administrator accounts and your own account cannot be banned here.",
