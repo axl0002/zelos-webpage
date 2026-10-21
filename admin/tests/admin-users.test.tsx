@@ -11,7 +11,14 @@ it.each([false, true])("searches then confirms and refreshes a manual ban remova
   fireEvent.change(screen.getByLabelText("Username or user ID"), {target: {value: "athlete"}}); fireEvent.click(screen.getByRole("button", {name: "Search users"}));
   await screen.findByRole("heading", {name: "athlete"});
   const button = screen.getByRole("button", {name: unban ? "Remove manual ban" : "Ban user"}) as HTMLButtonElement;
-  expect(button.disabled).toBe(true); fireEvent.change(screen.getByLabelText("Action reason"), {target: {value: "Reviewed account history"}}); fireEvent.click(button);
+  expect(button.disabled).toBe(true); fireEvent.change(screen.getByLabelText(/^(Action reason|Ban reason)/), {target: {value: "Reviewed account history"}}); fireEvent.click(button);
+  if (!unban) {
+    expect(screen.getByLabelText("Ban reason (shown to the user)")).toBeTruthy();
+    expect(within(screen.getByRole("dialog")).getByText("This reason will be shown to the user.")).toBeTruthy();
+  } else {
+    expect(screen.getByLabelText("Action reason")).toBeTruthy();
+    expect(screen.queryByText("This reason will be shown to the user.")).toBeNull();
+  }
   expect(fetch.mock.calls.filter(([path]) => path.endsWith("/ban"))).toHaveLength(0);
   const confirm = within(screen.getByRole("dialog")).getByRole("button", {name: "Confirm action"}); fireEvent.click(confirm); fireEvent.click(confirm);
   await screen.findByText("Account moderation saved.");
@@ -23,7 +30,7 @@ it("retains reason and retry identity after failure and does not claim success",
   const fetch = vi.fn(async (path: string) => ({ok: !path.endsWith("/ban"), json: async () => path.includes("?q=") ? [user] : {error: "Please try again."}}));
   vi.stubGlobal("fetch", fetch); render(<AdminUsersDashboard />);
   fireEvent.change(screen.getByLabelText("Username or user ID"), {target: {value: "athlete"}}); fireEvent.click(screen.getByRole("button", {name: "Search users"}));
-  await screen.findByRole("heading", {name: "athlete"}); fireEvent.change(screen.getByLabelText("Action reason"), {target: {value: "Repeated abuse"}});
+  await screen.findByRole("heading", {name: "athlete"}); fireEvent.change(screen.getByLabelText(/^(Action reason|Ban reason)/), {target: {value: "Repeated abuse"}});
   fireEvent.click(screen.getByRole("button", {name: "Ban user"})); fireEvent.click(screen.getByRole("button", {name: "Confirm action"}));
   await screen.findByRole("alert"); expect(screen.queryByRole("status")).toBeNull();
   fireEvent.click(screen.getByRole("button", {name: "Confirm action"}));
@@ -40,14 +47,14 @@ it("resets pending confirmation when switching accounts and uses the selected us
   });
   vi.stubGlobal("fetch", fetch); render(<AdminUsersDashboard />);
   fireEvent.change(screen.getByLabelText("Username or user ID"), {target: {value: "athlete"}}); fireEvent.click(screen.getByRole("button", {name: "Search users"}));
-  await screen.findByRole("heading", {name: "athlete"}); fireEvent.change(screen.getByLabelText("Action reason"), {target: {value: "First account reason"}});
+  await screen.findByRole("heading", {name: "athlete"}); fireEvent.change(screen.getByLabelText(/^(Action reason|Ban reason)/), {target: {value: "First account reason"}});
   fireEvent.click(screen.getByRole("button", {name: "Ban user"})); fireEvent.click(screen.getByRole("button", {name: "Cancel"}));
-  fireEvent.click(screen.getByRole("button", {name: /second.*Active/})); expect((screen.getByLabelText("Action reason") as HTMLTextAreaElement).value).toBe("");
-  fireEvent.change(screen.getByLabelText("Action reason"), {target: {value: "Second account reason"}}); fireEvent.click(screen.getByRole("button", {name: "Ban user"}));
+  fireEvent.click(screen.getByRole("button", {name: /second.*Active/})); expect((screen.getByLabelText(/^(Action reason|Ban reason)/) as HTMLTextAreaElement).value).toBe("");
+  fireEvent.change(screen.getByLabelText(/^(Action reason|Ban reason)/), {target: {value: "Second account reason"}}); fireEvent.click(screen.getByRole("button", {name: "Ban user"}));
   fireEvent.click(screen.getByRole("button", {name: "Confirm action"})); await screen.findByText("Account moderation saved.");
   expect(JSON.parse(fetch.mock.calls.find(([path]) => path.endsWith("/ban"))![1]?.body as string)).toMatchObject({user_id: second.id, expected_revision: 4});
   await screen.findByRole("button", {name: /second.*Banned/});
-  fireEvent.change(screen.getByLabelText("Action reason"), {target: {value: "Appeal accepted"}}); fireEvent.click(screen.getByRole("button", {name: "Remove manual ban"}));
+  fireEvent.change(screen.getByLabelText(/^(Action reason|Ban reason)/), {target: {value: "Appeal accepted"}}); fireEvent.click(screen.getByRole("button", {name: "Remove manual ban"}));
   fireEvent.click(screen.getByRole("button", {name: "Confirm action"}));
   await waitFor(() => expect(fetch.mock.calls.filter(([path]) => path.endsWith("/ban"))).toHaveLength(2));
   expect(JSON.parse(fetch.mock.calls.filter(([path]) => path.endsWith("/ban"))[1][1]?.body as string)).toMatchObject({user_id: second.id, expected_revision: 5, banned: false});

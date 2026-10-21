@@ -72,7 +72,7 @@ it.each([
   vi.stubGlobal("fetch", fetch); render(<ModerationReportsDashboard />);
   await screen.findByText("Unwanted links or messages");
   const button = screen.getByRole("button", {name: label}) as HTMLButtonElement;
-  expect(button.disabled).toBe(true); fireEvent.change(screen.getByLabelText("Action reason"), {target: {value: "Reviewed reported evidence"}}); fireEvent.click(button);
+  expect(button.disabled).toBe(true); fireEvent.change(screen.getByLabelText(/^(Action reason|Ban reason)/), {target: {value: "Reviewed reported evidence"}}); fireEvent.click(button);
   expect(fetch.mock.calls.filter(([path]) => path.endsWith("/action"))).toHaveLength(0);
   fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", {name: "Confirm action"}));
   await screen.findByText("Moderation action saved.");
@@ -90,13 +90,13 @@ it("clears action inputs when changing reports and refreshes revision after a de
   const first = {...report, target_kind: "profile" as const, context: {username: "first", body: "First profile", can_ban: true}};
   const second = {...first, id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", revision: 8, context: {username: "second", body: "Second profile", can_ban: true}};
   const fetch = mock([first, second]); render(<ModerationReportsDashboard />); await screen.findByText("First profile");
-  fireEvent.change(screen.getByLabelText("Action reason"), {target: {value: "First reason"}});
-  fireEvent.click(screen.getByRole("button", {name: /profile · second/})); expect((screen.getByLabelText("Action reason") as HTMLTextAreaElement).value).toBe("");
+  fireEvent.change(screen.getByLabelText(/^(Action reason|Ban reason)/), {target: {value: "First reason"}});
+  fireEvent.click(screen.getByRole("button", {name: /profile · second/})); expect((screen.getByLabelText(/^(Action reason|Ban reason)/) as HTMLTextAreaElement).value).toBe("");
   fireEvent.click(screen.getByLabelText("I reviewed the available content and report evidence."));
   fireEvent.click(screen.getByRole("button", {name: "Dismiss reports"})); fireEvent.click(screen.getByRole("button", {name: "Confirm decision"}));
   await screen.findByText(/Reports dismissed/);
   await screen.findByRole("button", {name: /profile · second/}); fireEvent.click(screen.getByRole("button", {name: /profile · second/}));
-  fireEvent.change(screen.getByLabelText("Action reason"), {target: {value: "Independent account restriction"}});
+  fireEvent.change(screen.getByLabelText(/^(Action reason|Ban reason)/), {target: {value: "Independent account restriction"}});
   fireEvent.click(screen.getByRole("button", {name: "Ban user"})); fireEvent.click(screen.getByRole("button", {name: "Confirm action"}));
   await waitFor(() => expect(fetch.mock.calls.filter(([path]) => path.endsWith("/action"))).toHaveLength(1));
   expect(JSON.parse(fetch.mock.calls.find(([path]) => path.endsWith("/action"))![1].body as string)).toMatchObject({case_id: second.id, expected_revision: 9, action: "ban"});

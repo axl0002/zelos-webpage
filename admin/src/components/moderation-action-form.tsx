@@ -9,6 +9,7 @@ export default function ModerationActionForm({actions, onSubmit, onBusy, onSaved
   const [reason, setReason] = useState(""), [selected, setSelected] = useState<ModerationAction | null>(null);
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
   const pending = useRef(false), retry = useRef<{signature: string; id: string} | null>(null);
+  const banOnly = actions.length === 1 && actions[0].id === "ban";
   async function save() {
     if (!selected || pending.current || reason.trim().length < 3) return;
     const signature = JSON.stringify([selected.id, reason.trim()]);
@@ -21,12 +22,14 @@ export default function ModerationActionForm({actions, onSubmit, onBusy, onSaved
   if (!actions.length) return null;
   return <section className="decision-form" aria-label="Moderation actions">
     <h3>Moderation actions</h3>
-    <label>Action reason<textarea rows={3} maxLength={1000} value={reason} disabled={busy}
+    <label>{banOnly ? "Ban reason (shown to the user)" : "Action reason"}<textarea rows={3} maxLength={1000} value={reason} disabled={busy}
       onChange={event => {setReason(event.target.value); setSelected(null);}} /></label>
+    {!banOnly && actions.some(action => action.id === "ban") && <p className="muted small">When banning an account, this reason is shown to the user.</p>}
     <div className="decision-actions">{actions.map(action => <button key={action.id} className={`button ${action.danger ? "danger" : "secondary"}`}
       disabled={busy || reason.trim().length < 3} onClick={() => {setSelected(action); setError("");}}>{action.label}</button>)}</div>
     {selected && <div className="dialog-backdrop"><div className="dialog" role="dialog" aria-modal="true" aria-label="Confirm moderation action">
       <h2>{selected.label}?</h2><p>{selected.effect}</p><p className="review-rule-copy">{reason.trim()}</p>
+      {selected.id === "ban" && <p>This reason will be shown to the user.</p>}
       {error && <p role="alert" className="notice error">{error}</p>}
       <div className="decision-actions"><button className="button secondary" disabled={busy} onClick={() => setSelected(null)}>Cancel</button>
         <button className="button primary" disabled={busy} onClick={() => void save()}>{busy ? "Saving…" : "Confirm action"}</button></div>
