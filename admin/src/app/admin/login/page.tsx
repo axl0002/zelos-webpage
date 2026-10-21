@@ -12,7 +12,10 @@ const validEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.tr
 
 export default function Login() {
   const router = useRouter();
-  const [mode, setMode] = useState<"code" | "password">("code");
+  // Enable only after SMTP and a template containing {{ .Token }} are verified.
+  // Supabase's default mail provider currently cannot send our code template.
+  const emailCodesEnabled = process.env.NEXT_PUBLIC_ADMIN_EMAIL_CODE_ENABLED === "true";
+  const [mode, setMode] = useState<"code" | "password">(emailCodesEnabled ? "code" : "password");
   const [email, setEmail] = useState(""), [sentTo, setSentTo] = useState("");
   const [password, setPassword] = useState(""), [code, setCode] = useState("");
   const [action, setAction] = useState<"send" | "verify" | "password" | null>(null);
@@ -23,9 +26,11 @@ export default function Login() {
   useEffect(() => {
     mounted.current = true;
     const reason = new URLSearchParams(window.location.search).get("error");
-    if (reason) setError(reason === "expired" ? "This sign-in link has expired. Request a new code below." : accessMessage);
+    if (reason) setError(reason === "expired" ? emailCodesEnabled
+      ? "This sign-in link has expired. Request a new code below."
+      : "This sign-in link has expired. Sign in with your email and password." : accessMessage);
     return () => {mounted.current = false;};
-  }, []);
+  }, [emailCodesEnabled]);
   useEffect(() => {
     if (cooldown <= 0) return;
     const timer = setInterval(() => setCooldown(Math.max(0, Math.ceil((retryAt.current - Date.now()) / 1000))), 1000);
@@ -48,7 +53,7 @@ export default function Login() {
     }
   }
   async function sendCode() {
-    if (pending.current || Date.now() < retryAt.current || !validEmail(sentTo || email)) return;
+    if (!emailCodesEnabled || pending.current || Date.now() < retryAt.current || !validEmail(sentTo || email)) return;
     pending.current = true; setAction("send"); setError(""); setNotice("");
     const destination = sentTo || email.trim();
     try {
@@ -85,7 +90,7 @@ export default function Login() {
     finally {pending.current = false; if (mounted.current) setAction(null);}
   }
   function switchMode() {
-    if (pending.current) return;
+    if (!emailCodesEnabled || pending.current) return;
     setMode(mode === "code" ? "password" : "code"); setSentTo(""); setPassword(""); setCode(""); setError(""); setNotice("");
   }
   return <main className="login-wrap"><section className="login-card">
@@ -112,7 +117,7 @@ export default function Login() {
       <button type="button" className="button text" disabled={busy || cooldown > 0} onClick={() => void sendCode()}>{cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}</button>
       <button type="button" className="button text" disabled={busy} onClick={() => {setSentTo(""); setCode(""); setNotice(""); setError("");}}>Change email</button>
     </div>}
-    <button type="button" className="button text" disabled={busy} onClick={switchMode}>{mode === "code" ? "Sign in with password" : "Sign in with an email code"}</button>
+    {emailCodesEnabled && <button type="button" className="button text" disabled={busy} onClick={switchMode}>{mode === "code" ? "Sign in with password" : "Sign in with an email code"}</button>}
     {notice && <p role="status" className="muted">{notice}</p>}
     {error && <p role="alert" className="error">{error}</p>}
     <p className="muted small">Access is limited to assigned admins.</p>

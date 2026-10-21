@@ -12,6 +12,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => mocks }));
 import Login from "../src/app/admin/login/page";
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.stubEnv("NEXT_PUBLIC_ADMIN_EMAIL_CODE_ENABLED", "true");
   mocks.auth.signInWithPassword.mockResolvedValue({ error: null });
   mocks.auth.signInWithOtp.mockResolvedValue({error: null});
   mocks.auth.verifyOtp.mockResolvedValue({error: null});
@@ -19,7 +20,7 @@ beforeEach(() => {
   mocks.rpc.mockResolvedValue({ error: null });
   window.history.replaceState({}, "", "/admin/login");
 });
-afterEach(() => {cleanup(); vi.useRealTimers();});
+afterEach(() => {cleanup(); vi.useRealTimers(); vi.unstubAllEnvs();});
 async function submit() {
   const user = userEvent.setup();
   await user.click(screen.getByRole("button", {name: "Sign in with password"}));
@@ -37,6 +38,18 @@ it("signs in using password and checks admin role before navigation", async () =
     password: "test-password",
   });
   expect(mocks.rpc).toHaveBeenCalledWith("admin_rank_review_context");
+});
+it("defaults to working password login and hides code requests until email delivery is configured", async () => {
+  vi.stubEnv("NEXT_PUBLIC_ADMIN_EMAIL_CODE_ENABLED", "false");
+  render(<Login />);
+  expect(screen.getByLabelText("Password")).toHaveProperty("type", "password");
+  expect(screen.queryByRole("button", {name: /code/i})).toBeNull();
+  fireEvent.change(screen.getByLabelText("Email address"), {target: {value: "admin@example.test"}});
+  fireEvent.change(screen.getByLabelText("Password"), {target: {value: "existing-password"}});
+  fireEvent.click(screen.getByRole("button", {name: "Sign in"}));
+  await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith("/admin"));
+  expect(mocks.auth.signInWithOtp).not.toHaveBeenCalled();
+  expect(mocks.auth.signInWithPassword).toHaveBeenCalledExactlyOnceWith({email: "admin@example.test", password: "existing-password"});
 });
 
 async function sendCode() {
