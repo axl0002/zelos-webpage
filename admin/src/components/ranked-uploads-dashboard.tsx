@@ -86,21 +86,15 @@ function RankedUploadDetail({item, onBusy, onSaved}: {
   const [preview, setPreview] = useState<{url: string; expires_in: number} | null>(null);
   const [opening, setOpening] = useState(false);
   const [watched, setWatched] = useState(false);
-  const [note, setNote] = useState(item.review_note ?? "");
   const [reason, setReason] = useState<RankedUploadReason | "">(item.rejection_reason ?? "");
-  const [selectedRules, setSelectedRules] = useState<string[]>([]);
-  const [confirmation, setConfirmation] = useState<"approve" | "reject" | null>(null);
+  const [confirmation, setConfirmation] = useState<"approve" | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const previewRequest = useRef<AbortController | null>(null);
   const savingRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const awaiting = item.state === "rank_review";
-  const ruleType = reason === "unacceptable_form" ? "form" : reason === "unacceptable_filming" ? "filming" : null;
-  const choices = item.guidelines.rules.filter(rule => rule.type === ruleType);
-  const chosen = choices.filter(rule => selectedRules.includes(rule.id));
-  const validRejection = !!reason && (ruleType && choices.length > 0
-    ? chosen.length > 0 : note.trim().length >= 3);
+  const validRejection = !!reason;
 
   const openPreview = useCallback(async () => {
     if (savingRef.current) return;
@@ -117,16 +111,16 @@ function RankedUploadDetail({item, onBusy, onSaved}: {
     void openPreview();
     return () => previewRequest.current?.abort();
   }, [openPreview]);
-  async function decide() {
-    if (!confirmation || savingRef.current || !awaiting || !preview || !watched ||
-      (confirmation === "reject" && !validRejection)) return;
+  async function decide(approved: boolean) {
+    if (savingRef.current || !awaiting ||
+      (approved ? confirmation !== "approve" || !preview || !watched : !validRejection)) return;
     savingRef.current = true; setSaving(true); onBusy(true); setError("");
-    const approved = confirmation === "approve";
     try {
       await api("/decision", {upload_id: item.id, expected_revision: item.revision,
-        approve: approved, watched_video: true, reason_code: approved ? null : reason,
-        review_note: note.trim(), rule_ids: approved ? [] : chosen.map(rule => rule.id)});
-      onSaved(approved, note.trim() || `Rules not met: ${chosen.map(rule => rule.text).join("; ")}`, approved ? null : reason as RankedUploadReason, approved ? [] : chosen);
+        approve: approved, watched_video: approved && watched,
+        reason_code: approved ? null : reason, review_note: "", rule_ids: []});
+      onSaved(approved, approved ? "" : rankedUploadReasons[reason as RankedUploadReason],
+        approved ? null : reason as RankedUploadReason, []);
     } catch (cause) { setError((cause as Error).message); setConfirmation(null); }
     finally { savingRef.current = false; setSaving(false); onBusy(false); }
   }
@@ -168,41 +162,28 @@ function RankedUploadDetail({item, onBusy, onSaved}: {
         <ul>{g.rules.filter(rule => rule.type === type).map(rule => <li key={rule.id}>{rule.text}</li>)}</ul>
       </div>)}
       {!awaiting ? <div className="notice"><h3>{item.rejection_reason ? rankedUploadReasons[item.rejection_reason] : "Rejected"}</h3>
-        <p className="review-rule-copy">{item.review_note}</p><ul>{item.rejection_rules.map(rule => <li key={rule.id}>{rule.text}</li>)}</ul><p>The upload remains private and earns no points.</p></div>
+        {item.review_note && item.review_note !== (item.rejection_reason ? rankedUploadReasons[item.rejection_reason] : null) && <p className="review-rule-copy">{item.review_note}</p>}<ul>{item.rejection_rules.map(rule => <li key={rule.id}>{rule.text}</li>)}</ul><p>The upload remains private and earns no points.</p></div>
         : <>
           <label className="check"><input type="checkbox" checked={watched} disabled={!preview || saving}
             onChange={event => {setWatched(event.target.checked); setConfirmation(null);}} />
             I watched the full video and checked the exercise, result and form against these rules.</label>
           <label htmlFor="ranked-upload-reason">Rejection reason</label>
-          <select id="ranked-upload-reason" value={reason} disabled={saving} onChange={event => {setReason(event.target.value as RankedUploadReason | ""); setSelectedRules([]); setConfirmation(null);}}>
+          <select id="ranked-upload-reason" value={reason} disabled={saving} onChange={event => {setReason(event.target.value as RankedUploadReason | ""); setConfirmation(null);}}>
             <option value="">Choose a reason if rejecting</option>
             {Object.entries(rankedUploadReasons).map(([code, label]) => <option key={code} value={code}>{label}</option>)}
           </select>
-          {choices.length > 0 && <fieldset disabled={saving}><legend>Rules not met</legend>
-            {choices.map(rule => <label className="check" key={rule.id}><input type="checkbox"
-              checked={selectedRules.includes(rule.id)} disabled={saving || (selectedRules.length >= 8 && !selectedRules.includes(rule.id))}
-              onChange={event => {setSelectedRules(old => event.target.checked ? [...old, rule.id] : old.filter(id => id !== rule.id)); setConfirmation(null);}} />
-              {rule.text}</label>)}
-            <p className="small muted">Select the requirements the clip does not meet, up to 8.</p>
-          </fieldset>}
-          <label htmlFor="ranked-upload-note">Note shown to the uploader if rejected</label>
-          <textarea id="ranked-upload-note" rows={4} maxLength={1000} value={note} disabled={saving}
-            placeholder="Add context or explain how to correct the issue. Optional when a rule is selected."
-            onChange={event => {setNote(event.target.value); setConfirmation(null);}} />
           <p className="small muted">While this review is pending, the video stays private, earns no points, and the athlete’s current personal best stays in place.</p>
-          <div className="decision-actions"><button className="button secondary" disabled={!watched || !preview || saving || !validRejection}
-            onClick={() => setConfirmation("reject")}>Reject upload</button>
+          <div className="decision-actions"><button className="button secondary" disabled={saving || !validRejection}
+            onClick={() => void decide(false)}>Reject upload</button>
             <button className="button primary" disabled={!watched || !preview || saving} onClick={() => setConfirmation("approve")}>Approve upload</button></div>
         </>}
       {error && <p className="notice error" role="alert">{error}</p>}
     </div></div>
     {confirmation && <div className="dialog-backdrop"><div className="dialog" role="dialog" aria-modal="true" aria-label="Confirm ranked upload decision">
-      <h2>{confirmation === "approve" ? "Approve this ranked upload?" : "Reject this ranked upload?"}</h2>
-      <p>{confirmation === "approve" ? "The upload can be published and counted in rankings after the remaining publication checks pass."
-        : "The video will stay private and earn no points. The uploader will receive this reason:"}</p>
-      {confirmation === "reject" && <><strong>{reason ? rankedUploadReasons[reason] : ""}</strong><ul>{chosen.map(rule => <li key={rule.id}>{rule.text}</li>)}</ul><p className="review-rule-copy">{note.trim()}</p></>}
+      <h2>Approve this ranked upload?</h2>
+      <p>The upload can be published and counted in rankings after the remaining publication checks pass.</p>
       <div className="decision-actions"><button className="button secondary" disabled={saving} onClick={() => setConfirmation(null)}>Cancel</button>
-        <button className="button primary" disabled={saving} onClick={() => void decide()}>{saving ? "Saving…" : "Confirm decision"}</button></div>
+        <button className="button primary" disabled={saving} onClick={() => void decide(true)}>{saving ? "Saving…" : "Confirm decision"}</button></div>
     </div></div>}
   </section>;
 }

@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     const auth = await requireAdmin();
     if (auth.response) return privateResponse(auth.response);
     const decision = parseRankedUploadDecision(await request.json().catch(() => null));
-    if (!decision) return privateResponse(NextResponse.json({error: "Watch the full video, then select a rule or add a note when rejecting."}, {status: 400}));
+    if (!decision) return privateResponse(NextResponse.json({error: "Select a rejection reason, or confirm you watched the full video when approving."}, {status: 400}));
     const {error} = await auth.client.rpc("resolve_ranked_upload_review", decision);
     return error ? rankedUploadFailure(error) : privateResponse(NextResponse.json({ok: true}));
   } catch { return rankedUploadFailure(); }

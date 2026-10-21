@@ -88,15 +88,17 @@ export function parseRankedUploadReviews(value: unknown): RankedUploadReview[] {
 export function parseRankedUploadDecision(value: unknown) {
   if (!value || typeof value !== "object") return null;
   const d = value as Record<string, unknown>;
-  const ruleIds = parseRuleIds(d.rule_ids);
+  const ruleIds = parseRuleIds(d.rule_ids ?? []);
+  const note = d.review_note ?? "";
   if (!ruleIds || !uuid(d.upload_id) || !integer(d.expected_revision, 1) || typeof d.approve !== "boolean" ||
-    d.watched_video !== true || !text(d.review_note, 1000) ||
-    (d.approve ? (d.reason_code !== null && d.reason_code !== undefined) || ruleIds.length > 0
-      : !reason(d.reason_code) || (d.review_note.trim().length < 3 && ruleIds.length === 0))) return null;
+    !text(note, 1000) || (d.watched_video !== undefined && typeof d.watched_video !== "boolean") ||
+    (d.approve ? d.watched_video !== true || (d.reason_code !== null && d.reason_code !== undefined) || ruleIds.length > 0
+      : !reason(d.reason_code))) return null;
   return { upload_id: d.upload_id, expected_revision: d.expected_revision,
-    approve: d.approve, watched_video: true,
+    approve: d.approve, watched_video: d.watched_video === true,
     reason_code: d.approve ? null : d.reason_code as RankedUploadReason,
-    review_note: d.review_note.trim(), rule_ids: ruleIds };
+    review_note: note.trim(), rule_ids: ruleIds };
+
 }
 export function parseRankedUploadPreview(value: unknown): string | null {
   const id = value && typeof value === "object" ? (value as Record<string, unknown>).upload_id : null;

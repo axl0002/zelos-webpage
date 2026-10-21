@@ -39,34 +39,29 @@ it("automatically loads the selected private video muted without confirming a re
   expect((screen.getByRole("button", {name: "Approve upload"}) as HTMLButtonElement).disabled).toBe(true);
   expect(fetch.mock.calls.filter(([path]) => path.endsWith("/decision"))).toHaveLength(0);
 });
-it("requires private video, full-video check, rejection choices and explicit confirmation", async () => {
-  const fetch = mockApi(); render(<RankedUploadsDashboard />);
+it("rejects with only a selected reason, without video, note, rules or confirmation", async () => {
+  let resolvePreview!: (value: unknown) => void;
+  const fetch = vi.fn(async (path: string, _options: RequestInit) => path.endsWith("/preview")
+    ? await new Promise(resolve => {resolvePreview = resolve;})
+    : {ok: true, json: async () => path.endsWith("/decision") ? {ok: true} : [rankedUpload]});
+  vi.stubGlobal("fetch", fetch); render(<RankedUploadsDashboard />);
   await screen.findByRole("heading", {name: rankedUpload.title});
-  const approve = screen.getByRole("button", {name: "Approve upload"}) as HTMLButtonElement;
   const reject = screen.getByRole("button", {name: "Reject upload"}) as HTMLButtonElement;
-  expect(approve.disabled).toBe(true);
-  expect(screen.getByText("Hips level with shoulders")).toBeTruthy();
-  expect(screen.getByText(/Projected rank: #2 of 11/)).toBeTruthy();
-  await review(); expect(approve.disabled).toBe(false); expect(reject.disabled).toBe(true);
+  expect(reject.disabled).toBe(true);
+  expect((screen.getByRole("button", {name: "Approve upload"}) as HTMLButtonElement).disabled).toBe(true);
+  expect(screen.queryByLabelText("Note shown to the uploader if rejected")).toBeNull();
   fireEvent.change(screen.getByLabelText("Rejection reason"), {target: {value: "unacceptable_form"}});
-  expect(reject.disabled).toBe(true);
-  fireEvent.change(screen.getByLabelText("Note shown to the uploader if rejected"), {target: {value: "Keep both arms straight for the full hold."}});
-  expect(reject.disabled).toBe(true);
-  fireEvent.click(screen.getByLabelText("Keep arms straight."));
-  fireEvent.click(reject);
-  const dialog = screen.getByRole("dialog");
-  expect(within(dialog).getByText("Keep both arms straight for the full hold.")).toBeTruthy();
-  expect(fetch.mock.calls.filter(([path]) => path.endsWith("/decision"))).toHaveLength(0);
-  const confirm = within(dialog).getByRole("button", {name: "Confirm decision"});
-  fireEvent.click(confirm); fireEvent.click(confirm);
+  expect(reject.disabled).toBe(false);
+  fireEvent.click(reject); fireEvent.click(reject);
   await screen.findByText("Rejected. The uploader will see your reason. The video remains private.");
+  expect(screen.queryByRole("dialog")).toBeNull();
   const decisions = fetch.mock.calls.filter(([path]) => path.endsWith("/decision"));
   expect(decisions).toHaveLength(1);
-  expect(JSON.parse(decisions[0][1].body as string)).toEqual({upload_id: rankedUpload.id, expected_revision: 4,
-    approve: false, watched_video: true, reason_code: "unacceptable_form", review_note: "Keep both arms straight for the full hold.", rule_ids: [rankedUpload.guidelines.rules[0].id]});
+  expect(JSON.parse((decisions[0] as unknown as [string, RequestInit])[1].body as string)).toEqual({upload_id: rankedUpload.id,
+    expected_revision: 4, approve: false, watched_video: false, reason_code: "unacceptable_form", review_note: "", rule_ids: []});
+  expect(screen.getByText("Unacceptable form")).toBeTruthy();
   expect(screen.queryByRole("button", {name: "Approve upload"})).toBeNull();
-  expect(screen.queryByRole("button", {name: "Reject upload"})).toBeNull();
-  expect(screen.getByText("The upload remains private and earns no points.")).toBeTruthy();
+  resolvePreview?.({ok: true, json: async () => privatePreview});
 });
 it("approval remains explicit and removes the completed queue entry", async () => {
   const fetch = mockApi(); render(<RankedUploadsDashboard />); await review();
@@ -81,16 +76,14 @@ it("approval remains explicit and removes the completed queue entry", async () =
     approve: true, watched_video: true, reason_code: null, review_note: "", rule_ids: []});
   expect(screen.queryByRole("heading", {name: rankedUpload.title})).toBeNull();
 });
-it("failed decisions retain the reason, note and watched state for retry", async () => {
-  mockApi([rankedUpload], true); render(<RankedUploadsDashboard />); await review();
+it("failed rejection retains selected reason and retries without another hurdle", async () => {
+  mockApi([rankedUpload], true); render(<RankedUploadsDashboard />);
+  await screen.findByRole("heading", {name: rankedUpload.title});
   fireEvent.change(screen.getByLabelText("Rejection reason"), {target: {value: "incorrect_measurement"}});
-  fireEvent.change(screen.getByLabelText("Note shown to the uploader if rejected"), {target: {value: "Only 8 seconds are held with valid form."}});
   fireEvent.click(screen.getByRole("button", {name: "Reject upload"}));
-  fireEvent.click(screen.getByRole("button", {name: "Confirm decision"}));
   await screen.findByText("Connection failed. Try again.");
   expect((screen.getByLabelText("Rejection reason") as HTMLSelectElement).value).toBe("incorrect_measurement");
-  expect((screen.getByLabelText("Note shown to the uploader if rejected") as HTMLTextAreaElement).value).toBe("Only 8 seconds are held with valid form.");
-  expect((screen.getByLabelText("I watched the full video and checked the exercise, result and form against these rules.") as HTMLInputElement).checked).toBe(true);
+  expect((screen.getByRole("button", {name: "Reject upload"}) as HTMLButtonElement).disabled).toBe(false);
   expect(screen.queryByRole("dialog")).toBeNull();
 });
 it("video failure clears watched confirmation and requires a fresh private preview", async () => {
@@ -99,6 +92,11 @@ it("video failure clears watched confirmation and requires a fresh private previ
   expect((screen.getByLabelText("I watched the full video and checked the exercise, result and form against these rules.") as HTMLInputElement).checked).toBe(false);
   expect((screen.getByRole("button", {name: "Approve upload"}) as HTMLButtonElement).disabled).toBe(true);
   expect(screen.getByRole("button", {name: "Retry video"})).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", {name: "Retry video"}));
+  await waitFor(() => expect(container.querySelector("video")).not.toBeNull());
+  expect(container.querySelector("video")!.autoplay).toBe(true);
+  expect(container.querySelector("video")!.muted).toBe(true);
+  expect((screen.getByRole("button", {name: "Approve upload"}) as HTMLButtonElement).disabled).toBe(true);
 });
 it("switching reviews ignores late previews and resets the watch confirmation", async () => {
   let resolvePreview!: (result: unknown) => void;
@@ -113,6 +111,11 @@ it("switching reviews ignores late previews and resets the watch confirmation", 
   resolveOldPreview({ok: true, json: async () => privatePreview});
   await screen.findByRole("heading", {name: "Other upload"});
   expect(container.querySelector("video")).toBeNull();
+  resolvePreview({ok: true, json: async () => ({...privatePreview, url: privatePreview.url + "&second=true"})});
+  await waitFor(() => expect(container.querySelector("video")).not.toBeNull());
+  expect(container.querySelector("video")!.autoplay).toBe(true);
+  expect(container.querySelector("video")!.muted).toBe(true);
+  expect(container.querySelector("video")!.playsInline).toBe(true);
   expect((screen.getByLabelText("I watched the full video and checked the exercise, result and form against these rules.") as HTMLInputElement).checked).toBe(false);
 });
 it("retained rejected uploads show uploader feedback and private preview without new actions", async () => {

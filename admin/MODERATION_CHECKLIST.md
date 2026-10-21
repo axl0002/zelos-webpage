@@ -7,8 +7,12 @@ HTTP/UI and isolated backend fixtures; they do not modify real athletes.
 
 Run `npm test`, `npm run typecheck`, and `npm run build` from `admin/`.
 
-- Ranked uploads: preview, exact saved hold boundaries, watched confirmation,
-  approve/reject, rule/note validation, stale revision, failed preview and retry.
+- Ranked uploads: selected video autoplays muted, including switching/retry;
+  exact saved hold boundaries; watched confirmation and explicit approval;
+  rejection needs only a dropdown reason, including while preview is unavailable;
+  stale revisions, retained selected reasons, and safe retries. Decisions appear
+  in the uploader inbox; approval pushes after publication, rejection pushes
+  its selected reason and opens owner-only review feedback.
 - Ranking flags: frame evidence/seek, reject ranking or dismiss flag, stale review
   confirmation, unavailable content and sanitized route errors.
 - User reports: post/comment/profile evidence; timestamp seek; confirm/dismiss;

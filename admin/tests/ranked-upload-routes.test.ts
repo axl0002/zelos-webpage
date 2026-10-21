@@ -33,12 +33,12 @@ it("requires admin identity for all private queue operations", async () => {
   expect((await preview(request({upload_id: rankedUpload.id}))).status).toBe(403);
   expect(client.functions.invoke).not.toHaveBeenCalled();
 });
-it("rejects cross-origin mutations and validates viewing, revision and rejection details", async () => {
+it("rejects cross-origin mutations and validates approval viewing, revision and rejection reasons", async () => {
   expect((await decide(request(decision, "https://other.test"))).status).toBe(403);
   expect((await preview(request({upload_id: rankedUpload.id}, "https://other.test"))).status).toBe(403);
   expect(client.auth.getUser).not.toHaveBeenCalled();
-  for (const patch of [{watched_video: false}, {expected_revision: 0}, {expected_revision: 1.5}, {reason_code: "invented"},
-    {reason_code: null}, {review_note: " ", rule_ids: []}, {rule_ids: ["not-a-rule"]}, {rule_ids: [rankedUpload.guidelines.rules[0].id, rankedUpload.guidelines.rules[0].id]}, {review_note: "x".repeat(1001)}, {upload_id: "not-uuid"}]) {
+  for (const patch of [{watched_video: "yes"}, {expected_revision: 0}, {expected_revision: 1.5}, {reason_code: "invented"},
+    {reason_code: null}, {rule_ids: ["not-a-rule"]}, {rule_ids: [rankedUpload.guidelines.rules[0].id, rankedUpload.guidelines.rules[0].id]}, {review_note: "x".repeat(1001)}, {upload_id: "not-uuid"}]) {
     expect((await decide(request({...decision, ...patch}))).status).toBe(400);
   }
   expect(client.rpc.mock.calls.every(([name]) => name === "admin_rank_review_context")).toBe(true);
@@ -47,6 +47,11 @@ it("rejects cross-origin mutations and validates viewing, revision and rejection
   expect(result.status).toBe(200); expect(result.headers.get("cache-control")).toBe("private, no-store");
   expect(client.rpc).toHaveBeenLastCalledWith("resolve_ranked_upload_review", decision);
   expect((await decide(request({...decision, approve: true, reason_code: null, review_note: "", rule_ids: []}))).status).toBe(200);
+  expect((await decide(request({upload_id: rankedUpload.id, expected_revision: 4, approve: false,
+    reason_code: "unacceptable_filming"}))).status).toBe(200);
+  expect(client.rpc).toHaveBeenLastCalledWith("resolve_ranked_upload_review", {upload_id: rankedUpload.id,
+    expected_revision: 4, approve: false, watched_video: false, reason_code: "unacceptable_filming", review_note: "", rule_ids: []});
+  expect((await decide(request({...decision, approve: true, watched_video: false, reason_code: null, rule_ids: []}))).status).toBe(400);
 });
 it("allowlists queue data including plain-text guidelines without exposing future private fields", async () => {
   client.rpc.mockImplementation(async name => ({data: name === "get_ranked_upload_reviews" ? [{...rankedUpload, access_token: "private-secret",
