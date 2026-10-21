@@ -14,16 +14,37 @@ function mockApi(items = [rankedUpload], fail = false) {
 }
 async function review() {
   await screen.findByRole("heading", {name: rankedUpload.title});
-  fireEvent.click(screen.getByRole("button", {name: "Open private video"}));
   await waitFor(() => expect(document.querySelector("video")).not.toBeNull());
   fireEvent.click(screen.getByLabelText("I watched the full video and checked the exercise, result and form against these rules."));
 }
+it("automatically loads the selected private video muted without confirming a review", async () => {
+  let resolvePreview!: (result: unknown) => void;
+  const fetch = vi.fn(async (path: string) => path.endsWith("/preview")
+    ? await new Promise(resolve => {resolvePreview = resolve;})
+    : {ok: true, json: async () => [rankedUpload]});
+  vi.stubGlobal("fetch", fetch);
+  render(<RankedUploadsDashboard />);
+  await screen.findByRole("heading", {name: rankedUpload.title});
+  const watched = screen.getByLabelText("I watched the full video and checked the exercise, result and form against these rules.") as HTMLInputElement;
+  expect(watched.disabled).toBe(true);
+  await screen.findByRole("button", {name: "Loading video…"});
+  resolvePreview({ok: true, json: async () => privatePreview});
+  await waitFor(() => expect(document.querySelector("video")).not.toBeNull());
+  const video = document.querySelector("video")!;
+  expect(video.autoplay).toBe(true);
+  expect(video.muted).toBe(true);
+  expect(video.controls).toBe(true);
+  expect(video.playsInline).toBe(true);
+  expect(watched.checked).toBe(false);
+  expect((screen.getByRole("button", {name: "Approve upload"}) as HTMLButtonElement).disabled).toBe(true);
+  expect(fetch.mock.calls.filter(([path]) => path.endsWith("/decision"))).toHaveLength(0);
+});
 it("requires private video, full-video check, rejection choices and explicit confirmation", async () => {
   const fetch = mockApi(); render(<RankedUploadsDashboard />);
   await screen.findByRole("heading", {name: rankedUpload.title});
   const approve = screen.getByRole("button", {name: "Approve upload"}) as HTMLButtonElement;
   const reject = screen.getByRole("button", {name: "Reject upload"}) as HTMLButtonElement;
-  expect(approve.disabled).toBe(true); expect((screen.getByLabelText("I watched the full video and checked the exercise, result and form against these rules.") as HTMLInputElement).disabled).toBe(true);
+  expect(approve.disabled).toBe(true);
   expect(screen.getByText("Hips level with shoulders")).toBeTruthy();
   expect(screen.getByText(/Projected rank: #2 of 11/)).toBeTruthy();
   await review(); expect(approve.disabled).toBe(false); expect(reject.disabled).toBe(true);
@@ -77,7 +98,7 @@ it("video failure clears watched confirmation and requires a fresh private previ
   fireEvent.error(container.querySelector("video")!);
   expect((screen.getByLabelText("I watched the full video and checked the exercise, result and form against these rules.") as HTMLInputElement).checked).toBe(false);
   expect((screen.getByRole("button", {name: "Approve upload"}) as HTMLButtonElement).disabled).toBe(true);
-  expect(screen.getByRole("button", {name: "Open private video"})).toBeTruthy();
+  expect(screen.getByRole("button", {name: "Retry video"})).toBeTruthy();
 });
 it("switching reviews ignores late previews and resets the watch confirmation", async () => {
   let resolvePreview!: (result: unknown) => void;
@@ -86,9 +107,10 @@ it("switching reviews ignores late previews and resets the watch confirmation", 
       {...rankedUpload, id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", username: "other", title: "Other upload"}]}));
   const {container} = render(<RankedUploadsDashboard />);
   await screen.findByRole("heading", {name: rankedUpload.title});
-  fireEvent.click(screen.getByRole("button", {name: "Open private video"}));
+  await waitFor(() => expect(resolvePreview).toBeTypeOf("function"));
+  const resolveOldPreview = resolvePreview;
   fireEvent.click(screen.getByRole("button", {name: /other · Full Planche/}));
-  resolvePreview({ok: true, json: async () => privatePreview});
+  resolveOldPreview({ok: true, json: async () => privatePreview});
   await screen.findByRole("heading", {name: "Other upload"});
   expect(container.querySelector("video")).toBeNull();
   expect((screen.getByLabelText("I watched the full video and checked the exercise, result and form against these rules.") as HTMLInputElement).checked).toBe(false);
@@ -100,7 +122,6 @@ it("retained rejected uploads show uploader feedback and private preview without
   expect(screen.getByText("This progression requires a review for every ranked upload.")).toBeTruthy();
   expect(screen.queryByRole("checkbox")).toBeNull();
   expect(screen.queryByRole("button", {name: "Approve upload"})).toBeNull();
-  fireEvent.click(screen.getByRole("button", {name: "Open private video"}));
   await waitFor(() => expect(document.querySelector("video")).not.toBeNull());
 });
 
@@ -116,8 +137,6 @@ it("preserves validated precise timing and lets reviewers seek each boundary", a
   const pause = vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
   mockApi([item]); render(<RankedUploadsDashboard />);
   await screen.findByText("Selected hold: 10.999 s · credited 10 s");
-  expect((screen.getByRole("button", {name: "Hold start · 1.500 s"}) as HTMLButtonElement).disabled).toBe(true);
-  fireEvent.click(screen.getByRole("button", {name: "Open private video"}));
   await waitFor(() => expect(document.querySelector("video")).not.toBeNull());
   fireEvent.click(screen.getByRole("button", {name: "Hold start · 1.500 s"}));
   expect(document.querySelector("video")!.currentTime).toBe(1.5);

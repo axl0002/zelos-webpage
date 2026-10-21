@@ -62,8 +62,13 @@ it("private preview pins the ranking kind and returns only a safe expiring R2 UR
   expect(result.status).toBe(200); expect(await result.json()).toEqual(privatePreview);
   expect(result.headers.get("cache-control")).toBe("private, no-store");
   expect(client.functions.invoke).toHaveBeenCalledWith("review-upload-media", {body: {upload_id: rankedUpload.id, review_kind: "ranking"}});
+  const pathStyle = {...privatePreview, url: "https://0123456789abcdef0123456789abcdef.r2.cloudflarestorage.com/zelos-supabase-staging/clip?X-Amz-Signature=test"};
+  client.functions.invoke.mockResolvedValue({data: pathStyle, error: null});
+  expect(await (await preview(request({upload_id: rankedUpload.id}))).json()).toEqual(pathStyle);
   for (const url of ["javascript:alert(1)", "http://0123456789abcdef0123456789abcdef.r2.cloudflarestorage.com/clip",
     "https://media.zelos.club/clip", "https://0123456789abcdef0123456789abcdef.r2.cloudflarestorage.com.attacker.test/clip",
+    "https://another-bucket.0123456789abcdef0123456789abcdef.r2.cloudflarestorage.com/clip",
+    "https://zelos-supabase-staging.0123456789abcdef0123456789abcdef.r2.cloudflarestorage.com.attacker.test/clip",
     "https://user:password@0123456789abcdef0123456789abcdef.r2.cloudflarestorage.com/clip"]) {
     client.functions.invoke.mockResolvedValue({data: {...privatePreview, url}, error: null});
     const failure = await preview(request({upload_id: rankedUpload.id}));

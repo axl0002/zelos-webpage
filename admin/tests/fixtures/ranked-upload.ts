@@ -17,4 +17,4 @@ export const rankedUpload: RankedUploadReview = {
   always_require_review: false, reason: "top_percent", revision: 4, state: "rank_review",
   review_note: null, rejection_reason: null, rejection_rules: [],
 };
-export const privatePreview = {url: "https://0123456789abcdef0123456789abcdef.r2.cloudflarestorage.com/private/clip?X-Amz-Signature=test", expires_in: 120};
+export const privatePreview = {url: "https://zelos-supabase-staging.0123456789abcdef0123456789abcdef.r2.cloudflarestorage.com/private/clip?X-Amz-Signature=test", expires_in: 120};

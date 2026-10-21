@@ -108,7 +108,9 @@ export function parsePrivateRankedPreview(value: unknown): {url: string; expires
   if (!text(result.url, 8192) || !integer(result.expires_in, 1) || result.expires_in > 600) return null;
   try {
     const url = new URL(result.url);
-    if (url.protocol !== "https:" || !/^[a-f0-9]{32}\.r2\.cloudflarestorage\.com$/i.test(url.hostname) ||
+    // AWS signs R2 downloads in either path-style or bucket-hosted form.
+    // Only the private staging bucket is allowed as a hostname prefix.
+    if (url.protocol !== "https:" || !/^(?:zelos-supabase-staging\.)?[a-f0-9]{32}\.r2\.cloudflarestorage\.com$/i.test(url.hostname) ||
       url.username || url.password || url.port || url.hash) return null;
     return { url: result.url, expires_in: result.expires_in };
   } catch { return null; }

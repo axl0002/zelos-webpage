@@ -1,6 +1,6 @@
 "use client";
 import type {ExerciseRule} from "@/lib/exercise-rules";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   rankedUploadReasons,
   type RankedUploadReason,
@@ -102,9 +102,8 @@ function RankedUploadDetail({item, onBusy, onSaved}: {
   const validRejection = !!reason && (ruleType && choices.length > 0
     ? chosen.length > 0 : note.trim().length >= 3);
 
-  useEffect(() => () => previewRequest.current?.abort(), []);
-  async function openPreview() {
-    if (opening || saving) return;
+  const openPreview = useCallback(async () => {
+    if (savingRef.current) return;
     previewRequest.current?.abort();
     const controller = new AbortController(); previewRequest.current = controller;
     setOpening(true); setError(""); setWatched(false); setPreview(null); setConfirmation(null);
@@ -113,7 +112,11 @@ function RankedUploadDetail({item, onBusy, onSaved}: {
       if (!controller.signal.aborted) setPreview(result);
     } catch (cause) { if (!controller.signal.aborted) setError((cause as Error).message); }
     finally { if (!controller.signal.aborted) setOpening(false); }
-  }
+  }, [item.id]);
+  useEffect(() => {
+    void openPreview();
+    return () => previewRequest.current?.abort();
+  }, [openPreview]);
   async function decide() {
     if (!confirmation || savingRef.current || !awaiting || !preview || !watched ||
       (confirmation === "reject" && !validRejection)) return;
@@ -134,9 +137,9 @@ function RankedUploadDetail({item, onBusy, onSaved}: {
     </div><span className="badge">{awaiting ? "Awaiting review" : "Rejected · private"}</span></div>
     <div className="clip-grid"><div>
       <div className="video-frame">
-        {preview ? <video ref={videoRef} key={preview.url} src={preview.url} controls playsInline preload="metadata" aria-label="Private ranked upload"
-          onError={() => {setPreview(null); setWatched(false); setConfirmation(null); setError("The video could not play. Open a new private video link before reviewing.");}} />
-          : <button className="button secondary" disabled={opening || saving} onClick={() => void openPreview()}>{opening ? "Opening…" : "Open private video"}</button>}
+        {preview ? <video ref={videoRef} key={preview.url} src={preview.url} autoPlay muted controls playsInline preload="auto" aria-label="Private ranked upload"
+          onError={() => {setPreview(null); setWatched(false); setConfirmation(null); setError("The video could not play. Retry the video to get a fresh private link.");}} />
+          : <button className="button secondary" disabled={opening || saving} onClick={() => void openPreview()}>{opening ? "Loading video…" : "Retry video"}</button>}
       </div>
       {item.hold_timing && <div className="playback-tools" aria-label="Selected hold timing">
         <p>Selected hold: {(item.hold_timing.duration_ms / 1000).toFixed(3)} s · credited {item.claim} s</p>
