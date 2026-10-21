@@ -9,7 +9,9 @@ export type ModerationReport = {
   id: string; target_kind: "post" | "comment" | "profile"; target_id: string;
   state: "open" | "confirmed" | "dismissed"; created_at: string;
   report_count: number; revision: number; decision_note: string | null; auto_hidden: boolean;
-  reports: ReportEvidence[]; context: { username: string; body: string; post_id?: string } | null;
+  reports: ReportEvidence[]; context: { username: string; body: string; post_id?: string;
+    post_state?: string; owner_banned?: boolean; owner_manual_ban?: boolean;
+    can_hide?: boolean; can_restore?: boolean; can_delete?: boolean; can_ban?: boolean } | null;
 };
 const object = (v: unknown): Record<string, unknown> | null => v !== null && typeof v === "object" && !Array.isArray(v) ? v as Record<string, unknown> : null;
 const text = (v: unknown, max = 10000): v is string => typeof v === "string" && v.length <= max;
@@ -36,7 +38,11 @@ export function parseModerationReports(value: unknown): ModerationReport[] {
       auto_hidden: v.auto_hidden === true, report_count: v.report_count as number, revision: v.revision as number,
       decision_note: text(v.decision_note, 2000) ? v.decision_note : null,
       context: context && text(context.username, 100) && text(context.body)
-        ? {username: context.username, body: context.body, ...(text(context.post_id, 128) ? {post_id: context.post_id} : {})} : null,
+        ? {username: context.username, body: context.body, ...(text(context.post_id, 128) ? {post_id: context.post_id} : {}),
+          ...(text(context.post_state, 50) ? {post_state: context.post_state} : {}),
+          owner_banned: context.owner_banned === true, owner_manual_ban: context.owner_manual_ban === true,
+          can_hide: context.can_hide === true, can_restore: context.can_restore === true,
+          can_delete: context.can_delete === true, can_ban: context.can_ban === true} : null,
       reports: v.reports.map(rawReport => {
         const r = object(rawReport);
         if (!r || !reportId(r.id) || !text(r.reason, 1000) || !text(r.created_at, 80)) throw new Error("Reports unavailable");

@@ -50,10 +50,15 @@ export function parseDecision(value: unknown): Decision | null {
 }
 export function rpcFailure(error: { code?: string; message?: string }) {
   const messages: Record<string, string> = {
+    account_restricted: "This account cannot perform moderation actions.",
+    user_unavailable: "This account is no longer available. Search again.",
+    protected_account: "Administrator accounts and your own account cannot be banned here.",
+    action_unavailable: "This action is no longer available. Refresh before trying again.",
+    request_conflict: "This action changed. Refresh before trying again.",
     case_unavailable: "This report is no longer available. Refresh the queue.",
     case_conflict: "This report was already resolved or changed. Refresh the queue before deciding.",
     review_conflict:
-      "Someone already reviewed or updated this clip. Refresh the queue.",
+      "Someone already reviewed or updated this item. Refresh before trying again.",
     candidate_changed_rescan:
       "The clip changed since scanning. Scan again before approving.",
     candidate_unavailable: "This clip is no longer eligible for review.",
