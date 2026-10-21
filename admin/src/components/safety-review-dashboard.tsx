@@ -1,7 +1,7 @@
 "use client";
 import ReviewQueueNav from "./review-queue-nav";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { SafetyCase } from "@/lib/safety-review";
 
 async function api<T>(path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
@@ -66,7 +66,9 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
     return () => controller.abort();
   }, []);
 
-  useEffect(() => {
+  // Finish selection cleanup before the new detail can receive a click. A
+  // deferred effect could invalidate a preview opened immediately after load.
+  useLayoutEffect(() => {
     epoch.current++;
     setPreview(null);
     setPreviewLoading(false);
