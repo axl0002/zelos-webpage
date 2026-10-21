@@ -59,7 +59,8 @@ it("rejects with only a selected reason, without video, note, rules or confirmat
   expect(decisions).toHaveLength(1);
   expect(JSON.parse((decisions[0] as unknown as [string, RequestInit])[1].body as string)).toEqual({upload_id: rankedUpload.id,
     expected_revision: 4, approve: false, watched_video: false, reason_code: "unacceptable_form", review_note: "", rule_ids: []});
-  expect(screen.getByText("Unacceptable form")).toBeTruthy();
+  expect(screen.queryByRole("heading", {name: rankedUpload.title})).toBeNull();
+  expect(screen.getByText("No ranked uploads awaiting review.")).toBeTruthy();
   expect(screen.queryByRole("button", {name: "Approve upload"})).toBeNull();
   resolvePreview?.({ok: true, json: async () => privatePreview});
 });
@@ -118,14 +119,31 @@ it("switching reviews ignores late previews and resets the watch confirmation", 
   expect(container.querySelector("video")!.playsInline).toBe(true);
   expect((screen.getByLabelText("I watched the full video and checked the exercise, result and form against these rules.") as HTMLInputElement).checked).toBe(false);
 });
-it("retained rejected uploads show uploader feedback and private preview without new actions", async () => {
-  mockApi([{...rankedUpload, state: "rank_rejected", reason: "always_review", always_require_review: true,
+it("hides retained rejected uploads from the pending queue without loading their private video", async () => {
+  const fetch = mockApi([{...rankedUpload, state: "rank_rejected", reason: "always_review", always_require_review: true,
     rejection_reason: "incorrect_exercise", review_note: "This is a different progression."}]);
-  render(<RankedUploadsDashboard />); await screen.findByText("This is a different progression.");
-  expect(screen.getByText("This progression requires a review for every ranked upload.")).toBeTruthy();
+  render(<RankedUploadsDashboard />); await screen.findByText("No ranked uploads awaiting review.");
+  expect(screen.queryByText("This is a different progression.")).toBeNull();
   expect(screen.queryByRole("checkbox")).toBeNull();
   expect(screen.queryByRole("button", {name: "Approve upload"})).toBeNull();
-  await waitFor(() => expect(document.querySelector("video")).not.toBeNull());
+  expect(fetch.mock.calls.filter(([path]) => path.endsWith("/preview"))).toHaveLength(0);
+});
+
+it("rejecting removes the entry, selects the next pending video and ignores stale entries on refresh", async () => {
+  const next = {...rankedUpload, id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", username: "other", title: "Next upload"};
+  const fetch = mockApi([rankedUpload, next]);
+  render(<RankedUploadsDashboard />);
+  await screen.findByRole("heading", {name: rankedUpload.title});
+  fireEvent.change(screen.getByLabelText("Rejection reason"), {target: {value: "incorrect_exercise"}});
+  fireEvent.click(screen.getByRole("button", {name: "Reject upload"}));
+  await screen.findByRole("heading", {name: next.title});
+  expect(screen.queryByRole("button", {name: /athlete ·/})).toBeNull();
+  expect(screen.queryByRole("heading", {name: rankedUpload.title})).toBeNull();
+  fireEvent.click(screen.getByRole("button", {name: "Refresh queue"}));
+  await waitFor(() => expect(fetch.mock.calls.filter(([path]) => !path.endsWith("/preview") && !path.endsWith("/decision"))).toHaveLength(2));
+  await waitFor(() => expect((screen.getByRole("button", {name: "Refresh queue"}) as HTMLButtonElement).disabled).toBe(false));
+  expect(screen.queryByRole("heading", {name: rankedUpload.title})).toBeNull();
+  expect(screen.getByRole("heading", {name: next.title})).toBeTruthy();
 });
 
 it("preserves validated precise timing and lets reviewers seek each boundary", async () => {

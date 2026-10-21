@@ -1,5 +1,4 @@
 "use client";
-import type {ExerciseRule} from "@/lib/exercise-rules";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   rankedUploadReasons,
@@ -24,13 +23,16 @@ export default function RankedUploadsDashboard() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  // An older in-flight queue response must not restore a completed review.
+  const completed = useRef(new Set<string>());
   async function refresh(signal?: AbortSignal) {
     setLoading(true); setError("");
     try {
       const items = await api<RankedUploadReview[]>("", undefined, signal);
       if (signal?.aborted) return;
-      setQueue(items);
-      setSelected(old => items.some(item => item.id === old) ? old : items[0]?.id ?? null);
+      const pending = items.filter(item => item.state === "rank_review" && !completed.current.has(item.id));
+      setQueue(pending);
+      setSelected(old => pending.some(item => item.id === old) ? old : pending[0]?.id ?? null);
     } catch (cause) {
       if (!signal?.aborted) setError((cause as Error).message);
     } finally { if (!signal?.aborted) setLoading(false); }
@@ -40,17 +42,11 @@ export default function RankedUploadsDashboard() {
     return () => controller.abort();
   }, []);
   const current = queue.find(item => item.id === selected);
-  function saved(approved: boolean, note: string, reason: RankedUploadReason | null, rules: ExerciseRule[]) {
+  function saved(approved: boolean) {
     if (!current) return;
-    if (approved) {
-      setQueue(old => old.filter(item => item.id !== current.id));
-      setSelected(queue.find(item => item.id !== current.id)?.id ?? null);
-    } else {
-      setQueue(old => old.map(item => item.id === current.id ? {
-        ...item, state: "rank_rejected", review_note: note,
-        rejection_reason: reason, rejection_rules: rules, revision: item.revision + 1,
-      } : item));
-    }
+    completed.current.add(current.id);
+    setQueue(old => old.filter(item => item.id !== current.id));
+    setSelected(queue.find(item => item.id !== current.id)?.id ?? null);
     setNotice(approved
       ? "Approved. The upload will finish publication checks before it can appear in the feed and rankings."
       : "Rejected. The uploader will see your reason. The video remains private.");
@@ -65,7 +61,7 @@ export default function RankedUploadsDashboard() {
       <div className="review-layout">
         <section className="queue-panel" aria-label="Ranked upload queue">
           {loading && !queue.length && <p className="empty">Loading ranked uploads…</p>}
-          {!loading && !queue.length && <p className="empty">No ranked uploads awaiting review or retained after rejection.</p>}
+          {!loading && !queue.length && <p className="empty">No ranked uploads awaiting review.</p>}
           {queue.map(item => <button key={item.id} className={`candidate ${item.id === selected ? "selected" : ""}`}
             disabled={busy} aria-pressed={item.id === selected} onClick={() => {setSelected(item.id); setNotice("");}}>
             <span className="candidate-copy"><strong>{item.username} · {item.board_name}</strong>
@@ -81,7 +77,7 @@ export default function RankedUploadsDashboard() {
 }
 function RankedUploadDetail({item, onBusy, onSaved}: {
   item: RankedUploadReview; onBusy: (busy: boolean) => void;
-  onSaved: (approve: boolean, note: string, reason: RankedUploadReason | null, rules: ExerciseRule[]) => void;
+  onSaved: (approve: boolean) => void;
 }) {
   const [preview, setPreview] = useState<{url: string; expires_in: number} | null>(null);
   const [opening, setOpening] = useState(false);
@@ -119,8 +115,7 @@ function RankedUploadDetail({item, onBusy, onSaved}: {
       await api("/decision", {upload_id: item.id, expected_revision: item.revision,
         approve: approved, watched_video: approved && watched,
         reason_code: approved ? null : reason, review_note: "", rule_ids: []});
-      onSaved(approved, approved ? "" : rankedUploadReasons[reason as RankedUploadReason],
-        approved ? null : reason as RankedUploadReason, []);
+      onSaved(approved);
     } catch (cause) { setError((cause as Error).message); setConfirmation(null); }
     finally { savingRef.current = false; setSaving(false); onBusy(false); }
   }

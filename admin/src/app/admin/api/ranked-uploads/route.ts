@@ -8,6 +8,7 @@ export async function GET() {
     const auth = await requireAdmin();
     if (auth.response) return privateResponse(auth.response);
     const {data, error} = await auth.client.rpc("get_ranked_upload_reviews");
-    return error ? rankedUploadFailure(error) : privateResponse(NextResponse.json(parseRankedUploadReviews(data)));
+    return error ? rankedUploadFailure(error) : privateResponse(NextResponse.json(
+      parseRankedUploadReviews(data).filter(item => item.state === "rank_review")));
   } catch { return rankedUploadFailure(); }
 }

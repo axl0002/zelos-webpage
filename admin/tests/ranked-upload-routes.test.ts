@@ -62,6 +62,16 @@ it("allowlists queue data including plain-text guidelines without exposing futur
   client.rpc.mockImplementation(async name => ({data: name === "get_ranked_upload_reviews" ? [{...rankedUpload, revision: -1}] : {}, error: null}));
   expect((await GET()).status).toBe(503);
 });
+it("returns only pending uploads even if an older backend includes rejected evidence", async () => {
+  client.rpc.mockImplementation(async name => ({data: name === "get_ranked_upload_reviews"
+    ? [rankedUpload, {...rankedUpload, id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", state: "rank_rejected",
+      rejection_reason: "incorrect_exercise", review_note: "Incorrect exercise or progression"}]
+    : {}, error: null}));
+  const response = await GET();
+  expect(response.status).toBe(200);
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
+  expect(await response.json()).toEqual([rankedUpload]);
+});
 it("private preview pins the ranking kind and returns only a safe expiring R2 URL", async () => {
   const result = await preview(request({upload_id: rankedUpload.id, review_kind: "safety", object_key: "forged"}));
   expect(result.status).toBe(200); expect(await result.json()).toEqual(privatePreview);
