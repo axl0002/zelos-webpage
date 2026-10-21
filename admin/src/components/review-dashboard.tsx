@@ -1,5 +1,4 @@
 "use client";
-import ReviewQueueNav from "./review-queue-nav";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Board, Candidate, Decision, QueuePage } from "@/lib/review-types";
 import { mediaUrls } from "@/lib/review-media";
@@ -24,10 +23,8 @@ async function api<T>(
 }
 export default function ReviewDashboard({
   boards,
-  email,
 }: {
   boards: Board[];
-  email: string;
 }) {
   const [status, setStatus] = useState("pending"),
     [exercise, setExercise] = useState(""),
@@ -172,47 +169,11 @@ export default function ReviewDashboard({
     .slice(0, 20)
     .find((c) => c.post_id === selected);
   return (
-    <div className="workspace">
-      <aside className="sidebar">
-        <a className="brand" href="/">
-          zelos<span> / admin</span>
-        </a>
-        <p className="nav-label">CONTENT</p>
-        <a href="/admin" className="nav-item active">
-          <span>▤</span> Exercise review
-        </a>
-        <a href="/admin/ranked-uploads" className="nav-item">Ranked uploads</a>
-        <a href="/admin/ranking-flags" className="nav-item"><span>⚑</span> Ranking flags</a>
-      <a href="/admin/users" className="nav-item">Users</a>
-      <a href="/admin/reports" className="nav-item">User reports</a>
-        <a href="/admin/safety" className="nav-item">
-          <span>◈</span> Upload safety
-        </a>
-        <div className="sidebar-bottom">
-          <span className="connection">
-            <i /> Supabase
-          </span>
-          <p className="small truncate">{email}</p>
-          <button
-            className="button text"
-            onClick={async () => {
-              try {
-                await api("auth/logout", {});
-                window.location.assign("/admin/login");
-              } catch (e) {
-                setError((e as Error).message);
-              }
-            }}
-          >
-            Sign out ↗
-          </button>
-        </div>
-      </aside>
-      <main className="main">
+    <div className="dashboard-content">
         <header className="page-header">
           <div>
             <p className="eyebrow">HUMAN REVIEW</p>
-            <h1>Find the next record.</h1>
+            <h1>Exercise review</h1>
             <p className="muted">
               Turn eligible training clips into exercise rankings. Every result
               is checked by a person.
@@ -222,7 +183,6 @@ export default function ReviewDashboard({
             {scanning ? "Scanning…" : "Scan training clips"}
           </button>
         </header>
-      <ReviewQueueNav active="/admin" />
         {scanning && (
           <p role="status" className="notice">
             {scanProgress ||
@@ -394,8 +354,7 @@ export default function ReviewDashboard({
             )}
           </section>
         </div>
-      </main>
-    </div>
+      </div>
   );
 }
 function QueueSkeleton() {

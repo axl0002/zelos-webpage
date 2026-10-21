@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 const mocks = vi.hoisted(() => ({ requireAdmin: vi.fn(), redirect: vi.fn() }));
 vi.mock("../src/lib/require-admin", () => ({ requireAdmin: mocks.requireAdmin }));
 vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
-import AdminHome from "../src/app/admin/page";
+import AdminHome from "../src/app/admin/(workspace)/page";
 afterEach(() => {
   cleanup();
   vi.resetAllMocks();

@@ -1,5 +1,4 @@
 "use client";
-import ReviewQueueNav from "./review-queue-nav";
 import type {ExerciseRule} from "@/lib/exercise-rules";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -56,23 +55,11 @@ export default function RankedUploadsDashboard() {
       ? "Approved. The upload will finish publication checks before it can appear in the feed and rankings."
       : "Rejected. The uploader will see your reason. The video remains private.");
   }
-  return <div className="workspace">
-    <aside className="sidebar">
-      <a className="brand" href="/">zelos<span> / admin</span></a>
-      <p className="nav-label">CONTENT</p>
-      <a href="/admin" className="nav-item">Exercise review</a>
-      <a href="/admin/ranked-uploads" className="nav-item active" aria-current="page">Ranked uploads</a>
-      <a href="/admin/ranking-flags" className="nav-item">Ranking flags</a>
-      <a href="/admin/users" className="nav-item">Users</a>
-      <a href="/admin/reports" className="nav-item">User reports</a>
-      <a href="/admin/safety" className="nav-item">Upload safety</a>
-    </aside>
-    <main className="main">
+  return <div className="dashboard-content">
       <header className="page-header"><div>
         <p className="eyebrow">BEFORE PUBLICATION</p><h1>Ranked uploads</h1>
         <p className="muted">Check the complete video against the exercise rules before it becomes public or earns points.</p>
       </div><button className="button secondary" disabled={loading || busy} onClick={() => void refresh()}>Refresh queue</button></header>
-      <ReviewQueueNav active="/admin/ranked-uploads" />
       {error && <p className="notice error" role="alert">{error}</p>}
       {notice && <p className="notice success" role="status">{notice}</p>}
       <div className="review-layout">
@@ -90,8 +77,7 @@ export default function RankedUploadsDashboard() {
         {current ? <RankedUploadDetail key={`${current.id}:${current.revision}`} item={current} onBusy={setBusy} onSaved={saved} />
           : <section className="review-panel"><p className="empty">Select an upload to review.</p></section>}
       </div>
-    </main>
-  </div>;
+    </div>;
 }
 function RankedUploadDetail({item, onBusy, onSaved}: {
   item: RankedUploadReview; onBusy: (busy: boolean) => void;

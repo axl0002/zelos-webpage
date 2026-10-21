@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { AdminUser } from "@/lib/admin-users";
-import ReviewQueueNav from "./review-queue-nav";
 import ModerationActionForm from "./moderation-action-form";
 export default function AdminUsersDashboard() {
   const [query, setQuery] = useState(""), [users, setUsers] = useState<AdminUser[]>([]);
@@ -21,11 +20,8 @@ export default function AdminUsersDashboard() {
     finally {if (!controller.signal.aborted) setLoading(false);}
   }
   const user = users.find(item => item.id === selected);
-  return <div className="workspace"><aside className="sidebar"><a className="brand" href="/admin">zelos<span> / admin</span></a>
-    <p className="nav-label">MODERATION</p><a href="/admin/users" className="nav-item active">Users</a><a href="/admin/reports" className="nav-item">User reports</a></aside>
-    <main className="main"><header className="page-header"><div><p className="eyebrow">ACCOUNT MODERATION</p><h1>Users</h1>
+  return <div className="dashboard-content"><header className="page-header"><div><p className="eyebrow">ACCOUNT MODERATION</p><h1>Users</h1>
       <p className="muted">Search by username or user ID. Up to 30 matching accounts are shown. Refine the search to find a specific athlete.</p></div></header>
-      <ReviewQueueNav active="/admin/users" />
       <form className="filter-controls" onSubmit={event => {event.preventDefault(); setNotice(""); void search();}}>
         <label>Username or user ID<input value={query} maxLength={100} disabled={busy} onChange={event => setQuery(event.target.value)} /></label>
         <button className="button primary" disabled={busy || loading || query.trim().length < 2}>Search users</button>
@@ -33,6 +29,7 @@ export default function AdminUsersDashboard() {
       {error && <p role="alert" className="notice error">{error}</p>}{notice && <p role="status" className="notice success">{notice}</p>}
       <div className="review-layout"><section className="queue-panel" aria-label="User search results">
         {loading && <p className="empty">Searching users…</p>}
+        {!loading && !searched && <p className="empty">Search for a username or user ID to find an account.</p>}
         {!loading && searched && !users.length && <p className="empty">No matching users.</p>}
         {users.map(item => <button key={item.id} disabled={busy} aria-label={`${item.username || "Unnamed account"} · ${item.is_banned ? "Banned" : "Active"} · ${item.id}`} aria-pressed={item.id === selected} className={`candidate ${item.id === selected ? "selected" : ""}`}
           onClick={() => {setSelected(item.id); setNotice("");}}><span className="candidate-copy"><strong>{item.username || "Unnamed account"}</strong>
@@ -53,5 +50,5 @@ export default function AdminUsersDashboard() {
           {!user.can_ban && !user.can_unban && <p className="muted">This account cannot be changed here.</p>}
         </> : <p className="empty">Search and select a user to review their account.</p>}
       </section></div>
-    </main></div>;
+    </div>;
 }

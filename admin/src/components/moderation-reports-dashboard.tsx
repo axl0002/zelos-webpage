@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { ModerationReport } from "@/lib/moderation-reports";
-import ReviewQueueNav from "./review-queue-nav";
 import ModerationActionForm from "./moderation-action-form";
 
 async function api<T>(path = "", body?: unknown, signal?: AbortSignal): Promise<T> {
@@ -34,21 +33,10 @@ export default function ModerationReportsDashboard() {
     return () => controller.abort();
   }, []);
   const current = queue.find(item => item.id === selected);
-  return <div className="workspace">
-    <aside className="sidebar"><a className="brand" href="/admin">zelos<span> / admin</span></a>
-      <p className="nav-label">CONTENT</p>
-      <a href="/admin" className="nav-item">Exercise review</a>
-      <a href="/admin/ranked-uploads" className="nav-item">Ranked uploads</a>
-      <a href="/admin/ranking-flags" className="nav-item">Ranking flags</a>
-      <a href="/admin/users" className="nav-item">Users</a>
-      <a href="/admin/reports" className="nav-item active" aria-current="page">User reports</a>
-      <a href="/admin/safety" className="nav-item">Upload safety</a>
-    </aside>
-    <main className="main"><header className="page-header"><div><p className="eyebrow">CONTENT MODERATION</p><h1>User reports</h1>
+  return <div className="dashboard-content"><header className="page-header"><div><p className="eyebrow">CONTENT MODERATION</p><h1>User reports</h1>
       <p className="muted">Reports about posts, comments and profiles, including the original answers and timestamps. Up to 50 recent cases are shown, with open reports first.</p></div>
       <button className="button secondary" disabled={loading || busy} onClick={() => void refresh()}>Refresh queue</button>
     </header>
-      <ReviewQueueNav active="/admin/reports" />
       {error && <p role="alert" className="notice error">{error}</p>}
       {notice && <p role="status" className="notice success">{notice}</p>}
       <div className="review-layout"><section className="queue-panel" aria-label="User report queue">
@@ -68,8 +56,7 @@ export default function ModerationReportsDashboard() {
           setNotice(confirmed ? "Violation confirmed. The moderation decision was saved." : "Reports dismissed. Content hidden by these reports can be restored.");
         }} /> : <section className="review-panel"><p className="empty">Select a report to review.</p></section>}
       </div>
-    </main>
-  </div>;
+    </div>;
 }
 function ReportDetail({item, onBusy, onSaved, onActionSaved}: {item: ModerationReport; onBusy: (value: boolean) => void; onSaved: (confirmed: boolean, note: string) => void; onActionSaved: () => void}) {
   const [preview, setPreview] = useState<Preview | null>(null), [opening, setOpening] = useState(false);

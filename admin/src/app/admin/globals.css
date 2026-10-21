@@ -138,7 +138,8 @@ small {
 .sidebar {
   position: sticky;
   top: 0;
-  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
   width: 220px;
   flex-shrink: 0;
   background: var(--surface);
@@ -165,6 +166,18 @@ small {
 .nav-item.active {
   background: var(--soft);
 }
+.nav-item:hover { background: var(--soft); }
+.admin-navigation { display: grid; gap: 4px; margin: 28px 0; }
+.admin-public-links { display: grid; gap: 12px; margin-bottom: 18px; font-size: 12px; }
+.admin-public-links a { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sidebar-bottom .error { margin-top: 12px; overflow-wrap: anywhere; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.admin-skip-link { position: fixed; left: 16px; top: -80px; z-index: 30; padding: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+.admin-skip-link:focus { top: 12px; }
+.workspace-state { display: grid; gap: 20px; max-width: 720px; margin: 24px 0; }
+.workspace-state .button { justify-self: start; }
+.workspace-state > .review-panel { display: grid; gap: 20px; }
+.dashboard-content { min-width: 0; }
 .sidebar-bottom {
   margin-top: auto;
   border-top: 1px solid var(--line);
@@ -193,10 +206,11 @@ small {
   flex: 1;
   padding: 36px 36px 50px;
   max-width: 1800px;
-  margin: auto;
+  margin: 0 auto;
 }
 .page-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
@@ -255,7 +269,11 @@ small {
 }
 .filter-controls input {
   width: 240px;
+  max-width: 100%;
 }
+.filter-controls > label { min-width: 0; }
+.filter-controls > .button { align-self: flex-end; }
+.filter-controls + .review-layout { margin-top: 20px; }
 .filter-controls select {
   max-width: 180px;
 }
@@ -518,12 +536,13 @@ textarea {
 }
 .decision-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin: 20px 0 12px;
   justify-content: flex-end;
 }
 .decision-actions button {
-  flex: 1;
+  flex: 1 1 140px;
   padding: 11px 8px;
 }
 .safety-signals {
@@ -619,6 +638,9 @@ textarea {
   padding: 27px;
   border-radius: 17px;
   box-shadow: 0 20px 80px #10182025;
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  overflow-wrap: anywhere;
 }
 .dialog > p {
   margin: 15px 0;
@@ -694,30 +716,33 @@ textarea {
     display: block;
   }
   .sidebar {
-    position: static;
+    position: sticky;
+    z-index: 10;
     height: auto;
     width: auto;
-    flex-direction: row;
-    align-items: center;
-    gap: 16px;
-    padding: 14px 20px;
+    max-height: 50dvh;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    gap: 12px;
+    padding: 14px 16px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
   }
   .sidebar .brand {
     font-size: 24px;
   }
-  .nav-label,
-  .sidebar-bottom .connection,
-  .sidebar-bottom p {
-    display: none;
-  }
+  .admin-navigation { grid-column: 1 / -1; grid-row: 2; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin: 0; }
   .sidebar-bottom {
-    margin: 0 0 0 auto;
+    margin: 0;
     border: 0;
     padding: 0;
+    display: contents;
   }
-  .nav-item {
-    display: none;
-  }
+  .sidebar-bottom > .button { width: auto; justify-self: end; grid-column: 2; grid-row: 1; }
+  .sidebar-bottom > .error { grid-column: 1 / -1; }
+  .admin-public-links { grid-column: 1 / -1; grid-row: 3; display: flex; flex-wrap: wrap; gap: 20px; margin: 0; }
+  .nav-item { display: flex; min-height: 40px; padding: 8px; line-height: 1.3; }
   .main {
     padding: 24px 16px;
   }
@@ -777,6 +802,13 @@ textarea {
 .ranking-flag-detail { display: flex; flex-direction: column; gap: 16px; }
 .ranking-flag-detail video { width: 100%; max-height: 560px; background: #111; border-radius: 12px; }
 
-.review-queue-links { display: flex; flex-wrap: wrap; gap: 12px 20px; margin: 0 0 24px; font-size: 13px; }
-.review-queue-links [aria-current="page"] { font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
 .review-rule-copy { white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 420px) {
+  .admin-navigation { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .page-header > .button { width: 100%; }
+  .filter-controls { align-items: stretch; }
+  .filter-controls > label { flex: 1 1 100%; }
+  .filter-controls input { width: 100%; }
+  .dialog-backdrop { padding: 12px; }
+  .dialog { padding: 20px; max-height: calc(100dvh - 24px); }
+}

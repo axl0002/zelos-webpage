@@ -41,7 +41,7 @@ it.each(["approve", "skip"])("%s advances immediately while refill is pending an
     .mockResolvedValueOnce(response({ active: action === "approve" }))
     .mockReturnValueOnce(refill.promise);
   vi.stubGlobal("fetch", fetch);
-  render(<ReviewDashboard boards={boards} email="reviewer@example.test" />);
+  render(<ReviewDashboard boards={boards} />);
   await screen.findByRole("heading", { name: "Clip 1" });
   if (action === "approve") {
     fireEvent.change(screen.getByLabelText("Completed reps"), { target: { value: "10" } });
@@ -65,7 +65,7 @@ it("a failed save stays on the current clip with its inputs", async () => {
     .mockResolvedValueOnce(response(queue(1, 2)))
     .mockResolvedValueOnce({ ok: false, json: async () => ({ error: "Try again." }) });
   vi.stubGlobal("fetch", fetch);
-  render(<ReviewDashboard boards={boards} email="reviewer@example.test" />);
+  render(<ReviewDashboard boards={boards} />);
   await screen.findByRole("heading", { name: "Clip 1" });
   fireEvent.change(screen.getByLabelText(/Review notes/), { target: { value: "Bad form" } });
   fireEvent.click(screen.getByRole("button", { name: "Reject ranking" }));
@@ -82,7 +82,7 @@ it("background refill failure keeps the next clip usable and retry preserves inp
     .mockResolvedValueOnce({ ok: false, json: async () => ({ error: "Queue unavailable" }) })
     .mockResolvedValueOnce(response(queue(2, 3)));
   vi.stubGlobal("fetch", fetch);
-  render(<ReviewDashboard boards={boards} email="reviewer@example.test" />);
+  render(<ReviewDashboard boards={boards} />);
   await screen.findByRole("heading", { name: "Clip 1" });
   fireEvent.click(screen.getByRole("button", { name: "Reject ranking" }));
   await screen.findByText("Queue unavailable");
@@ -105,7 +105,7 @@ it("late background responses cannot reinsert completed clips or change the curr
       : reads === 2 ? first.promise : second.promise;
   });
   vi.stubGlobal("fetch", fetch);
-  render(<ReviewDashboard boards={boards} email="reviewer@example.test" />);
+  render(<ReviewDashboard boards={boards} />);
   await screen.findByRole("heading", { name: "Clip 1" });
   fireEvent.click(screen.getByRole("button", { name: "Reject ranking" }));
   await screen.findByRole("heading", { name: "Clip 2" });
@@ -129,7 +129,7 @@ it("scan reports elapsed time and auto rejections across all batches", async () 
     url.endsWith("/scan") ? batches.shift() : queue(1, 2),
   )));
   vi.stubGlobal("fetch", fetch);
-  render(<ReviewDashboard boards={boards} email="reviewer@example.test" />);
+  render(<ReviewDashboard boards={boards} />);
   await screen.findByRole("heading", { name: "Clip 1" });
   fireEvent.click(screen.getByRole("button", { name: "Scan training clips" }));
   const notice = await screen.findByText(/Scan complete in/);
@@ -144,7 +144,7 @@ it("selecting the current queue filter reloads it without leaving the selection 
     .mockResolvedValueOnce(response(queue(1, 2)))
     .mockResolvedValueOnce(response(queue(2, 3)));
   vi.stubGlobal("fetch", fetch);
-  render(<ReviewDashboard boards={boards} email="reviewer@example.test" />);
+  render(<ReviewDashboard boards={boards} />);
   await screen.findByRole("heading", { name: "Clip 1" });
   fireEvent.click(screen.getByRole("button", { name: /Awaiting review/ }));
   await screen.findByRole("heading", { name: "Clip 2" });

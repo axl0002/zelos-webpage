@@ -1,5 +1,4 @@
 "use client";
-import ReviewQueueNav from "./review-queue-nav";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { mediaUrls } from "@/lib/review-media";
 import { rankingFlagHoldTiming, rankingReasons, type RankingFlag } from "@/lib/ranking-flags";
@@ -36,22 +35,12 @@ export default function RankingFlagsDashboard() {
     return () => controller.abort();
   }, []);
   const current = queue.find(item => item.id === selected);
-  return <div className="workspace">
-    <aside className="sidebar"><a className="brand" href="/admin">Zelos</a>
-      <a href="/admin" className="nav-item">Exercise review</a>
-      <a href="/admin/safety" className="nav-item">Upload safety</a>
-      <a href="/admin/ranked-uploads" className="nav-item">Ranked uploads</a>
-        <a href="/admin/ranking-flags" className="nav-item active">Ranking flags</a>
-      <a href="/admin/users" className="nav-item">Users</a>
-      <a href="/admin/reports" className="nav-item">User reports</a>
-    </aside>
-    <main className="main"><header className="page-header"><div><h1>Ranking flags</h1>
+  return <div className="dashboard-content"><header className="page-header"><div><h1>Ranking flags</h1>
       <p className="muted">Check the reported exercise, result, hold frames or form before deciding.</p></div>
       <button className="button secondary" disabled={loading || busy} onClick={() => void refresh()}>Refresh queue</button>
     </header>
-      <ReviewQueueNav active="/admin/ranking-flags" />
-      {error && <p className="error" role="alert">{error}</p>}
-      {notice && <p role="status">{notice}</p>}
+      {error && <p className="notice error" role="alert">{error}</p>}
+      {notice && <p className="notice success" role="status">{notice}</p>}
       <div className="review-layout"><section className="queue-panel" aria-label="Ranking flags">
         {loading && !queue.length && <p className="empty">Loading flags…</p>}
         {!loading && !queue.length && <p className="empty">No ranking flags awaiting review.</p>}
@@ -59,13 +48,12 @@ export default function RankingFlagsDashboard() {
           disabled={busy} aria-pressed={item.id === selected} onClick={() => setSelected(item.id)}><span className="candidate-copy"><strong>{item.username} · {item.board_name}</strong>
           <span>{rankingReasons[item.reason]}</span></span></button>)}
       </section>
-        {current && <FlagReview key={current.id} item={current} onBusy={setBusy} onSaved={confirmed => {
+        {current ? <FlagReview key={current.id} item={current} onBusy={setBusy} onSaved={confirmed => {
           setQueue(old => old.filter(item => item.id !== current.id)); setSelected(null);
           setNotice(confirmed ? "Ranking rejected. The uploader has been notified with your reason." : "Flag dismissed. The ranking is unchanged.");
-        }} />}
+        }} /> : <section className="review-panel"><p className="empty">Select a ranking flag to review its evidence.</p></section>}
       </div>
-    </main>
-  </div>;
+    </div>;
 }
 function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confirmed: boolean) => void; onBusy: (busy: boolean) => void}) {
   const [note, setNote] = useState(item.details || rankingReasons[item.reason] || "");

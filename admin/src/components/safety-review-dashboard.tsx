@@ -1,5 +1,4 @@
 "use client";
-import ReviewQueueNav from "./review-queue-nav";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { SafetyCase } from "@/lib/safety-review";
@@ -21,7 +20,7 @@ function timeLabel(ms: number) {
   return `${(ms / 1000).toFixed(1)}s`;
 }
 
-export default function SafetyReviewDashboard({ email }: { email: string }) {
+export default function SafetyReviewDashboard() {
   const [queue, setQueue] = useState<SafetyCase[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -144,33 +143,7 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
   }
 
   return (
-    <div className="workspace">
-      <aside className="sidebar">
-        <a className="brand" href="/">zelos<span> / admin</span></a>
-        <p className="nav-label">CONTENT</p>
-        <a href="/admin" className="nav-item"><span>▤</span> Exercise review</a>
-        <a href="/admin/ranked-uploads" className="nav-item">Ranked uploads</a>
-        <a href="/admin/ranking-flags" className="nav-item"><span>⚑</span> Ranking flags</a>
-      <a href="/admin/users" className="nav-item">Users</a>
-      <a href="/admin/reports" className="nav-item">User reports</a>
-        <a href="/admin/safety" className="nav-item active"><span>◈</span> Upload safety</a>
-        <div className="sidebar-bottom">
-          <span className="connection"><i /> Supabase</span>
-          <p className="small truncate">{email}</p>
-          <button className="button text" onClick={async () => {
-            try {
-              const response = await fetch("/admin/api/auth/logout", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: "{}",
-              });
-              if (!response.ok) throw new Error("Sign out failed.");
-              window.location.assign("/admin/login");
-            } catch { setError("Sign out failed. Try again."); }
-          }}>Sign out ↗</button>
-        </div>
-      </aside>
-      <main className="main">
+    <div className="dashboard-content">
         <header className="page-header">
           <div>
             <p className="eyebrow">HUMAN REVIEW</p>
@@ -179,7 +152,6 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
           </div>
           <button className="button secondary" onClick={() => void refresh()} disabled={loading || saving}>Refresh queue</button>
         </header>
-      <ReviewQueueNav active="/admin/safety" />
         {notice && <p role="status" className="notice success">{notice}</p>}
         {error && <p role="alert" className="notice error">{error}</p>}
         <div className="review-layout">
@@ -258,7 +230,6 @@ export default function SafetyReviewDashboard({ email }: { email: string }) {
             </>}
           </section>
         </div>
-      </main>
       {confirm && <div className="dialog-backdrop" role="presentation">
         <div className="dialog" role="dialog" aria-modal="true" aria-label="Confirm safety decision">
           <h2>{confirm === "approve" ? "Approve this upload?" : "Reject this upload?"}</h2>

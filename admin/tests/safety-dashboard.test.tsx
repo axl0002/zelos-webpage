@@ -16,7 +16,7 @@ it.each(["rejected", "failed"])("retained %s uploads can be previewed without a 
       review_note: "Review decision", created_at: "2026-10-15T00:00:00Z", evidence: null,
     }],
   })));
-  const { container } = render(<SafetyReviewDashboard email="admin@example.test" />);
+  const { container } = render(<SafetyReviewDashboard />);
   await screen.findByRole("heading", { name: "Retained clip" });
   expect(screen.queryByRole("button", { name: "Approve upload" })).toBeNull();
   expect(screen.queryByRole("button", { name: "Reject upload" })).toBeNull();
@@ -42,7 +42,7 @@ it("previews a flagged avatar as an image and requires review before approval", 
           }];
     return { ok: true, json: async () => data };
   }));
-  render(<SafetyReviewDashboard email="admin@example.test" />);
+  render(<SafetyReviewDashboard />);
   await screen.findByRole("heading", { name: "Profile image" });
   const approve = screen.getByRole("button", { name: "Approve upload" }) as HTMLButtonElement;
   expect(approve.disabled).toBe(true);
@@ -70,7 +70,7 @@ async function openReview() {
 it("requires explicit rejection, persists the exact reason once and retains the private rejected original", async () => {
   const fetch = vi.fn(async (path: string, options: RequestInit) => ({ok: true,
     json: async () => path.endsWith("/preview") ? {url: "https://private.example/video"} : path.endsWith("/decision") ? {ok: true} : [pendingUpload]}));
-  vi.stubGlobal("fetch", fetch); render(<SafetyReviewDashboard email="admin@example.test" />); await openReview();
+  vi.stubGlobal("fetch", fetch); render(<SafetyReviewDashboard />); await openReview();
   expect((screen.getByRole("button", {name: "Reject upload"}) as HTMLButtonElement).disabled).toBe(true);
   fireEvent.change(screen.getByLabelText("Review note"), {target: {value: "Explicit material verified."}});
   fireEvent.click(screen.getByRole("button", {name: "Reject upload"}));
@@ -86,7 +86,7 @@ it("blocks queue changes while saving and preserves all inputs after a failed de
   let finish!: (value: unknown) => void;
   const fetch = vi.fn(async (path: string) => path.endsWith("/decision") ? new Promise(resolve => {finish = resolve;})
     : {ok: true, json: async () => path.endsWith("/preview") ? {url: "https://private.example/video"} : [pendingUpload, {...pendingUpload, id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", title: "Other upload"}]});
-  vi.stubGlobal("fetch", fetch); render(<SafetyReviewDashboard email="admin@example.test" />); await openReview();
+  vi.stubGlobal("fetch", fetch); render(<SafetyReviewDashboard />); await openReview();
   fireEvent.change(screen.getByLabelText("Review note"), {target: {value: "Keep my decision note"}});
   fireEvent.click(screen.getByRole("button", {name: "Approve upload"})); fireEvent.click(screen.getByRole("button", {name: /^Approve$/}));
   expect((screen.getByRole("button", {name: /Other upload/}) as HTMLButtonElement).disabled).toBe(true);
@@ -98,7 +98,7 @@ it("blocks queue changes while saving and preserves all inputs after a failed de
 });
 it("clears watched confirmation on playback failure, renewed links and queue refresh", async () => {
   vi.stubGlobal("fetch", vi.fn(async (path: string) => ({ok: true, json: async () => path.endsWith("/preview") ? {url: "https://private.example/video"} : [pendingUpload]})));
-  const {container} = render(<SafetyReviewDashboard email="admin@example.test" />); await openReview();
+  const {container} = render(<SafetyReviewDashboard />); await openReview();
   fireEvent.error(container.querySelector("video")!);
   expect((screen.getByRole("checkbox") as HTMLInputElement).checked).toBe(false);
   expect((screen.getByRole("button", {name: "Approve upload"}) as HTMLButtonElement).disabled).toBe(true);
