@@ -84,6 +84,11 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
   const videoRef = useRef<HTMLVideoElement>(null);
   const timing = rankingFlagHoldTiming(item);
   const [source, setSource] = useState(0);
+  useEffect(() => {
+    // A successful refresh supplies a new evidence snapshot, even for the same
+    // report. Retry its media and require review again; retain the edited note.
+    setSource(0); setWatched(false); setConfirm(null); setError("");
+  }, [item]);
   const unavailable = item.review_unavailable === true;
   const canReject = item.submission_status === "eligible" && !unavailable;
   async function decide() {

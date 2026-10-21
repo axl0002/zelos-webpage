@@ -11,6 +11,37 @@ const item: RankingFlag = {
  primary_url:"https://media.zelos.club/clip.mp4",renditions:{},
 };
 afterEach(()=>{cleanup();vi.unstubAllGlobals();});
+for (const changedUrl of [false, true]) {
+ it(`retries exhausted media after refresh (changed URL: ${changedUrl})`,async()=>{
+  let gets=0;
+  const refreshedUrl=changedUrl?"https://media.zelos.club/refreshed.mp4":item.primary_url;
+  const fetch=vi.fn(async()=>({ok:true,json:async()=>[{...item,primary_url:++gets===1?item.primary_url:refreshedUrl}]}));
+  vi.stubGlobal("fetch",fetch);
+  const {container}=render(<RankingFlagsDashboard/>);
+  await screen.findByText("Keep arms straight.");
+  fireEvent.error(container.querySelector("video")!);
+  await screen.findByText("Video unavailable. Refresh the queue before reviewing.");
+  fireEvent.click(screen.getByRole("button",{name:"Refresh queue"}));
+  await waitFor(()=>expect(container.querySelector("video")?.getAttribute("src")).toBe(refreshedUrl));
+  expect(gets).toBe(2);
+  expect((screen.getByLabelText("I watched the clip and checked the reported issue") as HTMLInputElement).checked).toBe(false);
+  expect((screen.getByRole("button",{name:"Reject ranking"}) as HTMLButtonElement).disabled).toBe(true);
+ });
+}
+it("requires fresh review after refreshing evidence while preserving edited notes",async()=>{
+ vi.stubGlobal("fetch",vi.fn(async()=>({ok:true,json:async()=>[{...item}]})));
+ render(<RankingFlagsDashboard/>);await screen.findByText("Keep arms straight.");
+ const note=screen.getByLabelText("Reason shown to the uploader if rejected");
+ fireEvent.change(note,{target:{value:"My reviewed explanation"}});
+ fireEvent.click(screen.getByLabelText("I watched the clip and checked the reported issue"));
+ fireEvent.click(screen.getByRole("button",{name:"Reject ranking"}));
+ expect(screen.getByRole("dialog")).toBeTruthy();
+ fireEvent.click(screen.getByRole("button",{name:"Refresh queue"}));
+ await waitFor(()=>expect(screen.queryByRole("dialog")).toBeNull());
+ expect((screen.getByLabelText("I watched the clip and checked the reported issue") as HTMLInputElement).checked).toBe(false);
+ expect((screen.getByRole("button",{name:"Reject ranking"}) as HTMLButtonElement).disabled).toBe(true);
+ expect((screen.getByLabelText("Reason shown to the uploader if rejected") as HTMLTextAreaElement).value).toBe("My reviewed explanation");
+});
 it("requires review, explanation and confirmation before rejection",async()=>{
  const fetch=vi.fn(async(_input:string,options:RequestInit)=>({ok:true,json:async()=>options.method==="POST"?{ok:true}:[item]}));
  vi.stubGlobal("fetch",fetch);render(<RankingFlagsDashboard/>);await screen.findByText("Keep arms straight.");
