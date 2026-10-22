@@ -16,8 +16,9 @@ import RankingFlags from "../src/app/admin/(workspace)/ranking-flags/page";
 import Reports from "../src/app/admin/(workspace)/reports/page";
 import Safety from "../src/app/admin/(workspace)/safety/page";
 import Users from "../src/app/admin/(workspace)/users/page";
+import ScoringLab from "../src/app/admin/(workspace)/scoring-lab/page";
 import {adminDestinations} from "../src/components/admin-workspace";
-const pages = [AdminHome, RankedUploads, RankingFlags, Reports, Safety, Users];
+const pages = [AdminHome, RankedUploads, RankingFlags, Reports, Safety, Users, ScoringLab];
 const routes = adminDestinations.map((route, index) => ({...route, page: pages[index]}));
 beforeEach(() => {
   vi.resetAllMocks(); mocks.path = "/admin";
@@ -28,7 +29,7 @@ beforeEach(() => {
 afterEach(() => {cleanup(); vi.unstubAllGlobals();});
 function expectNavigation(active: string | null) {
   const nav = screen.getByRole("navigation", {name: "Admin navigation"});
-  expect(within(nav).getAllByRole("link")).toHaveLength(6);
+  expect(within(nav).getAllByRole("link")).toHaveLength(adminDestinations.length);
   for (const {href, label} of adminDestinations) {
     const link = within(nav).getByRole("link", {name: label});
     expect(link.getAttribute("href")).toBe(href);

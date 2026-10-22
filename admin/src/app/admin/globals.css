@@ -816,3 +816,39 @@ textarea {
   .dialog-backdrop { padding: 12px; }
   .dialog { padding: 20px; max-height: calc(100dvh - 24px); }
 }
+
+/* Scoring experiments stay inside the authenticated admin workspace. */
+.scoring-lab { display:grid; grid-template-columns:minmax(0,1fr); gap:20px; min-width:0; }
+.scoring-lab > *, .scoring-lab .lab-panel > *, .scoring-lab label, .scoring-lab details, .scoring-lab .lab-scroll, .scoring-lab .lab-grid > *, .scoring-lab .lab-checkbox > span { min-width:0; max-width:100%; }
+.scoring-lab .page-header > div { min-width:0; max-width:100%; }
+.scoring-lab p, .scoring-lab summary { overflow-wrap:anywhere; }
+.scoring-lab .lab-notice { border:1px solid #d6c296; background:#fff9ea; border-radius:var(--radius); padding:18px 20px; display:grid; grid-template-columns:minmax(0,1fr); gap:6px; }
+.scoring-lab .lab-panel { background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:20px; display:grid; grid-template-columns:minmax(0,1fr); gap:16px; min-width:0; }
+.scoring-lab .lab-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr)); gap:16px; }
+.scoring-lab label { display:grid; gap:6px; font-size:12px; font-weight:550; }
+.scoring-lab input:not([type=checkbox]), .scoring-lab select, .scoring-lab textarea { width:100%; min-width:0; max-width:100%; min-height:40px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink); }
+.scoring-lab textarea { min-height:95px; font-family:ui-monospace,monospace; font-size:12px; }
+.scoring-lab .lab-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.scoring-lab .lab-checkbox { display:flex; gap:9px; align-items:flex-start; font-weight:450; }
+.scoring-lab .lab-checkbox input { margin-top:4px; }
+.scoring-lab .lab-checks { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr)); gap:10px; }
+.scoring-lab .lab-checks label { border:1px solid var(--line); border-radius:8px; padding:12px; }
+.scoring-lab .lab-checks small { display:block; color:var(--muted); margin-top:4px; }
+.scoring-lab .lab-scroll { overflow-x:auto; border:1px solid var(--line); border-radius:9px; }
+.scoring-lab table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; font-size:12px; }
+.scoring-lab th, .scoring-lab td { text-align:left; padding:11px 13px; border-bottom:1px solid var(--line); white-space:nowrap; }
+.scoring-lab th { background:var(--soft); font-weight:650; }
+.scoring-lab tbody tr:last-child td { border-bottom:0; }
+.scoring-lab .lab-number { text-align:right; }
+.scoring-lab .lab-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,145px),1fr)); gap:12px; }
+.scoring-lab .lab-stat { border:1px solid var(--line); border-radius:9px; padding:14px; }
+.scoring-lab .lab-stat strong { display:block; font-size:23px; font-weight:650; }
+.scoring-lab .lab-stat span { font-size:12px; color:var(--muted); }
+.scoring-lab .lab-formula { white-space:pre-wrap; overflow-wrap:anywhere; padding:12px; border-radius:8px; background:var(--soft); font-size:12px; }
+.scoring-lab .lab-chart-row { display:grid; grid-template-columns:150px minmax(70px,1fr) 80px; gap:12px; align-items:center; font-size:12px; }
+.scoring-lab .lab-chart-track { background:var(--soft); height:12px; border-radius:3px; overflow:hidden; }
+.scoring-lab .lab-chart-fill { display:block; height:100%; background:#6f879a; border-radius:3px; }
+.scoring-lab .lab-positive { color:var(--green); }
+.scoring-lab details > summary { cursor:pointer; font-weight:550; }
+.scoring-lab .lab-description { max-width:80ch; color:var(--muted); }
+@media(max-width:650px) { .scoring-lab .button { max-width:100%; white-space:normal; } .scoring-lab .lab-panel {padding:15px;} .scoring-lab .lab-chart-row {grid-template-columns:100px minmax(40px,1fr) 65px;} }
