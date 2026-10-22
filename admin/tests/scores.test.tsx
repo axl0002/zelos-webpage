@@ -15,6 +15,7 @@ import {
 import ScoreCalculator from "../src/components/score-calculator";
 import ScoringGuide from "../src/components/scoring-guide";
 import fixture from "./fixtures/score-rules.json";
+import submissionPolicy from "./fixtures/submission-policy.json";
 const rules = parseScoreRules(fixture);
 afterEach(() => {
   cleanup();
@@ -218,7 +219,7 @@ it("publishes review policy from the safe contract with cutoff, ties and pending
   expect(policy.textContent).toContain("same gender");
   expect(policy.textContent).toContain("Country filters do not affect");
   expect(policy.textContent).toContain("video stays private and earns no points");
-  expect(policy.textContent).toContain("personal best remains in place");
+  expect(policy.textContent).toContain("current competition entry remains in place");
   expect(within(policy as HTMLElement).getByText("SAT")).toBeTruthy();
   expect(JSON.stringify(published)).not.toContain("must-not-leak");
 });
@@ -306,4 +307,52 @@ it("documents uncapped rep claims only from the validated public policy", () => 
   expect(screen.getByText(/no exercise-specific maximum/)).toBeTruthy();
   expect(screen.getByText(/Hold times remain subject/)).toBeTruthy();
   expect(() => parseScoreRules({...fixture, claim_policy: {...claim_policy, reps: "unbounded_numeric"}})).toThrow();
+});
+
+it("explains confirmed competition replacement across progressions, including lower results, only after publication", () => {
+  const updated = parseScoreRules({...fixture, submission_policy: submissionPolicy});
+  render(<ScoringGuide rules={updated} />);
+  expect(screen.getByText(/One active competition submission represents each exercise/)).toBeTruthy();
+  const policy = document.querySelector("#competition-replacement")!;
+  const copy = policy.textContent!.replace(/\s+/g, " ");
+  expect(copy).toContain("replacement before the ranked submission form");
+  expect(copy).toContain("same progression and to a different progression");
+  expect(copy).toContain("even when the new rep count or hold time is lower");
+  expect(copy).toContain("Confirmation does not replace your entry immediately");
+  expect(copy).toContain("stays active while the new upload is processing or awaiting review");
+  expect(copy).toContain("only after successful publication, following approval when review is required");
+  expect(copy).toContain("A rejected or failed upload does not replace it");
+  expect(copy).toContain("latest confirmed and successfully published submission");
+  expect(copy).toContain("even if it scores fewer points");
+  expect(copy).toContain("previous video post is preserved in your profile history");
+  expect(copy).toContain("does not delete the video");
+  expect(document.body.textContent).not.toMatch(/personal best/i);
+  expect(updated.formula).toEqual(rules.formula);
+  expect(updated.weights).toEqual(rules.weights);
+});
+
+it("does not invent a replacement policy for older public contracts", () => {
+  const older = parseScoreRules(fixture);
+  expect(older.submission_policy).toBeUndefined();
+  render(<ScoringGuide rules={older} />);
+  expect(document.querySelector("#competition-replacement")).toBeNull();
+  expect(screen.getByRole("heading", {name: "Can I earn points from every progression of an exercise?"})).toBeTruthy();
+  expect(document.body.textContent).not.toContain("latest confirmed and successfully published");
+});
+
+it("validates every replacement policy field and exposes only the public contract", () => {
+  const allowed = parseScoreRules({...fixture, submission_policy: {...submissionPolicy,
+    athlete_id: "private-athlete", storage_key: "private-video", service_role_key: "private-key"}});
+  expect(allowed.submission_policy).toEqual(submissionPolicy);
+  expect(JSON.stringify(allowed)).not.toMatch(/private-athlete|private-video|private-key/);
+  for (const value of [null, {}, [], "latest", {...submissionPolicy, active_entries_per_exercise: 2},
+    {...submissionPolicy, active_entries_per_exercise: "1"},
+    {...submissionPolicy, replacement_confirmation_required: false},
+    {...submissionPolicy, replacement_timing: "on_submission"},
+    {...submissionPolicy, replacement_timing: "on_approval"},
+    {...submissionPolicy, previous_video: "deleted"},
+    {...submissionPolicy, selection: "highest_result"},
+    {...submissionPolicy, selection: undefined}]) {
+    expect(() => parseScoreRules({...fixture, submission_policy: value})).toThrow("Scoring rules unavailable");
+  }
 });

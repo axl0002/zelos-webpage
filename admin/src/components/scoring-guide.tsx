@@ -4,6 +4,7 @@ import ScoreWeightTable from "./score-weight-table";
 export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
   const reviewPolicy = rules.review_policy;
   const clipPolicy = rules.clip_policy;
+  const submissionPolicy = rules.submission_policy;
   const active = rules.weights.filter((w) => w.enabled);
   const example = active.find((w) => w.id === "planche-hold-full") ?? active[0];
   const pullBest = new Map<string, (typeof active)[number]>();
@@ -30,7 +31,7 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
         <h2>Quick Summary</h2>
         <ul>
           <li>
-            Your current eligible record represents each exercise. Different
+            {submissionPolicy ? "One active competition submission represents each exercise." : "Your current eligible record represents each exercise."} Different
             progressions of the same exercise do not stack.
           </li>
           <li>
@@ -319,12 +320,34 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
               Can I earn points from every progression of an exercise?
             </h3>
             <p>
-              Only your current selected eligible record for an exercise counts.
+              Only your current eligible competition record for an exercise counts.
               For example, Tuck Planche and Full Planche do not both contribute
-              to your total. Moving progression replaces the exercise’s current
-              scoring entry; historical clips can remain available.
+              to your total. {submissionPolicy
+                ? "The limit applies across every progression of the same exercise."
+                : "Moving progression replaces the exercise’s current scoring entry; historical clips can remain available."}
             </p>
           </div>
+          {submissionPolicy && <div id="competition-replacement">
+            <h3>What happens when I submit another competition result?</h3>
+            <p>
+              If you already have an active entry, the app asks you to confirm its
+              replacement before the ranked submission form. This applies to the same
+              progression and to a different progression,
+              even when the new rep count or hold time is lower.
+            </p>
+            <p>
+              Confirmation does not replace your entry immediately. Your current entry
+              stays active while the new upload is processing or awaiting review.
+              Replacement happens only after successful publication, following approval
+              when review is required. A rejected or failed upload does not replace it.
+            </p>
+            <p>
+              The latest confirmed and successfully published submission becomes your
+              active competition entry, even if it scores fewer points. Your previous
+              video post is preserved in your profile history; replacing its competition
+              entry does not delete the video.
+            </p>
+          </div>}
           <div>
             <h3>Which records are eligible?</h3>
             <p>
@@ -386,7 +409,7 @@ export default function ScoringGuide({ rules }: { rules: ScoreRules }) {
               </>}
               <p>
                 While review is pending, the video stays private and earns no points.
-                The athlete’s existing current personal best remains in place until the new
+                The athlete’s current competition entry remains in place until the new
                 upload is approved and published. A rejected upload stays private and does not
                 replace that record. Approval still requires the normal publication and eligibility checks.
               </p>

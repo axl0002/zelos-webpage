@@ -34,6 +34,13 @@ export type ScoreRules = {
     ranked_hold_min_extra_seconds: number;
     scope: "new_uploads";
   };
+  submission_policy?: {
+    active_entries_per_exercise: 1;
+    replacement_confirmation_required: true;
+    replacement_timing: "successful_publication_after_required_review";
+    previous_video: "retained";
+    selection: "latest_confirmed_publication";
+  };
 };
 const finite = (n: unknown): n is number =>
   typeof n === "number" && Number.isFinite(n);
@@ -104,6 +111,15 @@ export function parseScoreRules(value: unknown): ScoreRules {
     clipPolicy.ranked_hold_extra_seconds > 180)) {
     throw new Error("Scoring rules unavailable");
   }
+  const submissionPolicy = r.submission_policy;
+  if (submissionPolicy !== undefined && (!submissionPolicy || typeof submissionPolicy !== "object" ||
+    submissionPolicy.active_entries_per_exercise !== 1 ||
+    submissionPolicy.replacement_confirmation_required !== true ||
+    submissionPolicy.replacement_timing !== "successful_publication_after_required_review" ||
+    submissionPolicy.previous_video !== "retained" ||
+    submissionPolicy.selection !== "latest_confirmed_publication")) {
+    throw new Error("Scoring rules unavailable");
+  }
   // An explicit allowlist also prevents future RPC fields leaking into HTML/JSON.
   return {
     schema_version: 1,
@@ -138,6 +154,13 @@ export function parseScoreRules(value: unknown): ScoreRules {
       ranked_hold_extra_seconds: clipPolicy.ranked_hold_extra_seconds,
       ranked_hold_min_extra_seconds: clipPolicy.ranked_hold_min_extra_seconds,
       scope: "new_uploads" as const,
+    }}),
+    ...(submissionPolicy === undefined ? {} : {submission_policy: {
+      active_entries_per_exercise: 1 as const,
+      replacement_confirmation_required: true as const,
+      replacement_timing: "successful_publication_after_required_review" as const,
+      previous_video: "retained" as const,
+      selection: "latest_confirmed_publication" as const,
     }}),
   };
 }

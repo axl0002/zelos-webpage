@@ -5,6 +5,7 @@ import { GET } from "../src/app/scoring/rules.json/route";
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
 import { config } from "../src/middleware";
 import fixture from "./fixtures/score-rules.json";
+import submissionPolicy from "./fixtures/submission-policy.json";
 beforeEach(() => {
   vi.stubEnv(
     "NEXT_PUBLIC_SUPABASE_URL",
@@ -94,4 +95,22 @@ it("fails closed for unavailable or unknown algorithms without leaking upstream 
     '{"error":"Scoring rules are temporarily unavailable."}',
   );
   expect(response.headers.get("cache-control")).toBe("no-store");
+});
+
+it("publishes only validated replacement metadata from the read-only scoring RPC", async () => {
+  vi.stubGlobal("fetch", vi.fn(async () => ({ok: true, json: async () => ({...fixture,
+    submission_policy: {...submissionPolicy, private_account: "private-value"}})})));
+  const response = await GET();
+  expect(response.status).toBe(200);
+  const body = await response.text();
+  expect(JSON.parse(body).submission_policy).toEqual(submissionPolicy);
+  expect(body).not.toContain("private-value");
+});
+
+it("fails closed when the replacement policy contradicts the published explanation", async () => {
+  vi.stubGlobal("fetch", vi.fn(async () => ({ok: true, json: async () => ({...fixture,
+    submission_policy: {...submissionPolicy, selection: "highest_result", private_key: "private-value"}})})));
+  const response = await GET();
+  expect(response.status).toBe(503);
+  expect(await response.json()).toEqual({error: "Scoring rules are temporarily unavailable."});
 });

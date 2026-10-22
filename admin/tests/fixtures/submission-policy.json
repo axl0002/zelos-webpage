@@ -1,0 +1,7 @@
+{
+  "active_entries_per_exercise": 1,
+  "replacement_confirmation_required": true,
+  "replacement_timing": "successful_publication_after_required_review",
+  "previous_video": "retained",
+  "selection": "latest_confirmed_publication"
+}
