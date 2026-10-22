@@ -124,7 +124,7 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
     <label htmlFor="ranking-rejection-note">Reason shown to the uploader if rejected</label>
     <textarea id="ranking-rejection-note" value={note} maxLength={1000} rows={4} disabled={saving}
       onChange={event => {setNote(event.target.value); setConfirm(null);}} />
-    <p className="muted">Confirm only the issues you verified. Rejecting removes this result from rankings; the post and video remain available.</p>
+    <p className="muted">Confirm only the issues you verified. Rejecting removes this result from rankings and hides the video from feeds and the athlete’s profile.</p>
     {error && <p role="alert" className="error">{error}</p>}
     <div className="actions"><button className="button secondary" disabled={!watched || saving}
       onClick={() => setConfirm(false)}>Dismiss flag</button>
