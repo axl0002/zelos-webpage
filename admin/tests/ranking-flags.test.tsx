@@ -146,3 +146,15 @@ it("lets admins explicitly close a server-confirmed unavailable flag without pre
  const call=fetch.mock.calls.find(([,o])=>o.method==="POST")!;
  expect(JSON.parse(call[1].body as string)).toEqual({report_id:item.id,confirmed:false,review_note:item.details,watched_video:false,rule_ids:[]});
 });
+
+it("shows reporter usernames separately from the reported athlete and handles unavailable names", async () => {
+ vi.stubGlobal("fetch",vi.fn(async()=>({ok:true,json:async()=>[{...item,reporter_username:"flag_author"},{...item,id:"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",reporter_username:null}]})));
+ render(<RankingFlagsDashboard/>);
+ await screen.findByText("Keep arms straight.");
+ expect(screen.getAllByText("Reported by: @flag_author")).toHaveLength(2);
+ expect(screen.getAllByText("Reported by: Username unavailable")).toHaveLength(1);
+ expect(screen.getByText("athlete · Listed result: 10 seconds")).toBeTruthy();
+ fireEvent.click(screen.getByRole("button",{name:/Username unavailable/}));
+ expect(screen.getAllByText("Reported by: Username unavailable")).toHaveLength(2);
+ expect(screen.queryByText("Reported by: @athlete")).toBeNull();
+});

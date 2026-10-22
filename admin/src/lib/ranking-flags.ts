@@ -4,7 +4,7 @@ export type RankingFlag = {
   corrected_value: number | null; reported_value: number | null;
   metric: string | null; rule_violations: ExerciseRule[]; rules: ExerciseRule[];
   claimed_value: number; board_name: string; board_metric: string;
-  username: string; title: string; created_at: string; submission_status: string;
+  username: string; reporter_username?: string | null; title: string; created_at: string; submission_status: string;
   primary_url: string | null; renditions: Record<string, string> | null; review_unavailable?: boolean;
   reported_hold_start_ms?: number | null; reported_hold_end_ms?: number | null;
   hold_timing?: {start_ms: number; end_ms: number; duration_ms: number} | null;

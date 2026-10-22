@@ -46,7 +46,7 @@ export default function RankingFlagsDashboard() {
         {!loading && !queue.length && <p className="empty">No ranking flags awaiting review.</p>}
         {queue.map(item => <button className={`candidate ${item.id === selected ? "selected" : ""}`} key={item.id}
           disabled={busy} aria-pressed={item.id === selected} onClick={() => setSelected(item.id)}><span className="candidate-copy"><strong>{item.username} · {item.board_name}</strong>
-          <span>{rankingReasons[item.reason]}</span></span></button>)}
+          <span>{rankingReasons[item.reason]}</span><small>Reported by: {item.reporter_username ? `@${item.reporter_username}` : "Username unavailable"}</small></span></button>)}
       </section>
         {current ? <FlagReview key={current.id} item={current} onBusy={setBusy} onSaved={confirmed => {
           setQueue(old => old.filter(item => item.id !== current.id)); setSelected(null);
@@ -90,6 +90,7 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
     finally { savingRef.current = false; setSaving(false); onBusy(false); }
   }
   return <section className="review-panel ranking-flag-detail"><h2>{item.board_name}</h2>
+    <p>Reported by: {item.reporter_username ? `@${item.reporter_username}` : "Username unavailable"}</p>
     <p>{item.username} · Listed result: {item.reported_value ?? item.claimed_value} {item.metric ?? item.board_metric}</p>
     {source < urls.length ? <video ref={videoRef} key={urls[source]} controls playsInline preload="metadata" src={urls[source]}
       aria-label="Reported clip" onError={() => { setSource(old => old + 1); setWatched(false); setConfirm(null); }} />

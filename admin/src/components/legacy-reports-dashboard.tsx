@@ -33,6 +33,7 @@ export default function LegacyReportsDashboard() {
       {!loading && !visible.length && <p className="empty">No reports in this queue.</p>}
       {visible.map(item => <button key={item.id} disabled={busy || loading} aria-pressed={item.id === current?.id} className={`candidate ${item.id === current?.id ? "selected" : ""}`} onClick={() => setSelected(item.id)}>
         <span className="candidate-copy"><strong>{item.target_kind === "post" ? "Video" : item.target_kind} · {item.username}</strong><span>{item.reason} · {item.state}</span>
+          <small>Reported by: {item.reporter_username ? `@${item.reporter_username}` : "Username unavailable"}</small>
           <small>{new Date(item.created_at).toLocaleString()}</small></span></button>)}
     </section>{current ? <Detail key={`${current.id}:${current.revision}`} item={current} locked={busy || loading} onBusy={setBusy} onSaved={() => void refresh()} />
       : <section className="review-panel"><p className="empty">Select a report to review.</p></section>}</div></div>;
@@ -48,6 +49,7 @@ function Detail({item, locked, onBusy, onSaved}: {item: LegacyReport; locked: bo
     finally {pending.current = false; onBusy(false);}
   }
   return <section className="review-panel" aria-label="Legacy report detail"><div className="clip-heading"><h2>{item.username}</h2><span className="badge">{item.state}</span></div>
+    <p>Reported by: {item.reporter_username ? `@${item.reporter_username}` : "Username unavailable"}</p>
     <h3>{item.reason}</h3><p className="muted">{new Date(item.created_at).toLocaleString()}</p>
     {item.details && <p className="review-rule-copy">{item.details}</p>}
     {!item.target_id ? <p className="notice">{item.target_kind === "post" ? "The original report has no video ID. The reported video cannot be identified safely." : "The reported content is no longer available or could not be matched safely."}</p>

@@ -41,3 +41,20 @@ it("keeps explicit ban confirmation mounted and retains the reason after a faile
   await waitFor(() => expect(within(dialog).getByRole("alert").textContent).toContain("Refresh the report"));
   expect((screen.getByLabelText("Ban reason (shown to the user)") as HTMLTextAreaElement).value).toBe("Verified violation");
 });
+
+it("shows the verified reporter username separately from the target athlete", async () => {
+ vi.spyOn(globalThis,"fetch").mockResolvedValue(new Response(JSON.stringify([{...report,reporter_username:"legacy_author",reporter_available:true}])));
+ render(<LegacyReportsDashboard/>);
+ await screen.findByText(/original report has no video ID/);
+ expect(screen.getAllByText("Reported by: @legacy_author")).toHaveLength(2);
+ expect(screen.queryByText("Reported by: @athlete")).toBeNull();
+ expect(screen.queryByText(/original reporter account is unavailable/)).toBeNull();
+});
+it("allowlists only the reporter username and handles missing or malformed values", () => {
+ for (const reporter_username of [undefined,null," ",123,"x".repeat(101)]) {
+  expect(parseLegacyReports([{...report,reporter_username}])[0].reporter_username).toBeNull();
+ }
+ const [parsed]=parseLegacyReports([{...report,reporter_username:"author",reporter_id:"secret-id",email:"secret-email"}]);
+ expect(parsed.reporter_username).toBe("author");
+ expect(JSON.stringify(parsed)).not.toContain("secret");
+});

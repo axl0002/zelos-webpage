@@ -3,7 +3,7 @@ export type LegacyReport = {
   id: string; target_kind: "post" | "profile" | "comment"; target_id: string | null;
   state: "open" | "reviewed" | "dismissed"; revision: number; created_at: string;
   reason: string; details: string; username: string; body: string | null;
-  review_note: string | null; reporter_available: boolean; target_available: boolean; can_ban: boolean;
+  review_note: string | null; reporter_username?: string | null; reporter_available: boolean; target_available: boolean; can_ban: boolean;
 };
 const object = (v: unknown): Record<string, unknown> | null => v !== null && typeof v === "object" && !Array.isArray(v) ? v as Record<string, unknown> : null;
 const text = (v: unknown, max: number): v is string => typeof v === "string" && v.length <= max;
@@ -18,6 +18,7 @@ export function parseLegacyReports(value: unknown): LegacyReport[] {
     return {id: v.id, target_kind: v.target_kind as LegacyReport["target_kind"], target_id: v.target_id,
       state: v.state as LegacyReport["state"], revision: Number(v.revision), created_at: v.created_at,
       reason: v.reason, details: v.details, username: v.username, body: text(v.body, 10000) ? v.body : null,
+      reporter_username: text(v.reporter_username, 100) && v.reporter_username.trim() ? v.reporter_username.trim() : null,
       review_note: text(v.review_note, 2000) ? v.review_note : null, reporter_available: v.reporter_available === true,
       target_available: v.target_available === true, can_ban: v.can_ban === true};
   });

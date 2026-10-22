@@ -1,7 +1,7 @@
 import { mediaUrls } from "./review-media";
 
 export type ReportEvidence = {
-  id: string; reason: string; details: string; created_at: string;
+  id: string; reason: string; details: string; created_at: string; reporter_username?: string | null;
   timestamp_ms: number | null;
   answers_snapshot: { category?: { label: string }; options: { label: string }[]; locations: { label: string }[] };
 };
@@ -21,7 +21,7 @@ function labels(v: unknown): {label: string}[] {
   return v.filter(item => object(item) && text(item.label, 2000)).map(item => ({label: item.label}));
 }
 
-/** Allowlist review evidence; reporter identities and internal owner data stay server-side. */
+/** Allowlist admin evidence: only reporter usernames, never auth IDs or private owner data. */
 export function parseModerationReports(value: unknown): ModerationReport[] {
   if (!Array.isArray(value) || value.length > 200) throw new Error("Reports unavailable");
   return value.map(raw => {
@@ -47,7 +47,7 @@ export function parseModerationReports(value: unknown): ModerationReport[] {
         const r = object(rawReport);
         if (!r || !reportId(r.id) || !text(r.reason, 1000) || !text(r.created_at, 80)) throw new Error("Reports unavailable");
         const snapshot = object(r.answers_snapshot), category = object(snapshot?.category);
-        return {id: r.id, reason: r.reason, details: text(r.details, 1000) ? r.details : "", created_at: r.created_at,
+        return {id: r.id, reporter_username: text(r.reporter_username, 100) && r.reporter_username.trim() ? r.reporter_username.trim() : null, reason: r.reason, details: text(r.details, 1000) ? r.details : "", created_at: r.created_at,
           timestamp_ms: Number.isSafeInteger(r.timestamp_ms) && (r.timestamp_ms as number) >= 0 ? r.timestamp_ms as number : null,
           answers_snapshot: {...(category && text(category.label, 2000) ? {category: {label: category.label}} : {}),
             options: labels(snapshot?.options), locations: labels(snapshot?.locations)}};

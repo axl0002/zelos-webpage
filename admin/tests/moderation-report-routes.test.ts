@@ -34,11 +34,12 @@ it("rejects cross-site requests before auth, and validates viewing, revision and
   }
   expect(client.rpc.mock.calls.every(([name]) => name === "admin_rank_review_context")).toBe(true);
 });
-it("returns evidence for every report kind without leaking reporter identities or unrelated RPC fields", async () => {
+it("returns authorized reporter usernames for every report kind while stripping auth IDs and unrelated fields", async () => {
   admin([report, {...report, id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", target_kind: "comment", context: {username: "athlete", body: "Reported comment", post_id: "post", internal: "secret"}},
-    {...report, id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", target_kind: "profile", reports: [{...report.reports[0], reporter_id: "private-reporter"}], internal: "secret"}]);
+    {...report, id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", target_kind: "profile", reports: [{...report.reports[0], reporter_id: "private-reporter", reporter_username: "report_author"}], internal: "secret"}]);
   const response = await GET(), data = await response.json();
   expect(response.status).toBe(200); expect(data.map((item: {target_kind: string}) => item.target_kind)).toEqual(["post", "comment", "profile"]);
+  expect(data[2].reports[0].reporter_username).toBe("report_author");
   expect(JSON.stringify(data)).not.toContain("private-reporter"); expect(JSON.stringify(data)).not.toContain("secret");
   expect(client.rpc).toHaveBeenLastCalledWith("get_moderation_cases");
 });
@@ -61,4 +62,12 @@ it("previews reported posts only through the authorized RPC and allowlisted medi
 it("returns a custom retry error for unexpected service failures", async () => {
   client.auth.getUser.mockRejectedValue(new Error("internal secret"));
   const response = await GET(); expect(response.status).toBe(503); expect(JSON.stringify(await response.json())).not.toContain("internal secret");
+});
+
+it("treats absent, blank and invalid reporter usernames as unavailable", async () => {
+ for (const reporter_username of [undefined, null, " ", 123, "x".repeat(101)]) {
+  admin([{...report,reports:[{...report.reports[0],reporter_username}]}]);
+  const response=await GET(); expect(response.status).toBe(200);
+  expect((await response.json())[0].reports[0].reporter_username).toBeNull();
+ }
 });

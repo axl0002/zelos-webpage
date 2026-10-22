@@ -123,3 +123,16 @@ it("confirms temporary report-owner bans and keeps duration out of video actions
   await waitFor(() => expect(fetch.mock.calls.filter(([path]) => path.endsWith("/action"))).toHaveLength(2));
   expect(JSON.parse(fetch.mock.calls.filter(([path]) => path.endsWith("/action"))[1][1]?.body as string)).toMatchObject({case_id: report.id, expected_revision: 3, action: "ban", duration_days: 7});
 });
+
+it("labels every report author separately, including unavailable profiles", async () => {
+ mock([{...report, report_count: 3, reports: [
+  {...report.reports[0],reporter_username:"first_reporter"},
+  {...report.reports[0],id:"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",reporter_username:"second_reporter"},
+  {...report.reports[0],id:"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",reporter_username:null},
+ ],context:{username:"reported_athlete",body:"Reported text"}}]);
+ render(<ModerationReportsDashboard/>);
+ expect(await screen.findByText("Reported by: @first_reporter")).toBeTruthy();
+ expect(screen.getByText("Reported by: @second_reporter")).toBeTruthy();
+ expect(screen.getByText("Reported by: Username unavailable")).toBeTruthy();
+ expect(screen.queryByText("Reported by: @reported_athlete")).toBeNull();
+});

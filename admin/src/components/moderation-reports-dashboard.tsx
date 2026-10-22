@@ -101,6 +101,7 @@ function ReportDetail({item, onBusy, onSaved, onActionSaved}: {item: ModerationR
     <h3>Report evidence</h3>
     {item.reports.map(report => <article className="notice" key={report.id}>
       <strong>{report.answers_snapshot.category?.label || report.reason}</strong>
+      <p>Reported by: {report.reporter_username ? `@${report.reporter_username}` : "Username unavailable"}</p>
       <ul>{report.answers_snapshot.options.map((option, index) => <li key={index}>{option.label}</li>)}</ul>
       {report.answers_snapshot.locations.length > 0 && <p>Location: {report.answers_snapshot.locations.map(location => location.label).join(", ")}</p>}
       {report.timestamp_ms !== null && <button className="button text" disabled={!preview?.urls[source] || saving} onClick={() => {
