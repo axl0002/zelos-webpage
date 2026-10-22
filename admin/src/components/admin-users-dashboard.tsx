@@ -1,4 +1,5 @@
 "use client";
+import {notifyAdminReviewCountsChanged} from "@/lib/admin-review-counts";
 import { useEffect, useRef, useState } from "react";
 import type { AdminUser } from "@/lib/admin-users";
 import ModerationActionForm from "./moderation-action-form";
@@ -48,6 +49,7 @@ export default function AdminUsersDashboard() {
               const response = await fetch("/admin/api/users/ban", {method: "POST", headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({user_id: user.id, banned: action === "ban", expected_revision: user.revision, reason, request_id: requestId, duration_days: durationDays})});
               const data = await response.json(); if (!response.ok) throw new Error(data.error || "The account could not be updated. Please try again.");
+              notifyAdminReviewCountsChanged();
             }} />
           {!user.can_ban && !user.can_unban && <p className="muted">This account cannot be changed here.</p>}
         </> : <p className="empty">Search and select a user to review their account.</p>}

@@ -1,4 +1,5 @@
 "use client";
+import {notifyAdminReviewCountsChanged} from "@/lib/admin-review-counts";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { LegacyReport } from "@/lib/legacy-reports";
@@ -8,6 +9,7 @@ async function api(path = "", body?: unknown, signal?: AbortSignal) {
     headers: body === undefined ? undefined : {"Content-Type": "application/json"}, body: body === undefined ? undefined : JSON.stringify(body)});
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "The reports could not load. Please try again.");
+  if (path === "/decision" || path === "/ban") notifyAdminReviewCountsChanged();
   return data;
 }
 export default function LegacyReportsDashboard() {

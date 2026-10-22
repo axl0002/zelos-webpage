@@ -1,6 +1,8 @@
 "use client";
+import {notifyAdminReviewCountsChanged} from "@/lib/admin-review-counts";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import {ReviewCountBadge} from "./admin-review-counts";
 import type { ModerationReport } from "@/lib/moderation-reports";
 import ModerationActionForm from "./moderation-action-form";
 
@@ -12,6 +14,7 @@ async function api<T>(path = "", body?: unknown, signal?: AbortSignal): Promise<
   });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "The reports could not load. Please try again.");
+  if (path === "/decision" || path === "/action") notifyAdminReviewCountsChanged();
   return data;
 }
 type Preview = {title: string; caption: string; username: string; urls: string[]};
@@ -36,7 +39,7 @@ export default function ModerationReportsDashboard() {
   const current = queue.find(item => item.id === selected);
   return <div className="dashboard-content"><header className="page-header"><div><p className="eyebrow">CONTENT MODERATION</p><h1>User reports</h1>
       <p className="muted">Reports about posts, comments and profiles, including the original answers and timestamps. Up to 50 recent cases are shown, with open reports first.</p></div>
-      <Link className="button secondary" href="/admin/reports/legacy">Legacy reports</Link>
+      <Link className="button secondary" href="/admin/reports/legacy" aria-label="Legacy reports" aria-describedby="legacy-report-count">Legacy reports <ReviewCountBadge kind="legacy_reports" id="legacy-report-count" /></Link>
       <button className="button secondary" disabled={loading || busy} onClick={() => void refresh()}>Refresh queue</button>
     </header>
       {error && <p role="alert" className="notice error">{error}</p>}

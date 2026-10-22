@@ -1,4 +1,5 @@
 "use client";
+import {notifyAdminReviewCountsChanged} from "@/lib/admin-review-counts";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { SafetyCase } from "@/lib/safety-review";
@@ -13,6 +14,7 @@ async function api<T>(path: string, body?: unknown, signal?: AbortSignal): Promi
   });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "The request failed. Try again.");
+  if (path === "/decision") notifyAdminReviewCountsChanged();
   return data as T;
 }
 

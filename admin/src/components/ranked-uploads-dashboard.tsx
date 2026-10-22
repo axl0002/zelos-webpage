@@ -1,4 +1,5 @@
 "use client";
+import {notifyAdminReviewCountsChanged} from "@/lib/admin-review-counts";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   rankedUploadReasons,
@@ -14,6 +15,7 @@ async function api<T>(path = "", body?: unknown, signal?: AbortSignal): Promise<
   });
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || "Could not load ranked uploads. Try again.");
+  if (path === "/decision") notifyAdminReviewCountsChanged();
   return result;
 }
 export default function RankedUploadsDashboard() {

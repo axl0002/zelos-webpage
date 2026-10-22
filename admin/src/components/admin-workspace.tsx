@@ -2,6 +2,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import {AdminReviewCountsProvider, ReviewCountBadge} from "./admin-review-counts";
+import type {AdminReviewCounts} from "@/lib/admin-review-counts";
 
 export const adminDestinations = [
   {href: "/admin", label: "Exercise review"},
@@ -12,8 +14,15 @@ export const adminDestinations = [
   {href: "/admin/users", label: "Users"},
 ] as const;
 
+const countKinds: Record<string, keyof AdminReviewCounts> = {
+  "/admin/ranked-uploads": "ranked_uploads", "/admin/ranking-flags": "ranking_flags", "/admin/reports": "user_reports",
+};
+
 /** One persistent navigation shell for every admin workspace route/state. */
 export default function AdminWorkspace({children}: {children: React.ReactNode}) {
+  return <AdminReviewCountsProvider><WorkspaceContent>{children}</WorkspaceContent></AdminReviewCountsProvider>;
+}
+function WorkspaceContent({children}: {children: React.ReactNode}) {
   const pathname = usePathname(), router = useRouter();
   const [signingOut, setSigningOut] = useState(false), [error, setError] = useState("");
   const pending = useRef(false);
@@ -34,7 +43,8 @@ export default function AdminWorkspace({children}: {children: React.ReactNode}) 
       <nav className="admin-navigation" aria-label="Admin navigation">
         {adminDestinations.map(({href, label}) => {
           const active = href === "/admin" ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
-          return <Link key={href} href={href} prefetch={false} className={`nav-item${active ? " active" : ""}`} aria-current={active ? "page" : undefined}>{label}</Link>;
+          const kind = countKinds[href], badgeId = `admin-count-${kind}`;
+          return <Link aria-label={label} aria-describedby={kind ? badgeId : undefined} key={href} href={href} prefetch={false} className={`nav-item${active ? " active" : ""}`} aria-current={active ? "page" : undefined}>{label}{kind && <ReviewCountBadge kind={kind} id={badgeId} />}</Link>;
         })}
       </nav>
       <div className="sidebar-bottom">

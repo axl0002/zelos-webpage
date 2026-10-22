@@ -1,4 +1,5 @@
 "use client";
+import {notifyAdminReviewCountsChanged} from "@/lib/admin-review-counts";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Board, Candidate, Decision, QueuePage } from "@/lib/review-types";
 import { mediaUrls } from "@/lib/review-media";
@@ -19,6 +20,7 @@ async function api<T>(
   const data = await response.json();
   if (!response.ok)
     throw new Error(data.error || "Something went wrong. Try again.");
+  if (path === "review/decision") notifyAdminReviewCountsChanged();
   return data as T;
 }
 export default function ReviewDashboard({

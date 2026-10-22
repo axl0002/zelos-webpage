@@ -22,7 +22,7 @@ const routes = adminDestinations.map((route, index) => ({...route, page: pages[i
 beforeEach(() => {
   vi.resetAllMocks(); mocks.path = "/admin";
   mocks.requireAdmin.mockResolvedValue({context: {boards: []}, user: {email: "admin@example.test"}});
-  vi.stubGlobal("fetch", vi.fn(async (url: string) => ({ok: true, json: async () => url.startsWith("/admin/api/review?")
+  vi.stubGlobal("fetch", vi.fn(async (url: string) => ({ok: true, json: async () => url === "/admin/api/review-counts" ? {current_reports:0,legacy_reports:0,user_reports:0,ranking_flags:0,ranked_uploads:0} : url.startsWith("/admin/api/review?")
     ? {items: [], stats: {pending: 0, approved: 0, skipped: 0}} : []})));
 });
 afterEach(() => {cleanup(); vi.unstubAllGlobals();});
@@ -95,7 +95,8 @@ it("handles unknown admin deep links through authorization and an in-shell not-f
   render(<WorkspaceLayout><WorkspaceNotFound /></WorkspaceLayout>); expectNavigation(null);
 });
 it("signs out once from every workspace and retains navigation after a failed logout", async () => {
-  const fetch = vi.fn().mockResolvedValueOnce({ok: false}).mockResolvedValueOnce({ok: true});
+  let attempts = 0;
+  const fetch = vi.fn(async (url: string) => url === "/admin/api/auth/logout" ? {ok: ++attempts > 1} : {ok:true,json:async()=>({current_reports:0,legacy_reports:0,user_reports:0,ranking_flags:0,ranked_uploads:0})});
   vi.stubGlobal("fetch", fetch); mocks.path = "/admin/reports";
   render(<WorkspaceLayout><p>Report queue</p></WorkspaceLayout>);
   fireEvent.click(screen.getByRole("button", {name: "Sign out"}));
@@ -103,5 +104,5 @@ it("signs out once from every workspace and retains navigation after a failed lo
   expectNavigation("/admin/reports"); expect(mocks.replace).not.toHaveBeenCalled();
   const button = screen.getByRole("button", {name: "Sign out"}); fireEvent.click(button); fireEvent.click(button);
   await waitFor(() => expect(mocks.replace).toHaveBeenCalledExactlyOnceWith("/admin/login"));
-  expect(fetch).toHaveBeenCalledTimes(2); expect(fetch).toHaveBeenLastCalledWith("/admin/api/auth/logout", expect.objectContaining({method: "POST", body: "{}"}));
+  expect(fetch.mock.calls.filter(([url]) => url === "/admin/api/auth/logout")).toHaveLength(2); expect(fetch).toHaveBeenLastCalledWith("/admin/api/auth/logout", expect.objectContaining({method: "POST", body: "{}"}));
 });

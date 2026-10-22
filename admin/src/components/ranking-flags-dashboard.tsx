@@ -1,4 +1,5 @@
 "use client";
+import {notifyAdminReviewCountsChanged} from "@/lib/admin-review-counts";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { mediaUrls } from "@/lib/review-media";
 import { rankingFlagHoldTiming, rankingReasons, type RankingFlag } from "@/lib/ranking-flags";
@@ -11,6 +12,7 @@ async function api<T>(body?: unknown, signal?: AbortSignal): Promise<T> {
   });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Could not load ranking flags. Try again.");
+  if (body !== undefined) notifyAdminReviewCountsChanged();
   return data;
 }
 export default function RankingFlagsDashboard() {
