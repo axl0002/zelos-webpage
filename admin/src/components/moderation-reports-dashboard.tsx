@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { ModerationReport } from "@/lib/moderation-reports";
 import ModerationActionForm from "./moderation-action-form";
@@ -35,6 +36,7 @@ export default function ModerationReportsDashboard() {
   const current = queue.find(item => item.id === selected);
   return <div className="dashboard-content"><header className="page-header"><div><p className="eyebrow">CONTENT MODERATION</p><h1>User reports</h1>
       <p className="muted">Reports about posts, comments and profiles, including the original answers and timestamps. Up to 50 recent cases are shown, with open reports first.</p></div>
+      <Link className="button secondary" href="/admin/reports/legacy">Legacy reports</Link>
       <button className="button secondary" disabled={loading || busy} onClick={() => void refresh()}>Refresh queue</button>
     </header>
       {error && <p role="alert" className="notice error">{error}</p>}
