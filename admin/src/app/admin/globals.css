@@ -851,4 +851,24 @@ textarea {
 .scoring-lab .lab-positive { color:var(--green); }
 .scoring-lab details > summary { cursor:pointer; font-weight:550; }
 .scoring-lab .lab-description { max-width:80ch; color:var(--muted); }
+.scoring-lab .lab-comparison, .scoring-lab .lab-discipline { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; min-width:0; }
+.scoring-lab .lab-discipline { padding-top:18px; border-top:1px solid var(--line); }
+.scoring-lab .lab-comparison-heading { display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:12px; }
+.scoring-lab .lab-comparison-heading h3 { margin:0 0 6px; }
+.scoring-lab .lab-leaderboard-scroll { overflow-x:auto; max-width:100%; min-width:0; padding-bottom:8px; }
+.scoring-lab .lab-leaderboard-scroll:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+.scoring-lab .lab-leaderboard-columns { display:grid; grid-auto-flow:column; grid-auto-columns:300px; align-items:start; gap:12px; width:max-content; min-width:100%; }
+.scoring-lab .lab-leaderboard-card { min-width:0; border:1px solid var(--line); border-radius:9px; overflow:hidden; background:var(--surface); }
+.scoring-lab .lab-leaderboard-card > header { min-height:76px; padding:14px 12px 4px; }
+.scoring-lab .lab-leaderboard-card h4 { margin:0 0 6px; overflow-wrap:anywhere; font-size:14px; }
+.scoring-lab .lab-leaderboard-card > p { padding:0 12px; font-size:11px; }
+.scoring-lab .lab-leaderboard-rows { max-height:440px; overflow:auto; }
+.scoring-lab .lab-leaderboard-rows th { position:sticky; top:0; z-index:1; }
+.scoring-lab .lab-leaderboard-rows th, .scoring-lab .lab-leaderboard-rows td { padding:9px 8px; font-size:11px; }
+.scoring-lab .lab-leaderboard-rows td:nth-child(2) { max-width:140px; white-space:normal; overflow-wrap:anywhere; }
+.scoring-lab .lab-leaderboard-rows small { display:block; color:var(--muted); margin-top:3px; font-size:10px; }
+.scoring-lab .lab-athlete-button { padding:0; background:none; border:0; color:var(--ink); text-align:left; cursor:pointer; font:inherit; font-weight:600; overflow-wrap:anywhere; }
+.scoring-lab .lab-athlete-button:hover, .scoring-lab .lab-athlete-button:focus-visible { text-decoration:underline; }
+.scoring-lab .lab-selected-athlete { background:#edf3f7; }
+.scoring-lab .lab-athlete-comparison { border-color:#adc0d0; }
 @media(max-width:650px) { .scoring-lab .button { max-width:100%; white-space:normal; } .scoring-lab .lab-panel {padding:15px;} .scoring-lab .lab-chart-row {grid-template-columns:100px minmax(40px,1fr) 65px;} }
