@@ -191,3 +191,16 @@ export const formatPoints = (points: number) =>
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+
+// Alternative algorithms remain private. A recognized scores-only contract
+// explicitly retires the old public calculator rather than showing stale math.
+export type ScoreStatus={schema_version:2;mode:"scores_only";revision:number;updated_at:string};
+export type PublicScoreRules=ScoreRules|ScoreStatus;
+export function parsePublicScoreRules(value:unknown):PublicScoreRules {
+ if(value&&typeof value==="object"&&"schema_version" in value&&value.schema_version===2){
+  const v=value as Record<string,unknown>;
+  if(v.mode!=="scores_only"||typeof v.revision!=="number"||!Number.isSafeInteger(v.revision)||v.revision<1||typeof v.updated_at!=="string"||!Number.isFinite(Date.parse(v.updated_at)))throw Error("Invalid scoring status");
+  return {schema_version:2,mode:"scores_only",revision:v.revision,updated_at:v.updated_at};
+ }
+ return parseScoreRules(value);
+}

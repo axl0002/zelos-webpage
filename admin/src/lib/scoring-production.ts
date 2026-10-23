@@ -1,0 +1,15 @@
+import {isLabId,object,parseLabConfig,type LabConfig} from "./scoring-lab";
+export type ScoringVersion={id:string;name:string;engine:"score_engine_v1";config:LabConfig;shrinkage:number;calibration_note:string;created_at:string;ready:boolean};
+export type ScoringActivation={id:string;previous_id:string|null;active_id:string;reason:string;created_at:string;rankings_version:number};
+export type ScoringRegistry={active_id:string;rankings_version:number;versions:ScoringVersion[];history:ScoringActivation[]};
+export type ScoringPreview={id:string;version_id:string;expires_at:string;created_at:string;summary:{record_count:number;cohorts:{discipline:"push"|"pull";gender:string;athletes:number;moved:number;max_rank_change:number;max_score_change:number;top10_overlap:number|null}[]}};
+const id=(v:unknown)=>{if(!isLabId(v))throw Error();return v;};
+const num=(v:unknown)=>{if(typeof v!=="number"||!Number.isFinite(v)||v<0)throw Error();return v;};
+const int=(v:unknown)=>{const n=num(v);if(!Number.isSafeInteger(n))throw Error();return n;};
+const str=(v:unknown,max=2000)=>{if(typeof v!=="string"||!v.length||v.length>max)throw Error();return v;};
+const date=(v:unknown)=>{const s=str(v,100);if(!Number.isFinite(Date.parse(s)))throw Error();return s;};
+function array<T>(v:unknown,max:number,parse:(v:unknown)=>T):T[]{if(!Array.isArray(v)||v.length>max)throw Error();return v.map(parse);}
+export function parseScoringVersion(value:unknown):ScoringVersion{const v=object(value);if(v.engine!=="score_engine_v1")throw Error();return{id:id(v.id),name:str(v.name,100),engine:v.engine,config:parseLabConfig(v.config),shrinkage:num(v.shrinkage),calibration_note:str(v.calibration_note),created_at:date(v.created_at),ready:v.ready===true};}
+export function parseScoringActivation(value:unknown):ScoringActivation{const v=object(value);return{id:id(v.id),previous_id:v.previous_id===null?null:id(v.previous_id),active_id:id(v.active_id),reason:str(v.reason),created_at:date(v.created_at),rankings_version:int(v.rankings_version)};}
+export function parseScoringRegistry(value:unknown):ScoringRegistry{const v=object(value);const result={active_id:id(v.active_id),rankings_version:int(v.rankings_version),versions:array(v.versions,200,parseScoringVersion),history:array(v.history,30,parseScoringActivation)};if(!result.versions.some(a=>a.id===result.active_id)||new Set(result.versions.map(a=>a.id)).size!==result.versions.length)throw Error();return result;}
+export function parseScoringPreview(value:unknown):ScoringPreview{const v=object(value),s=object(v.summary);return{id:id(v.id),version_id:id(v.version_id),expires_at:date(v.expires_at),created_at:date(v.created_at),summary:{record_count:int(s.record_count),cohorts:array(s.cohorts,30,x=>{const c=object(x);if(c.discipline!=="push"&&c.discipline!=="pull")throw Error();const overlap=c.top10_overlap===null?null:num(c.top10_overlap);if(overlap!==null&&overlap>1)throw Error();return{discipline:c.discipline,gender:str(c.gender,30),athletes:int(c.athletes),moved:int(c.moved),max_rank_change:int(c.max_rank_change),max_score_change:num(c.max_score_change),top10_overlap:overlap};})}};}

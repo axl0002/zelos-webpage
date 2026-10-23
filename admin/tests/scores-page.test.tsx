@@ -47,3 +47,7 @@ it("shows an honest unavailable state instead of hardcoded stale scoring", async
   expect(screen.queryByRole("math")).toBeNull();
   expect(screen.queryByRole("table")).toBeNull();
 });
+it("renders generic rankings without revealing private algorithm math",async()=>{
+ get.mockResolvedValue({schema_version:2,mode:"scores_only",revision:30,updated_at:"2026-10-23T00:00:00Z"});
+ render(await Page());expect(screen.getByRole("heading",{name:"Your rankings"})).toBeTruthy();expect(screen.queryByRole("math")).toBeNull();expect(screen.queryByRole("table")).toBeNull();expect(screen.queryByText(/Formula v/)).toBeNull();expect(screen.queryByLabelText(/rank/i)).toBeNull();
+});

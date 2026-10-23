@@ -1,4 +1,4 @@
-import { parseScoreRules } from "./score-rules";
+import { parsePublicScoreRules } from "./score-rules";
 import { supabaseConfig } from "./supabase/config";
 
 // Only Server Components / server routes import this module. No session cookies,
@@ -17,5 +17,5 @@ export async function getPublicScoreRules() {
     signal: AbortSignal.timeout(6000),
   });
   if (!response.ok) throw new Error("Scoring rules unavailable");
-  return parseScoreRules(await response.json());
+  return parsePublicScoreRules(await response.json());
 }

@@ -5,7 +5,7 @@ export async function GET() {
   try {
     return NextResponse.json(await getPublicScoreRules(), {
       headers: {
-        "Cache-Control": "public, max-age=60",
+        "Cache-Control": "no-store",
         "X-Content-Type-Options": "nosniff",
       },
     });

@@ -20,7 +20,9 @@ afterEach(() => {
 it("fetches only the fixed read-only public RPC without session cookies or user input", async () => {
   const fetch = vi.fn(async () => ({ ok: true, json: async () => fixture }));
   vi.stubGlobal("fetch", fetch);
-  expect((await getPublicScoreRules()).weights).toHaveLength(
+  const rules=await getPublicScoreRules();
+  if(rules.schema_version!==1)throw Error("Expected baseline");
+  expect(rules.weights).toHaveLength(
     fixture.weights.length,
   );
   expect(fetch).toHaveBeenCalledWith(
@@ -113,4 +115,8 @@ it("fails closed when the replacement policy contradicts the published explanati
   const response = await GET();
   expect(response.status).toBe(503);
   expect(await response.json()).toEqual({error: "Scoring rules are temporarily unavailable."});
+});
+it("recognizes scores-only mode and strips private algorithm fields",async()=>{
+ vi.stubGlobal("fetch",vi.fn(async()=>({ok:true,json:async()=>({schema_version:2,mode:"scores_only",revision:30,updated_at:"2026-10-23T00:00:00Z",config:{alpha:.5},formula:"private formula",users:["private"]})})));
+ const response=await GET();expect(response.status).toBe(200);expect(await response.json()).toEqual({schema_version:2,mode:"scores_only",revision:30,updated_at:"2026-10-23T00:00:00Z"});
 });

@@ -1,25 +1,25 @@
 import type { Metadata } from "next";
 import { getPublicScoreRules } from "@/lib/score-rules.server";
-import type { ScoreRules } from "@/lib/score-rules";
+import type { PublicScoreRules } from "@/lib/score-rules";
 import ScoringGuide from "@/components/scoring-guide";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Scoring – Zelos",
   description:
-    "See the exact Zelos record-points formula, every progression weight, worked examples and an interactive points calculator.",
+    "Zelos exercise records and Push and Pull rankings.",
   alternates: { canonical: "https://zelos.club/scoring" },
   robots: { index: true, follow: true },
   openGraph: {
     title: "Scoring – Zelos",
     description:
-      "How Zelos calculates exercise-record points: the formula, progression weights and examples.",
+      "Zelos exercise records and rankings.",
     url: "https://zelos.club/scoring",
     type: "website",
   },
   icons: { icon: "/assets/z_app_icon.png", apple: "/assets/z_app_icon.png" },
 };
 export default async function ScoringPage() {
-  let rules: ScoreRules | null = null;
+  let rules: PublicScoreRules | null = null;
   try {
     rules = await getPublicScoreRules();
   } catch {
@@ -72,17 +72,18 @@ export default async function ScoringPage() {
                 })}
               </time>
               <br />
-              Formula v{rules.formula_version} ·{" "}
+              {rules.schema_version===1&&<>Formula v{rules.formula_version} · </>}
               <span>Rules revision {rules.revision}</span>
             </p>
           )}
           <p className="page-intro">
-            Zelos calculates points from your exercise records. This page
-            explains the formula, lists every progression weight, and shows
-            how points add up to your Push and Pull totals.
+            Zelos calculates your Push and Pull scores from eligible exercise records.
+            View your current scores and positions in the app.
           </p>
         </header>
-        {rules ? (
+        {rules?.schema_version===2 ? (
+          <section className="document-card"><h2>Your rankings</h2><p>Your eligible exercise records contribute to your Push and Pull scores. Open the app to see your current leaderboard positions.</p></section>
+        ) : rules ? (
           <ScoringGuide rules={rules} />
         ) : (
           <section className="document-card" role="status">
