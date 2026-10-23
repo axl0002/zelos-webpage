@@ -46,6 +46,12 @@ function approvalRequest() {
     }),
   });
 }
+function pageRequest(path: string, headers: Record<string, string> = {}) {
+  return new NextRequest(`http://localhost:3004${path}`, {headers: {
+    cookie: [...store.values].map(([name, value]) => `${name}=${value}`).join("; "),
+    ...headers,
+  }});
+}
 beforeEach(() => {
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", project);
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-public-key");
@@ -116,4 +122,95 @@ it("passes refreshed chunked cookies from middleware to approval and the next br
   store.values = originalCookies;
   expect((await decide(approvalRequest())).status).toBe(200);
   expect(refreshes).toBe(1);
+});
+
+it.each(["/admin", "/admin/", "/admin/ranked-uploads", "/admin/ranking-flags", "/admin/reports", "/admin/reports/legacy", "/admin/users", "/admin/safety", "/admin/scoring-lab", "/admin/unknown"])(
+  "redirects signed-out %s before returning HTML or allowing the workspace render", async path => {
+    const fetch = vi.fn(); vi.stubGlobal("fetch", fetch);
+    const response = await middleware(pageRequest(path));
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost:3004/admin/login");
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(response.headers.get("x-middleware-next")).toBeNull();
+    expect(await response.text()).not.toContain("Admin workspace");
+    expect(fetch).not.toHaveBeenCalled();
+  },
+);
+
+it("also gates signed-out RSC and prefetch requests", async () => {
+  vi.stubGlobal("fetch", vi.fn());
+  const response = await middleware(pageRequest("/admin/users?_rsc=test", {rsc: "1", "next-router-prefetch": "1"}));
+  expect(response.status).toBe(307);
+  expect(response.headers.get("x-middleware-next")).toBeNull();
+});
+
+it.each(["/admin/login", "/admin/login/", "/admin/auth/callback?code=test", "/admin/api/review", "/admin/api/review-counts", "/admin/api/auth/logout"])(
+  "keeps login/callback/API behavior reachable on %s", async path => {
+    vi.stubGlobal("fetch", vi.fn());
+    const response = await middleware(pageRequest(path));
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+  },
+);
+
+it("rejects a forged session cookie after verifying identity", async () => {
+  seed(session());
+  const fetch = vi.fn(async (input: string) => {
+    expect(input).toBe(`${project}/auth/v1/user`);
+    return Response.json({message: "Invalid JWT", code: "bad_jwt"}, {status: 401});
+  });
+  vi.stubGlobal("fetch", fetch);
+  const response = await middleware(pageRequest("/admin"));
+  expect(fetch).toHaveBeenCalledOnce();
+  expect(response.status).toBe(307);
+  expect(response.headers.get("x-middleware-next")).toBeNull();
+});
+
+it("preserves clearing chunked cookies when a revoked refresh token redirects to login", async () => {
+  seed(session(Math.floor(Date.now() / 1000) - 60, true));
+  const chunks = store.values.size;
+  vi.stubGlobal("fetch", vi.fn(async (input: string) => {
+    expect(input).toBe(`${project}/auth/v1/token?grant_type=refresh_token`);
+    return Response.json({message: "Refresh token not found", code: "refresh_token_not_found"}, {status: 400});
+  }));
+  const response = await middleware(pageRequest("/admin"));
+  expect(response.status).toBe(307);
+  const cleared = response.cookies.getAll().filter(cookie => cookie.name.startsWith(cookieName));
+  expect(cleared).toHaveLength(chunks);
+  for (const cookie of cleared) {
+    expect(cookie.maxAge).toBe(0);
+    expect(cookie.path).toBe("/admin");
+  }
+});
+
+it.each([429, 503])("withholds the workspace during Auth HTTP %i without clearing a valid session", async status => {
+  seed(session());
+  vi.stubGlobal("fetch", vi.fn(async () => Response.json({message: "Temporarily unavailable"}, {status})));
+  const request = pageRequest("/admin/reports");
+  const response = await middleware(request);
+  expect(response.status).toBe(503);
+  expect(response.headers.get("location")).toBeNull();
+  expect(response.headers.get("x-middleware-next")).toBeNull();
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
+  expect(response.cookies.getAll()).toHaveLength(0);
+  expect(request.cookies.getAll().length).toBeGreaterThan(0);
+  expect(await response.text()).not.toContain("Admin workspace");
+});
+
+it("continues authenticated page requests with verified identity and refreshed cookies", async () => {
+  seed(session(Math.floor(Date.now() / 1000) - 60, true));
+  const refreshed = session();
+  const fetch = vi.fn(async (input: string) => {
+    if (input === `${project}/auth/v1/token?grant_type=refresh_token`) return Response.json(refreshed);
+    expect(input).toBe(`${project}/auth/v1/user`);
+    return Response.json(user);
+  });
+  vi.stubGlobal("fetch", fetch);
+  const response = await middleware(pageRequest("/admin/ranked-uploads"));
+  expect(response.status).toBe(200);
+  expect(response.headers.get("x-middleware-next")).toBe("1");
+  expect(response.cookies.getAll().length).toBeGreaterThan(0);
+  expect(response.headers.get("cache-control")).toBe("private, no-store");
 });

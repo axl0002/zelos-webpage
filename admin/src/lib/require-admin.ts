@@ -1,19 +1,12 @@
 import { NextResponse } from "next/server";
-import { isAuthRetryableFetchError, type AuthError } from "@supabase/supabase-js";
+import { cache } from "react";
 import { serverClient } from "./supabase/server";
+import { temporaryAuthError } from "./supabase/auth-errors";
 import type { ReviewContext } from "./review-types";
 
-function temporaryAuthError(error: AuthError | null) {
-  return (
-    !!error &&
-    (isAuthRetryableFetchError(error) ||
-      error.status === 0 ||
-      error.status === 429 ||
-      (error.status !== undefined && error.status >= 500))
-  );
-}
-
-export async function requireAdmin() {
+// Deduplicate layout/page verification within one server render. React's cache
+// is request-scoped; it never shares identities or admin context across users.
+export const requireAdmin = cache(async function requireAdmin() {
   const client = await serverClient();
   let result = await client.auth.getUser();
   // Only retry the read-only identity check, never an approval. A failed
@@ -57,4 +50,4 @@ export async function requireAdmin() {
       ),
     };
   return { client, user, context: data as ReviewContext };
-}
+});
