@@ -2,6 +2,8 @@
 import {beforeEach, expect, it, vi} from "vitest";
 import {NextRequest} from "next/server";
 import {rankedUpload, privatePreview} from "./fixtures/ranked-upload";
+import {rankedUploadReasons} from "../src/lib/ranked-uploads";
+import {rankingReasons} from "../src/lib/ranking-flags";
 const client = vi.hoisted(() => ({auth: {getUser: vi.fn()}, rpc: vi.fn(), functions: {invoke: vi.fn()}}));
 vi.mock("../src/lib/supabase/server", () => ({serverClient: async () => client}));
 import {GET} from "../src/app/admin/api/ranked-uploads/route";
@@ -19,6 +21,14 @@ beforeEach(() => {
   client.auth.getUser.mockResolvedValue({data: {user: {id: "admin"}}, error: null});
   client.rpc.mockImplementation(async name => ({data: name === "get_ranked_upload_reviews" ? [rankedUpload] : {}, error: null}));
   client.functions.invoke.mockResolvedValue({data: privatePreview, error: null});
+});
+it("shares user-flag categories and forwards timing rejections without unrelated rule choices", async () => {
+  for (const [code,label] of Object.entries(rankingReasons)) expect(rankedUploadReasons[code as keyof typeof rankedUploadReasons]).toBe(label);
+  for (const reason_code of ["incorrect_start_frame", "incorrect_end_frame", "incorrect_hold_frames"]) {
+    expect((await decide(request({...decision, reason_code, rule_ids: []}))).status).toBe(200);
+    expect(client.rpc).toHaveBeenLastCalledWith("resolve_ranked_upload_review", {...decision, reason_code, rule_ids: []});
+    expect((await decide(request({...decision, reason_code}))).status).toBe(400);
+  }
 });
 it("requires admin identity for all private queue operations", async () => {
   client.auth.getUser.mockResolvedValue({data: {user: null}, error: null});

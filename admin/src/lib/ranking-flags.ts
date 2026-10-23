@@ -1,4 +1,5 @@
 import {parseRuleIds, type ExerciseRule} from "./exercise-rules";
+import {rankedReviewReasons} from "./ranked-review-reasons";
 export type RankingFlag = {
   id: string; post_id: string; reason: string; details: string;
   corrected_value: number | null; reported_value: number | null;
@@ -9,15 +10,7 @@ export type RankingFlag = {
   reported_hold_start_ms?: number | null; reported_hold_end_ms?: number | null;
   hold_timing?: {start_ms: number; end_ms: number; duration_ms: number} | null;
 };
-export const rankingReasons: Record<string, string> = {
-  incorrect_exercise: "Incorrect exercise or progression",
-  incorrect_measurement: "Incorrect hold time or rep count",
-  unacceptable_form: "Unacceptable form",
-  unacceptable_filming: "Filming rules not met",
-  incorrect_start_frame: "Incorrect hold start frame",
-  incorrect_end_frame: "Incorrect hold end frame",
-  incorrect_hold_frames: "Incorrect hold start and end frames",
-};
+export const rankingReasons: Record<string, string> = rankedReviewReasons;
 export function rankingFlagHoldTiming(item: RankingFlag) {
   if ((item.metric ?? item.board_metric) !== "seconds") return null;
   // The report snapshot is the evidence the athlete flagged. Do not replace it

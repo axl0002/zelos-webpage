@@ -1,9 +1,7 @@
 import {parseExerciseRules, parseRuleIds, type ExerciseRule} from "./exercise-rules";
+import {rankedReviewReasons} from "./ranked-review-reasons";
 export const rankedUploadReasons = {
-  incorrect_exercise: "Incorrect exercise or progression",
-  incorrect_measurement: "Incorrect hold time or rep count",
-  unacceptable_form: "Unacceptable form",
-  unacceptable_filming: "Filming rules not met",
+  ...rankedReviewReasons,
   other: "Other",
 } as const;
 export type RankedUploadReason = keyof typeof rankedUploadReasons;
@@ -94,6 +92,7 @@ export function parseRankedUploadDecision(value: unknown) {
     !text(note, 1000) || (d.watched_video !== undefined && typeof d.watched_video !== "boolean") ||
     (d.approve ? d.watched_video !== true || (d.reason_code !== null && d.reason_code !== undefined) || ruleIds.length > 0
       : !reason(d.reason_code))) return null;
+  if (ruleIds.length && !["unacceptable_form", "unacceptable_filming"].includes(d.reason_code as string)) return null;
   return { upload_id: d.upload_id, expected_revision: d.expected_revision,
     approve: d.approve, watched_video: d.watched_video === true,
     reason_code: d.approve ? null : d.reason_code as RankedUploadReason,

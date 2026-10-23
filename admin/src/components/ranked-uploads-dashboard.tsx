@@ -1,5 +1,6 @@
 "use client";
 import {notifyAdminReviewCountsChanged} from "@/lib/admin-review-counts";
+import {holdTimingReasons} from "@/lib/ranked-review-reasons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   rankedUploadReasons,
@@ -85,6 +86,7 @@ function RankedUploadDetail({item, onBusy, onSaved}: {
   const [opening, setOpening] = useState(false);
   const [watched, setWatched] = useState(false);
   const [reason, setReason] = useState<RankedUploadReason | "">(item.rejection_reason ?? "");
+  const [ruleIds, setRuleIds] = useState<string[]>(item.rejection_rules.map(rule => rule.id));
   const [confirmation, setConfirmation] = useState<"approve" | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -92,7 +94,9 @@ function RankedUploadDetail({item, onBusy, onSaved}: {
   const savingRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const awaiting = item.state === "rank_review";
-  const validRejection = !!reason;
+  const canRejectTiming = item.metric === "seconds" && !!item.hold_timing;
+  const validRejection = !!reason && (!holdTimingReasons.has(reason) || canRejectTiming);
+  const ruleType = reason === "unacceptable_form" ? "form" : reason === "unacceptable_filming" ? "filming" : null;
 
   const openPreview = useCallback(async () => {
     if (savingRef.current) return;
@@ -116,7 +120,7 @@ function RankedUploadDetail({item, onBusy, onSaved}: {
     try {
       await api("/decision", {upload_id: item.id, expected_revision: item.revision,
         approve: approved, watched_video: approved && watched,
-        reason_code: approved ? null : reason, review_note: "", rule_ids: []});
+        reason_code: approved ? null : reason, review_note: "", rule_ids: approved ? [] : ruleIds});
       onSaved(approved);
     } catch (cause) { setError((cause as Error).message); setConfirmation(null); }
     finally { savingRef.current = false; setSaving(false); onBusy(false); }
@@ -165,10 +169,22 @@ function RankedUploadDetail({item, onBusy, onSaved}: {
             onChange={event => {setWatched(event.target.checked); setConfirmation(null);}} />
             I watched the full video and checked the exercise, result and form against these rules.</label>
           <label htmlFor="ranked-upload-reason">Rejection reason</label>
-          <select id="ranked-upload-reason" value={reason} disabled={saving} onChange={event => {setReason(event.target.value as RankedUploadReason | ""); setConfirmation(null);}}>
+          <select id="ranked-upload-reason" value={reason} disabled={saving} onChange={event => {setReason(event.target.value as RankedUploadReason | ""); setRuleIds([]); setConfirmation(null);}}>
             <option value="">Choose a reason if rejecting</option>
-            {Object.entries(rankedUploadReasons).map(([code, label]) => <option key={code} value={code}>{label}</option>)}
+            {Object.entries(rankedUploadReasons).filter(([code]) => !holdTimingReasons.has(code) || canRejectTiming).map(([code, label]) => <option key={code} value={code}>{label}</option>)}
           </select>
+          {ruleType && <fieldset disabled={saving}>
+            <legend>Which {ruleType} rules were not met?</legend>
+            <p className="small muted">Select up to eight specific rules to include in the uploader’s rejection feedback.</p>
+            {g.rules.filter(rule => rule.type === ruleType).map(rule => <label key={rule.id} className="check">
+              <input type="checkbox" checked={ruleIds.includes(rule.id)}
+                disabled={!ruleIds.includes(rule.id) && ruleIds.length >= 8}
+                onChange={event => setRuleIds(ids => event.target.checked ? [...ids, rule.id] : ids.filter(id => id !== rule.id))} />
+              <span className="review-rule-copy">{rule.text}</span>
+            </label>)}
+            {!g.rules.some(rule => rule.type === ruleType) && <p className="small muted">No specific {ruleType} rules are configured for this progression.</p>}
+          </fieldset>}
+          {holdTimingReasons.has(reason) && <p className="small muted">Use Hold start and Hold end above to check the selected times. The uploader will be told which boundary is inaccurate.</p>}
           <p className="small muted">While this review is pending, the video stays private, earns no points, and the athlete’s current personal best stays in place.</p>
           <div className="decision-actions"><button className="button secondary" disabled={saving || !validRejection}
             onClick={() => void decide(false)}>Reject upload</button>

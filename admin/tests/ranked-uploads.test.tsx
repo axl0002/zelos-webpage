@@ -4,6 +4,41 @@ import {cleanup, fireEvent, render, screen, waitFor, within} from "@testing-libr
 import RankedUploadsDashboard from "../src/components/ranked-uploads-dashboard";
 import {rankedUpload, privatePreview} from "./fixtures/ranked-upload";
 afterEach(() => {cleanup(); vi.unstubAllGlobals();});
+it.each(["form", "filming"] as const)("sends the selected %s rule and preserves it after a failed rejection", async type => {
+  const fetch = mockApi([rankedUpload], true); render(<RankedUploadsDashboard />);
+  await screen.findByRole("heading", {name: rankedUpload.title});
+  fireEvent.change(screen.getByLabelText("Rejection reason"), {target: {value: `unacceptable_${type}`}});
+  const rule = rankedUpload.guidelines.rules.find(rule => rule.type === type)!;
+  const choice = screen.getByRole("checkbox", {name: rule.text});
+  fireEvent.click(choice);
+  fireEvent.click(screen.getByRole("button", {name: "Reject upload"}));
+  await screen.findByText("Connection failed. Try again.");
+  expect(choice).toHaveProperty("checked", true);
+  const body = JSON.parse(fetch.mock.calls.find(([path]) => path.endsWith("/decision"))![1].body as string);
+  expect(body).toMatchObject({approve: false, reason_code: `unacceptable_${type}`, rule_ids: [rule.id]});
+  fireEvent.change(screen.getByLabelText("Rejection reason"), {target: {value: "incorrect_exercise"}});
+  expect(screen.queryByRole("checkbox", {name: rule.text})).toBeNull();
+  fireEvent.click(screen.getByRole("button", {name: "Reject upload"}));
+  await waitFor(() => expect(fetch.mock.calls.filter(([path]) => path.endsWith("/decision"))).toHaveLength(2));
+  expect(JSON.parse(fetch.mock.calls.filter(([path]) => path.endsWith("/decision"))[1][1].body as string).rule_ids).toEqual([]);
+});
+it.each(["incorrect_start_frame", "incorrect_end_frame", "incorrect_hold_frames"])("rejects timed holds for %s without publishing or editing their times", async reason => {
+  const item = {...rankedUpload, hold_timing: {start_ms: 1500, end_ms: 13999, duration_ms: 12499}};
+  const fetch = mockApi([item]); render(<RankedUploadsDashboard />);
+  await screen.findByRole("heading", {name: item.title});
+  fireEvent.change(screen.getByLabelText("Rejection reason"), {target: {value: reason}});
+  expect(screen.getByText(/which boundary is inaccurate/)).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", {name: "Reject upload"}));
+  await screen.findByText("Rejected. The uploader will see your reason. The video remains private.");
+  expect(JSON.parse(fetch.mock.calls.find(([path]) => path.endsWith("/decision"))![1].body as string)).toMatchObject({approve: false, reason_code: reason, rule_ids: []});
+});
+it.each(["seconds", "reps"] as const)("does not offer selected hold-boundary reasons for an untimed %s clip", async metric => {
+  mockApi([{...rankedUpload, metric}]); render(<RankedUploadsDashboard />);
+  await screen.findByRole("heading", {name: rankedUpload.title});
+  expect(screen.queryByRole("option", {name: "Incorrect hold start frame"})).toBeNull();
+  expect(screen.queryByRole("option", {name: "Incorrect hold end frame"})).toBeNull();
+  expect(screen.queryByRole("option", {name: "Incorrect hold start and end frames"})).toBeNull();
+});
 function mockApi(items = [rankedUpload], fail = false) {
   const fetch = vi.fn(async (path: string, options: RequestInit) => ({
     ok: !path.endsWith("/decision") || !fail,
