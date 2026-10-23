@@ -4,6 +4,7 @@ import {labFormula,parseLabDetail,parseLabResults,type LabAlgorithm,type LabData
 import {LabError,labRequest} from "@/lib/scoring-lab-request";
 
 type Discipline="push"|"pull";
+type Gender="male"|"female";
 type Read=(path:string,signal:AbortSignal)=>Promise<unknown>;
 type ResultEntry={result?:LabResults;error?:string};
 const pageSize=50,n=(v:number)=>v.toLocaleString(undefined,{maximumFractionDigits:3}),delta=(v:number)=>(v>0?"+":"")+n(v);
@@ -31,7 +32,7 @@ function createReader():Read {
 }
 
 export default function ScoringLabComparison({run,algorithms,dataset}:{run:LabRun;algorithms:LabAlgorithm[];dataset?:LabDataset}){
- const [gender,setGender]=useState(""),[country,setCountry]=useState(""),[pages,setPages]=useState({push:0,pull:0});
+ const [gender,setGender]=useState<Gender>("male"),[country,setCountry]=useState(""),[pages,setPages]=useState({push:0,pull:0});
  const [focus,setFocus]=useState<{row:LabRow;algorithm:string}|null>(null);
  const focusOrigin=useRef<HTMLButtonElement|null>(null);
  const read=useMemo(createReader,[]),appliedCountry=country.length===2?country:"";
@@ -39,7 +40,7 @@ export default function ScoringLabComparison({run,algorithms,dataset}:{run:LabRu
  function filter(change:()=>void){setPages({push:0,pull:0});setFocus(null);change();}
  return <div className="lab-comparison">
   <div className="lab-grid">
-   <label>Gender cohort<select value={gender} onChange={e=>filter(()=>setGender(e.target.value))}><option value="">All recorded genders</option><option value="male">Male</option><option value="female">Female</option></select></label>
+   <div className="lab-gender-field"><span>Gender cohort</span><div className="lab-gender-toggle" role="group" aria-label="Gender cohort">{(["male","female"] as const).map(value=><button key={value} type="button" className={`button ${gender===value?"primary":"secondary"}`} aria-pressed={gender===value} onClick={()=>{if(gender!==value)filter(()=>setGender(value));}}>{value==="male"?"Male":"Female"}</button>)}</div></div>
    <label>Country filter (two-letter code)<input value={country} maxLength={2} onChange={e=>filter(()=>setCountry(e.target.value.toLowerCase().replace(/[^a-z]/g,"")))} placeholder="All countries"/></label>
   </div>
   <p className="small muted">Push and Pull Elo leaderboards for every algorithm in this frozen run are shown together. Scroll across the algorithm columns; select an athlete to compare their exact positions across every version, even outside the displayed page.</p>
@@ -52,7 +53,7 @@ export default function ScoringLabComparison({run,algorithms,dataset}:{run:LabRu
 }
 
 type Version={id:string;name:string;config:LabAlgorithm["config"]|null;is_baseline:boolean};
-function DisciplineLeaderboards({discipline,run,versions,gender,country,offset,read,selectedAthlete,onPage,onAthlete}:{discipline:Discipline;run:LabRun;versions:Version[];gender:string;country:string;offset:number;read:Read;selectedAthlete?:string;onPage:(offset:number)=>void;onAthlete:(row:LabRow,algorithm:string,trigger:HTMLButtonElement)=>void}){
+function DisciplineLeaderboards({discipline,run,versions,gender,country,offset,read,selectedAthlete,onPage,onAthlete}:{discipline:Discipline;run:LabRun;versions:Version[];gender:Gender;country:string;offset:number;read:Read;selectedAthlete?:string;onPage:(offset:number)=>void;onAthlete:(row:LabRow,algorithm:string,trigger:HTMLButtonElement)=>void}){
  const [refresh,setRefresh]=useState(0),[state,setState]=useState<{key:string;entries:Record<string,ResultEntry>}>({key:"",entries:{}});
  const ids=run.algorithm_ids.join(","),key=`${run.id}:${run.dataset_id}:${ids}:${discipline}:${gender}:${country}:${offset}:${refresh}`;
  useEffect(()=>{
@@ -66,7 +67,7 @@ function DisciplineLeaderboards({discipline,run,versions,gender,country,offset,r
    let entry:ResultEntry;
    try{
     const result=parseLabResults(await read("?"+new URLSearchParams({view:"results",run:run.id,algorithm:id,discipline,gender,country,offset:String(offset)}),controller.signal));
-    if(result.run_id!==run.id||result.dataset_id!==run.dataset_id||result.algorithm_id!==id||result.rows.some(r=>r.discipline!==discipline))throw Error("Mismatched comparison response");
+    if(result.run_id!==run.id||result.dataset_id!==run.dataset_id||result.algorithm_id!==id||result.rows.some(r=>r.discipline!==discipline||r.gender!==gender))throw Error("Mismatched comparison response");
     entry={result};
    }catch(error){entry={error:message(error,"Could not load this leaderboard. Retry this discipline.")};}
    if(current&&!controller.signal.aborted)setState(s=>s.key===key?{key,entries:{...s.entries,[id]:entry}}:s);
@@ -76,7 +77,7 @@ function DisciplineLeaderboards({discipline,run,versions,gender,country,offset,r
  const entries=state.key===key?state.entries:{},loading=run.algorithm_ids.some(id=>!entries[id]),failed=run.algorithm_ids.some(id=>!!entries[id]?.error);
  const maximum=Math.max(0,...run.algorithm_ids.map(id=>entries[id]?.result?.total??0));
  return <section className="lab-discipline" aria-label={`${title(discipline)} Elo leaderboards`}>
-  <div className="lab-comparison-heading"><div><h3>{title(discipline)} Elo leaderboards</h3><p className="small muted">All {versions.length} algorithms · same snapshot and filters</p></div><button className="button secondary" disabled={loading} onClick={()=>setRefresh(v=>v+1)}>{failed?`Retry ${title(discipline)} leaderboards`:`Refresh ${title(discipline)} leaderboards`}</button></div>
+  <div className="lab-comparison-heading"><div><h3>{title(discipline)} Elo leaderboards</h3><p className="small muted">{gender==="male"?"Male":"Female"} · all {versions.length} algorithms · same snapshot and filters</p></div><button className="button secondary" disabled={loading} onClick={()=>setRefresh(v=>v+1)}>{failed?`Retry ${title(discipline)} leaderboards`:`Refresh ${title(discipline)} leaderboards`}</button></div>
   {loading&&<p role="status">Loading {title(discipline)} leaderboards…</p>}
   <div className="lab-leaderboard-scroll" tabIndex={0} role="region" aria-label={`${title(discipline)} algorithm columns`}>
    <div className="lab-leaderboard-columns">{versions.map(algorithm=>{

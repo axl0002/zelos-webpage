@@ -7,7 +7,7 @@ import {algorithms,algoId,athleteId,baselineId,dataset,detail,results,row,run,ru
 const ok=(value:unknown)=>({ok:true,json:async()=>value});
 const uuid=(v:number)=>`00000000-0000-4000-8000-${String(v).padStart(12,"0")}`;
 function query(url:string){return new URL(url,"https://test.local").searchParams;}
-function response(url:string,overrides:Record<string,unknown>={}){const q=query(url);return {...results,algorithm_id:q.get("algorithm"),run_id:q.get("run"),rows:[{...row,discipline:q.get("discipline")}],...overrides};}
+function response(url:string,overrides:Record<string,unknown>={}){const q=query(url);return {...results,algorithm_id:q.get("algorithm"),run_id:q.get("run"),rows:[{...row,discipline:q.get("discipline"),gender:q.get("gender")??"male"}],...overrides};}
 function detailResponse(url:string,overrides:Record<string,unknown>={}){const q=query(url);return {...detail,athlete_id:q.get("athlete"),discipline:q.get("discipline"),...overrides};}
 function setup(fetch=vi.fn(async(url:string)=>ok(query(url).get("view")==="detail"?detailResponse(url):response(url)))){vi.stubGlobal("fetch",fetch);return fetch;}
 function page(){return render(<ScoringLabComparison run={run} algorithms={algorithms as never} dataset={dataset}/>);}
@@ -24,8 +24,8 @@ it("shows both discipline leaderboards for every run algorithm without an algori
  const calls=fetch.mock.calls.map(([url])=>query(url));
  expect(new Set(calls.map(q=>q.get("algorithm")))).toEqual(new Set(run.algorithm_ids));
  expect(new Set(calls.map(q=>q.get("discipline")))).toEqual(new Set(["push","pull"]));
- for(const q of calls){expect(q.get("run")).toBe(runId);expect(q.get("offset")).toBe("0");}
- expect(screen.getAllByText("male · GB")).toHaveLength(4);
+ for(const q of calls){expect(q.get("run")).toBe(runId);expect(q.get("offset")).toBe("0");expect(q.get("gender")).toBe("male");}
+ expect(screen.getAllByText("male · GB")).toHaveLength(4);expect(screen.getByRole("button",{name:"Male",exact:true}).getAttribute("aria-pressed")).toBe("true");expect(screen.getByRole("button",{name:"Female",exact:true}).getAttribute("aria-pressed")).toBe("false");expect(screen.queryByText("All recorded genders")).toBeNull();
 });
 
 it("bounds all Push/Pull reads at four concurrent requests even with nine versions",async()=>{
@@ -56,9 +56,9 @@ it("keeps pagination independent per discipline and compares ranks outside the d
 });
 
 it("applies the same gender and country filters to every board while preserving supplied tied ranks",async()=>{
- const fetch=setup(vi.fn(async(url:string)=>ok(response(url,{rows:[{...row,discipline:query(url).get("discipline"),gender:"female",rank:1},{...row,athlete_id:uuid(20),username:"other",discipline:query(url).get("discipline"),gender:"male",rank:1}]}))));page();await loaded();
+ const fetch=setup(vi.fn(async(url:string)=>ok(response(url,{rows:[{...row,discipline:query(url).get("discipline"),gender:query(url).get("gender"),rank:1},{...row,athlete_id:uuid(20),username:"other",discipline:query(url).get("discipline"),gender:query(url).get("gender"),rank:1}]}))));page();await loaded();
  expect(within(board()).getAllByText("#1")).toHaveLength(2);
- fireEvent.change(screen.getByLabelText("Gender cohort"),{target:{value:"female"}});
+ fireEvent.click(screen.getByRole("button",{name:"Female",exact:true}));
  await waitFor(()=>expect(fetch.mock.calls.filter(([url])=>query(url).get("gender")==="female")).toHaveLength(4));
  const before=fetch.mock.calls.length;
  fireEvent.change(screen.getByLabelText("Country filter (two-letter code)"),{target:{value:"g"}});
@@ -66,6 +66,12 @@ it("applies the same gender and country filters to every board while preserving 
  fireEvent.change(screen.getByLabelText("Country filter (two-letter code)"),{target:{value:"gb"}});
  await waitFor(()=>expect(fetch.mock.calls.filter(([url])=>query(url).get("country")==="gb")).toHaveLength(4));
  for(const[url]of fetch.mock.calls.slice(-4)){expect(query(url).get("gender")).toBe("female");expect(query(url).get("offset")).toBe("0");}
+ await waitFor(()=>expect(screen.getAllByText("female · GB")).toHaveLength(8));
+ expect(screen.queryByText("male · GB")).toBeNull();
+ fireEvent.click(screen.getByRole("button",{name:"Male",exact:true}));
+ await waitFor(()=>expect(screen.getAllByText("male · GB")).toHaveLength(8));
+ expect(screen.queryByText("female · GB")).toBeNull();
+ for(const[url]of fetch.mock.calls.slice(-4)){expect(query(url).get("gender")).toBe("male");expect(query(url).get("country")).toBe("gb");}
 });
 
 it("retains other boards when a single version fails and retries only that discipline",async()=>{
@@ -79,10 +85,10 @@ it("retains other boards when a single version fails and retries only that disci
  expect(screen.getAllByRole("table",{name:/Elo leaderboard/})).toHaveLength(4);
 });
 
-it.each(["run","dataset","algorithm","discipline"])("refuses mismatched %s response data",async mismatch=>{
+it.each(["run","dataset","algorithm","discipline","gender"])("refuses mismatched %s response data",async mismatch=>{
  setup(vi.fn(async(url:string)=>{
   const q=query(url),invalid=q.get("algorithm")===algoId&&q.get("discipline")==="push";
-  const value=response(url);if(invalid){if(mismatch==="discipline")value.rows=[{...row,username:"wrong_result",discipline:"pull"}];else{(value as Record<string,unknown>)[mismatch+"_id"]=uuid(99);value.rows=[{...row,username:"wrong_result"}];}}
+  const value=response(url);if(invalid){if(mismatch==="gender")value.rows=[{...row,username:"wrong_result",discipline:"push",gender:"female"}];else if(mismatch==="discipline")value.rows=[{...row,username:"wrong_result",discipline:"pull"}];else{(value as Record<string,unknown>)[mismatch+"_id"]=uuid(99);value.rows=[{...row,username:"wrong_result"}];}}
   return ok(value);
  }));page();await loaded();await screen.findByRole("alert");expect(screen.queryByText("@wrong_result")).toBeNull();
  expect(screen.getAllByRole("table",{name:/Elo leaderboard/})).toHaveLength(3);
@@ -111,7 +117,7 @@ it("clears athlete detail on filter and page changes and aborts all reads on unm
  expect(pending.every(signal=>signal.aborted)).toBe(true);expect(screen.queryByRole("region",{name:"Athlete position comparison"})).toBeNull();
  await waitFor(()=>expect(screen.getByRole("button",{name:"Next Push page"})).toHaveProperty("disabled",false));
  fireEvent.click(within(board()).getByRole("button",{name:"Compare test_athlete push across algorithms"}));await waitFor(()=>expect(pending).toHaveLength(4));
- fireEvent.change(screen.getByLabelText("Gender cohort"),{target:{value:"male"}});expect(pending.every(signal=>signal.aborted)).toBe(true);
+ fireEvent.click(screen.getByRole("button",{name:"Female",exact:true}));expect(pending.every(signal=>signal.aborted)).toBe(true);
  await loaded();fireEvent.click(within(board()).getByRole("button",{name:"Compare test_athlete push across algorithms"}));await waitFor(()=>expect(pending).toHaveLength(6));
  view.unmount();expect(pending.every(signal=>signal.aborted)).toBe(true);
 });

@@ -852,6 +852,9 @@ textarea {
 .scoring-lab details > summary { cursor:pointer; font-weight:550; }
 .scoring-lab .lab-description { max-width:80ch; color:var(--muted); }
 .scoring-lab .lab-comparison, .scoring-lab .lab-discipline { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; min-width:0; }
+.scoring-lab .lab-gender-field { display:grid; align-content:start; gap:7px; font-size:13px; font-weight:550; }
+.scoring-lab .lab-gender-toggle { display:inline-flex; gap:4px; padding:4px; border:1px solid var(--line); border-radius:10px; background:var(--soft); justify-self:start; }
+.scoring-lab .lab-gender-toggle .button { min-width:88px; border:0; }
 .scoring-lab .lab-discipline { padding-top:18px; border-top:1px solid var(--line); }
 .scoring-lab .lab-comparison-heading { display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:12px; }
 .scoring-lab .lab-comparison-heading h3 { margin:0 0 6px; }
