@@ -189,3 +189,9 @@ it("renders a bounded static mock preview for desktop/mobile layout review",asyn
  expect(view.container.querySelectorAll(".lab-leaderboard-scroll")).toHaveLength(2);
  expect(view.container.querySelectorAll(".lab-leaderboard-card")).toHaveLength(16);
 });
+it("shows the frozen active baseline configuration after an algorithm switch",async()=>{
+ setup();const frozen={...algorithms[1].config,discount:.85};
+ render(<ScoringLabComparison run={{...run,metadata:{algorithm_configs:{[baselineId]:frozen}}}} algorithms={algorithms as never} dataset={dataset}/>);await loaded();
+ expect(screen.getByText(/captured production aggregation and discount/,{selector:"pre"}).textContent).toContain('"discount": 0.85');
+ expect(screen.getByText(/captured production aggregation and discount/,{selector:"pre"}).textContent).toContain('"alpha": 0.5');
+});

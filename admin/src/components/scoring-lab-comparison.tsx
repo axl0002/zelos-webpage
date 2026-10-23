@@ -1,6 +1,6 @@
 "use client";
 import {useEffect,useMemo,useRef,useState} from "react";
-import {labFormula,parseLabDetail,parseLabResults,type LabAlgorithm,type LabDataset,type LabDetail,type LabResults,type LabRow,type LabRun} from "@/lib/scoring-lab";
+import {labFormula,parseLabConfig,parseLabDetail,parseLabResults,type LabAlgorithm,type LabDataset,type LabDetail,type LabResults,type LabRow,type LabRun} from "@/lib/scoring-lab";
 import {LabError,labRequest} from "@/lib/scoring-lab-request";
 
 type Discipline="push"|"pull";
@@ -36,7 +36,12 @@ export default function ScoringLabComparison({run,algorithms,dataset}:{run:LabRu
  const [focus,setFocus]=useState<{row:LabRow;algorithm:string}|null>(null);
  const focusOrigin=useRef<HTMLButtonElement|null>(null);
  const read=useMemo(createReader,[]),appliedCountry=country.length===2?country:"";
- const versions=run.algorithm_ids.map(id=>algorithms.find(a=>a.id===id)??{id,name:"Unavailable algorithm version",config:null,is_baseline:false});
+ const versions=run.algorithm_ids.map(id=>{
+  const a=algorithms.find(a=>a.id===id)??{id,name:"Unavailable algorithm version",config:null,is_baseline:false};
+  const saved=run.metadata.algorithm_configs;
+  if(saved&&typeof saved==="object"&&!Array.isArray(saved)&&id in saved){try{return{...a,config:parseLabConfig((saved as Record<string,unknown>)[id])};}catch{return{...a,config:null};}}
+  return a;
+ });
  function filter(change:()=>void){setPages({push:0,pull:0});setFocus(null);change();}
  return <div className="lab-comparison">
   <div className="lab-grid">
