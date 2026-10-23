@@ -16,7 +16,7 @@ export const adminDestinations = [
 ] as const;
 
 const countKinds: Record<string, keyof AdminReviewCounts> = {
-  "/admin/ranked-uploads": "ranked_uploads", "/admin/ranking-flags": "ranking_flags", "/admin/reports": "user_reports",
+  "/admin/ranked-uploads": "ranked_uploads", "/admin/ranking-flags": "ranking_flags", "/admin/reports": "current_reports",
 };
 
 /** One persistent navigation shell for every admin workspace route/state. */

@@ -21,7 +21,7 @@ it("distinguishes loading, nonzero backlog and quiet zero without changing acces
  render(<AdminWorkspace><p>Queue</p></AdminWorkspace>);
  expect(badge("User reports").textContent).toContain("…");
  await act(async()=>resolve(response({...counts,ranking_flags:0})));
- expect(badge("User reports").getAttribute("title")).toBe("256 unprocessed reports: 51 current, 205 legacy");
+ expect(badge("User reports").getAttribute("title")).toBe("51 unprocessed current reports");
  expect(badge("Ranked uploads").textContent).toContain("102");
  expect(badge("Ranking flags").className).toContain("quiet");
  expect(screen.getByRole("link",{name:"Ranking flags"})).toBeTruthy();
@@ -96,5 +96,5 @@ it("exposes legacy backlog beside the current reports queue and refreshes both a
  fireEvent.click(screen.getByRole("button",{name:"Dismiss reports"}));
  fireEvent.click(screen.getByRole("button",{name:"Confirm decision"}));
  await waitFor(()=>expect(countReads).toBe(2));
- expect(badge("User reports").getAttribute("title")).toBe("255 unprocessed reports: 50 current, 205 legacy");
+ expect(badge("User reports").getAttribute("title")).toBe("50 unprocessed current reports");
 });
