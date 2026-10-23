@@ -1,5 +1,9 @@
 const { PHASE_DEVELOPMENT_SERVER } = require("next/constants");
 const { validatePublicEnvironment } = require("./public-env.cjs");
+const {readFileSync} = require("node:fs");
+const {join} = require("node:path");
+const {createHash} = require("node:crypto");
+const {baselineHeaders, staticContentSecurityPolicy} = require("./security-policy.cjs");
 
 /** @param {string} phase @returns {import("next").NextConfig} */
 module.exports = (phase) => {
@@ -43,7 +47,15 @@ module.exports = (phase) => {
       ];
     },
     async headers() {
+      const pages = ["index", "about", "support", "stats", "equipment", "legal/privacy", "legal/terms"];
+      const hashes = [...new Set(pages.flatMap(page => [...readFileSync(join(__dirname, "public", page + ".html"), "utf8")
+        .matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)]
+        .filter(match => match[1].trim())
+        .map(match => `'sha256-${createHash("sha256").update(match[1]).digest("base64")}'`)))];
       return [
+        {source: "/:path*", headers: baselineHeaders},
+        ...["/", "/index.html", "/about", "/about.html", "/support", "/support.html", "/stats", "/stats.html", "/equipment", "/equipment.html", "/privacy", "/terms", "/legal/privacy", "/legal/privacy.html", "/legal/terms", "/legal/terms.html"]
+          .map(source => ({source, headers: [{key: "Content-Security-Policy", value: staticContentSecurityPolicy(hashes)}]})),
         {
           source: "/.well-known/:path*",
           headers: [

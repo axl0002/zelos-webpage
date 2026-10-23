@@ -214,3 +214,29 @@ it("continues authenticated page requests with verified identity and refreshed c
   expect(response.cookies.getAll().length).toBeGreaterThan(0);
   expect(response.headers.get("cache-control")).toBe("private, no-store");
 });
+
+it.each(["/scoring", "/profile/11111111-1111-4111-8111-111111111111"])("protects public dynamic scripts at %s without any session lookup", async path => {
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "");
+  const fetch = vi.fn(); vi.stubGlobal("fetch", fetch);
+  const response = await middleware(pageRequest(path));
+  expect(response.status).toBe(200);
+  expect(response.headers.get("x-middleware-next")).toBe("1");
+  expect(response.headers.get("content-security-policy")).toContain("'strict-dynamic'");
+  expect(fetch).not.toHaveBeenCalled();
+});
+
+it("generates a fresh script nonce and overwrites attacker-supplied request policy headers", async () => {
+  const supplied = {"x-nonce": "attacker-nonce", "content-security-policy": "script-src * 'unsafe-inline'"};
+  const first = await middleware(pageRequest("/admin/login", supplied));
+  const second = await middleware(pageRequest("/admin/login", supplied));
+  const policy = first.headers.get("content-security-policy")!;
+  const nonce = policy.match(/'nonce-([^']+)'/)?.[1];
+  expect(nonce).toBeTruthy();
+  expect(first.headers.get("x-middleware-request-x-nonce")).toBe(nonce);
+  expect(first.headers.get("x-middleware-request-content-security-policy")).toBe(policy);
+  expect(policy).not.toContain("attacker");
+  expect(policy).not.toContain("script-src *");
+  expect(policy.split(";").find(d => d.trim().startsWith("img-src"))).toContain("https://*.r2.cloudflarestorage.com");
+  expect(policy.split(";").find(d => d.trim().startsWith("script-src"))).not.toContain("unsafe-inline");
+  expect(policy).not.toBe(second.headers.get("content-security-policy"));
+});

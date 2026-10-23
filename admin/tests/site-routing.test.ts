@@ -81,7 +81,8 @@ it.each(pages)("keeps %s and its linked local pages/assets public and available"
       } else {
         expect(statSync(join(publicDirectory, decodeURIComponent(asset))).isFile(), target.href).toBe(true);
       }
-      expect(unstable_doesMiddlewareMatch({ config: middlewareConfig, url: target.href })).toBe(false);
+      // The public scoring page gets a script nonce, without session handling.
+      expect(unstable_doesMiddlewareMatch({ config: middlewareConfig, url: target.href })).toBe(asset === "/scoring");
     }
     if (["/", "/index.html", "/stats", "/stats.html", "/about", "/about.html", "/equipment", "/equipment.html"].includes(pathname)) {
       const shop = [...document.querySelectorAll("a")].find((a) => a.textContent?.trim() === "Shop");

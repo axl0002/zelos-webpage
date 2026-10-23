@@ -42,7 +42,7 @@ it("fetches only the fixed read-only public RPC without session cookies or user 
         config,
         url: `https://zelos.club${path}`,
       }),
-    ).toBe(false);
+    ).toBe(path === "/scoring"); // Nonce headers only; no public session lookup.
 });
 it("returns only validated public JSON and no credential fields", async () => {
   vi.stubGlobal(

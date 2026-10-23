@@ -123,21 +123,21 @@
             if (data) {
                 if (typeof data.userCount !== "number") {
                     totalUserCountEl.textContent = "—";
-                    updatedEl.innerHTML = '<span class="error">No data found at meta/appStats</span>';
+                    updatedEl.textContent = 'Statistics are temporarily unavailable.';
                 } else {
                     totalUserCountEl.textContent = data.userCount.toLocaleString();
                 }
 
                 if (typeof data.totalSkillCount !== "number") {
                     totalSkillCountEl.textContent = "—";
-                    updatedEl.innerHTML = '<span class="error">No data found at meta/appStats</span>';
+                    updatedEl.textContent = 'Statistics are temporarily unavailable.';
                 } else {
                     totalSkillCountEl.textContent = data.totalSkillCount.toLocaleString();
                 }
 
                 if (typeof data.totalVoteCount !== "number") {
                     totalVoteCountEl.textContent = "—";
-                    updatedEl.innerHTML = '<span class="error">No data found at meta/appStats</span>';
+                    updatedEl.textContent = 'Statistics are temporarily unavailable.';
                 } else {
                     totalVoteCountEl.textContent = data.totalVoteCount.toLocaleString();
                 }
@@ -148,8 +148,9 @@
             console.error(err);
             totalUserCountEl.textContent = "—";
             totalSkillCountEl.textContent = "—";
-            updatedEl.innerHTML = `<span class="error">${err.code || "Error"}: ${err.message}</span>`;
-            noteEl.textContent = "If App Check is enforced, ensure this domain is allowed and App Check is initialized before Firestore.";
+            totalVoteCountEl.textContent = "—";
+            updatedEl.textContent = 'Statistics are temporarily unavailable. Please try again.';
+            noteEl.textContent = "";
         });
     </script>
 </body>
