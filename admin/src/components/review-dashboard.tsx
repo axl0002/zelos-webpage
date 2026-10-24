@@ -186,7 +186,7 @@ export default function ReviewDashboard({
             {scanning ? "Scanning…" : "Scan training clips"}
           </button>
         </header>
-        <p className="small muted">Known difficulty and results first: hardest progression, then highest reps or hold time within each progression. Imported claims still need review; missing information follows.</p>
+        <p className="small muted">Hardest known progression first, then highest reps or hold time within each progression. Missing results follow measured results in that progression; unknown progressions follow known ones. Imported claims still need review.</p>
         {scanning && (
           <p role="status" className="notice">
             {scanProgress ||
