@@ -71,6 +71,10 @@ export function rpcFailure(error: { code?: string; message?: string }, operation
       "This new hold upload is more than 6 seconds longer than the claim. Ask the uploader to trim it in the app and submit a new clip.",
     video_review_required: "Confirm that you watched and checked the clip.",
     invalid_rule_choices: "These rules changed. Refresh the queue and select the rules again.",
+    invalid_measurement_correction: "Enter a valid corrected result and review note.",
+    invalid_hold_timing: "Choose start and end frames inside the clip, covering at least one whole second.",
+    measurement_unchanged: "Choose a different result or different hold frames.",
+    correction_not_applicable: "This flag needs a review decision rather than a measurement correction.",
     invalid_decision: "Check the review details and try again.",
     assisted_exercise_not_eligible:
       "This clip mentions assistance and is not eligible for ranking. Scan the queue to apply the automatic rejection.",

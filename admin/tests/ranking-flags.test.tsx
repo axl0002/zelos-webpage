@@ -31,7 +31,7 @@ for (const changedUrl of [false, true]) {
 it("requires fresh review after refreshing evidence while preserving edited notes",async()=>{
  vi.stubGlobal("fetch",vi.fn(async()=>({ok:true,json:async()=>[{...item}]})));
  render(<RankingFlagsDashboard/>);await screen.findByText("Keep arms straight.");
- const note=screen.getByLabelText("Reason shown to the uploader if rejected");
+ const note=screen.getByLabelText("Review note shown to the uploader");
  fireEvent.change(note,{target:{value:"My reviewed explanation"}});
  fireEvent.click(screen.getByLabelText("I watched the clip and checked the reported issue"));
  fireEvent.click(screen.getByRole("button",{name:"Reject ranking"}));
@@ -40,14 +40,14 @@ it("requires fresh review after refreshing evidence while preserving edited note
  await waitFor(()=>expect(screen.queryByRole("dialog")).toBeNull());
  expect((screen.getByLabelText("I watched the clip and checked the reported issue") as HTMLInputElement).checked).toBe(false);
  expect((screen.getByRole("button",{name:"Reject ranking"}) as HTMLButtonElement).disabled).toBe(true);
- expect((screen.getByLabelText("Reason shown to the uploader if rejected") as HTMLTextAreaElement).value).toBe("My reviewed explanation");
+ expect((screen.getByLabelText("Review note shown to the uploader") as HTMLTextAreaElement).value).toBe("My reviewed explanation");
 });
 it("requires review, explanation and confirmation before rejection",async()=>{
  const fetch=vi.fn(async(_input:string,options:RequestInit)=>({ok:true,json:async()=>options.method==="POST"?{ok:true}:[item]}));
  vi.stubGlobal("fetch",fetch);render(<RankingFlagsDashboard/>);await screen.findByText("Keep arms straight.");
  const reject=screen.getByRole("button",{name:"Reject ranking"}) as HTMLButtonElement;
  expect(reject.disabled).toBe(true);fireEvent.click(screen.getByLabelText("I watched the clip and checked the reported issue"));expect(reject.disabled).toBe(false);
- const note=screen.getByLabelText("Reason shown to the uploader if rejected");
+ const note=screen.getByLabelText("Review note shown to the uploader");
  fireEvent.change(note,{target:{value:""}});expect(reject.disabled).toBe(false);
  fireEvent.click(screen.getByLabelText("Form: Keep arms straight."));expect(reject.disabled).toBe(true);
  fireEvent.click(screen.getByLabelText("Form: Keep arms straight."));
@@ -60,13 +60,13 @@ it("requires review, explanation and confirmation before rejection",async()=>{
 it("retains edited notes after failure and resets review when changing reports",async()=>{
  vi.stubGlobal("fetch",vi.fn(async(_i:string,o:RequestInit)=>({ok:o.method!=="POST",json:async()=>o.method==="POST"?{error:"Connection failed"}:[item,{...item,id:"eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",username:"other",details:"Incorrect rep count"}]})));
  render(<RankingFlagsDashboard/>);await screen.findByText("Keep arms straight.");
- fireEvent.change(screen.getByLabelText("Reason shown to the uploader if rejected"),{target:{value:"Reviewed note"}});
+ fireEvent.change(screen.getByLabelText("Review note shown to the uploader"),{target:{value:"Reviewed note"}});
  fireEvent.click(screen.getByLabelText("I watched the clip and checked the reported issue"));fireEvent.click(screen.getByRole("button",{name:"Reject ranking"}));fireEvent.click(screen.getByRole("button",{name:"Confirm decision"}));
  await screen.findByText("Connection failed");
- expect((screen.getByLabelText("Reason shown to the uploader if rejected") as HTMLTextAreaElement).value).toBe("Reviewed note");
+ expect((screen.getByLabelText("Review note shown to the uploader") as HTMLTextAreaElement).value).toBe("Reviewed note");
  fireEvent.click(screen.getByRole("button",{name:/other · Full Planche/}));
  expect((screen.getByLabelText("I watched the clip and checked the reported issue") as HTMLInputElement).checked).toBe(false);
- expect((screen.getByLabelText("Reason shown to the uploader if rejected") as HTMLTextAreaElement).value).toBe("Incorrect rep count");
+ expect((screen.getByLabelText("Review note shown to the uploader") as HTMLTextAreaElement).value).toBe("Incorrect rep count");
 });
 it("shows correction and blocks untrusted media",async()=>{
  vi.stubGlobal("fetch",vi.fn(async()=>({ok:true,json:async()=>[{...item,corrected_value:8.125,primary_url:"https://untrusted.test/video"}]})));
@@ -153,7 +153,7 @@ it("shows reporter usernames separately from the reported athlete and handles un
  await screen.findByText("Keep arms straight.");
  expect(screen.getAllByText("Reported by: @flag_author")).toHaveLength(2);
  expect(screen.getAllByText("Reported by: Username unavailable")).toHaveLength(1);
- expect(screen.getByText("athlete · Listed result: 10 seconds")).toBeTruthy();
+ expect(screen.getByText("athlete · Current result: 10 seconds")).toBeTruthy();
  fireEvent.click(screen.getByRole("button",{name:/Username unavailable/}));
  expect(screen.getAllByText("Reported by: Username unavailable")).toHaveLength(2);
  expect(screen.queryByText("Reported by: @athlete")).toBeNull();

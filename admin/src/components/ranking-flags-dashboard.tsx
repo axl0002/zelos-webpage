@@ -1,4 +1,5 @@
 "use client";
+import RankingCorrectionEditor from "./ranking-correction-editor";
 import {notifyAdminReviewCountsChanged} from "@/lib/admin-review-counts";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { mediaUrls } from "@/lib/review-media";
@@ -52,12 +53,12 @@ export default function RankingFlagsDashboard() {
       </section>
         {current ? <FlagReview key={current.id} item={current} onBusy={setBusy} onSaved={confirmed => {
           setQueue(old => old.filter(item => item.id !== current.id)); setSelected(null);
-          setNotice(confirmed ? "Ranking rejected. The uploader has been notified with your reason." : "Flag dismissed. The ranking is unchanged.");
+          setNotice(confirmed === "corrected" ? "Ranking corrected. The video stays published and the uploader has been notified." : confirmed ? "Ranking rejected. The uploader has been notified with your reason." : "Flag dismissed. The ranking is unchanged.");
         }} /> : <section className="review-panel"><p className="empty">Select a ranking flag to review its evidence.</p></section>}
       </div>
     </div>;
 }
-function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confirmed: boolean) => void; onBusy: (busy: boolean) => void}) {
+function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confirmed: boolean|"corrected") => void; onBusy: (busy: boolean) => void}) {
   const [note, setNote] = useState(item.details || rankingReasons[item.reason] || "");
   const ruleType = item.reason === "unacceptable_form" ? "form" : item.reason === "unacceptable_filming" ? "filming" : null;
   const frameFlag = ["incorrect_start_frame", "incorrect_end_frame", "incorrect_hold_frames"].includes(item.reason);
@@ -93,7 +94,8 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
   }
   return <section className="review-panel ranking-flag-detail"><h2>{item.board_name}</h2>
     <p>Reported by: {item.reporter_username ? `@${item.reporter_username}` : "Username unavailable"}</p>
-    <p>{item.username} · Listed result: {item.reported_value ?? item.claimed_value} {item.metric ?? item.board_metric}</p>
+    <p>{item.username} · Current result: {item.claimed_value} {item.metric ?? item.board_metric}</p>
+    {item.reported_value!=null&&item.reported_value!==item.claimed_value&&<p>Result when reported: {item.reported_value} {item.metric??item.board_metric}. This measurement has since changed.</p>}
     {source < urls.length ? <video ref={videoRef} key={urls[source]} controls playsInline preload="metadata" src={urls[source]}
       aria-label="Reported clip" onError={() => { setSource(old => old + 1); setWatched(false); setConfirm(null); }} />
       : <p role="alert">Video unavailable. Refresh the queue before reviewing.</p>}
@@ -111,6 +113,7 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
     </div>}
     {frameFlag && !timing && <p role="alert">The reported hold boundaries are unavailable. Refresh the queue before reviewing.</p>}
     <h3>{rankingReasons[item.reason]}</h3>
+
     {item.corrected_value !== null && <p>Suggested correction: {item.corrected_value} {item.metric}</p>}
     {item.rule_violations.length > 0 && <ul>{item.rule_violations.map(rule => <li key={rule.id}>{rule.text}</li>)}</ul>}
     {item.details && <p>{item.details}</p>}
@@ -123,9 +126,10 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
         onChange={event => {setSelectedRules(old => event.target.checked ? [...old, rule.id] : old.filter(id => id !== rule.id)); setConfirm(null);}} />
         {rule.type === "form" ? "Form" : "Filming"}: {rule.text}</label>)}
     </fieldset>}
-    <label htmlFor="ranking-rejection-note">Reason shown to the uploader if rejected</label>
+    <label htmlFor="ranking-rejection-note">Review note shown to the uploader</label>
     <textarea id="ranking-rejection-note" value={note} maxLength={1000} rows={4} disabled={saving}
       onChange={event => {setNote(event.target.value); setConfirm(null);}} />
+    {canReject&&["incorrect_measurement","incorrect_start_frame","incorrect_end_frame","incorrect_hold_frames"].includes(item.reason)&&<RankingCorrectionEditor key={`${item.id}:${item.measurement_revision}:${item.media_fingerprint}:${urls[source]}`} item={item} videoRef={videoRef} watched={watched} note={note} disabled={saving||!urls[source]} onBusy={value=>{setSaving(value);onBusy(value);}} onSaved={()=>onSaved("corrected")}/>}
     <p className="muted">Confirm only the issues you verified. Rejecting removes this result from rankings and hides the video from feeds and the athlete’s profile.</p>
     {error && <p role="alert" className="error">{error}</p>}
     <div className="actions"><button className="button secondary" disabled={!watched || saving}

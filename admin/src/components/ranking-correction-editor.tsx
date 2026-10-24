@@ -1,0 +1,43 @@
+"use client";
+import {useEffect,useRef,useState,type RefObject} from "react";
+import type {RankingFlag} from "@/lib/ranking-flags";
+import {notifyAdminReviewCountsChanged} from "@/lib/admin-review-counts";
+export default function RankingCorrectionEditor({item,videoRef,watched,note,disabled,onBusy,onSaved}:{item:RankingFlag;videoRef:RefObject<HTMLVideoElement|null>;watched:boolean;note:string;disabled:boolean;onBusy:(v:boolean)=>void;onSaved:()=>void}){
+ const [open,setOpen]=useState(false),[start,setStart]=useState<number|null>(item.hold_timing?.start_ms??null),[end,setEnd]=useState<number|null>(item.hold_timing?.end_ms??null),[reps,setReps]=useState(String(item.corrected_value??item.claimed_value));
+ const [duration,setDuration]=useState<number|null>(item.duration_ms??null),[confirm,setConfirm]=useState(false),[saving,setSaving]=useState(false),[error,setError]=useState(""),[slow,setSlow]=useState(false);
+ const parsedTime=(raw:string,n:number)=>raw!==""&&Number.isFinite(n)?Math.round(n*1000):null;
+ const savingRef=useRef(false),alive=useRef(true),request=useRef<AbortController|null>(null),frame=useRef<number|null>(null);
+ const hold=(item.metric??item.board_metric)==="seconds";
+ useEffect(()=>{alive.current=true;return()=>{alive.current=false;request.current?.abort();};},[]);
+ useEffect(()=>{if(!open)return;const video=videoRef.current;if(!video)return;let id:number|undefined;
+  const loaded=()=>{if(Number.isFinite(video.duration)&&video.duration>0)setDuration(Math.round(video.duration*1000));};loaded();video.addEventListener("loadedmetadata",loaded);const seeking=()=>{frame.current=null;};video.addEventListener("seeking",seeking);
+  if(typeof video.requestVideoFrameCallback==="function"){const rendered:VideoFrameRequestCallback=(_now,metadata)=>{frame.current=Math.round(metadata.mediaTime*1000);id=video.requestVideoFrameCallback(rendered);};id=video.requestVideoFrameCallback(rendered);}
+  return()=>{video.removeEventListener("loadedmetadata",loaded);video.removeEventListener("seeking",seeking);if(id!==undefined)video.cancelVideoFrameCallback(id);frame.current=null;};
+ },[open,videoRef]);
+ const value=hold?(start!==null&&end!==null?Math.floor((end-start)/1000):null):/^\d+$/.test(reps)?Number(reps):null;
+ const bound=item.duration_ms??duration;
+ const valid=Number.isSafeInteger(value)&&value!==null&&value>=1&&value<=2147483647&&(!hold||(start!==null&&end!==null&&start>=0&&bound!==null&&end<=bound&&end-start>=1000&&value<=(item.max_value??2147483647)))&&
+ (value!==item.claimed_value||hold&&(start!==item.hold_timing?.start_ms||end!==item.hold_timing?.end_ms));
+ const ready=valid&&watched&&note.trim().length>=3&&!disabled&&!saving&&Number.isSafeInteger(item.measurement_revision)&&typeof item.media_fingerprint==="string";
+ const changed=()=>{setConfirm(false);setError("");};
+ function mark(which:"start"|"end"){const video=videoRef.current;if(!video||!Number.isFinite(video.currentTime)||video.readyState<2||video.seeking)return;video.pause();if(typeof video.requestVideoFrameCallback==='function'&&frame.current===null){setError('Play or scrub the video to display the frame, then mark it.');return;}const t=frame.current??Math.round(video.currentTime*1000);if(which==="start")setStart(t);else setEnd(t);changed();}
+ async function save(){if(!ready||savingRef.current)return;savingRef.current=true;setSaving(true);onBusy(true);setError("");const c=new AbortController();request.current=c;const timeout=setTimeout(()=>c.abort(),60000);
+  try{const r=await fetch('/admin/api/ranking-flags/correction',{method:'POST',cache:'no-store',signal:c.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({report_id:item.id,expected_revision:item.measurement_revision,expected_media_fingerprint:item.media_fingerprint,corrected_value:value,hold_start_ms:hold?start:null,hold_end_ms:hold?end:null,reviewed_duration_ms:hold?duration:null,watched_video:watched,review_note:note.trim()})});const v=await r.json();if(!r.ok)throw Error(v.error||'Could not save the correction. Refresh before retrying.');if(v.ok!==true||v.status!=='corrected'||v.value!==value)throw Error('Could not verify the saved correction. Refresh the queue.');if(alive.current) {notifyAdminReviewCountsChanged();onSaved();}}
+  catch(e){if(alive.current){setError(c.signal.aborted?'The request timed out. Refresh the queue before retrying; the correction may have saved.':(e as Error).message);setConfirm(false);}}
+  finally{clearTimeout(timeout);savingRef.current=false;if(alive.current){setSaving(false);onBusy(false);}}
+ }
+ return <section className="lab-panel" aria-label="Correct ranked measurement"><button className="button secondary" disabled={disabled||saving} onClick={()=>{setOpen(v=>!v);setConfirm(false);}}>Correct result</button>
+ {open&&<><h3>Correct {hold?'hold timing':'rep count'}</h3><p>The video stays published. Saving updates this submission, resolves the flag and recalculates its ranking.</p>
+ {hold?<>
+ <p>Pause or scrub the clip to the correct frame, then mark its start and end.</p><div className="actions"><button className="button secondary" disabled={disabled||saving} onClick={()=>mark('start')}>Use paused frame as start</button><button className="button secondary" disabled={disabled||saving} onClick={()=>mark('end')}>Use paused frame as end</button><button className="button secondary" disabled={disabled||saving} onClick={()=>{const v=videoRef.current;if(v){v.pause();v.currentTime=Math.max(0,v.currentTime-.1);}changed();}}>Back 0.1s</button><button className="button secondary" disabled={disabled||saving} onClick={()=>{const v=videoRef.current;if(v&&Number.isFinite(v.duration)){v.pause();v.currentTime=Math.min(v.duration,v.currentTime+.1);}changed();}}>Forward 0.1s</button><button className="button secondary" disabled={disabled||saving} onClick={()=>{if(videoRef.current){videoRef.current.playbackRate=slow?1:.25;setSlow(!slow);}}}>{slow?'Playback 1×':'Playback 0.25×'}</button></div>
+ <div className="lab-grid"><label>Correct start (seconds)<input type="number" min={0} step="0.001" disabled={disabled||saving} value={start===null?'':start/1000} onChange={e=>{setStart(parsedTime(e.target.value,e.target.valueAsNumber));changed();}}/></label><label>Correct end (seconds)<input type="number" min={0} step="0.001" disabled={disabled||saving} value={end===null?'':end/1000} onChange={e=>{setEnd(parsedTime(e.target.value,e.target.valueAsNumber));changed();}}/></label></div>
+ {item.suggested_hold_start_ms!=null&&item.suggested_hold_end_ms!=null&&<button className="button secondary" disabled={disabled||saving} onClick={()=>{setStart(item.suggested_hold_start_ms!);setEnd(item.suggested_hold_end_ms!);changed();}}>Load reporter’s suggested frames</button>}
+ <div className="actions"><button className="button secondary" disabled={disabled||saving||start===null} onClick={()=>{const v=videoRef.current;if(v&&start!==null){v.pause();v.currentTime=start/1000;}changed();}}>View corrected start</button><button className="button secondary" disabled={disabled||saving||end===null} onClick={()=>{const v=videoRef.current;if(v&&end!==null){v.pause();v.currentTime=end/1000;}changed();}}>View corrected end</button></div>
+ <p aria-live="polite">Selected duration: {start!==null&&end!==null?`${((end-start)/1000).toFixed(3)} seconds`:'Choose both frames'}. Counted hold: {value!==null&&value>=1?`${value} whole seconds`:'—'}.</p>
+ </>:<label>Correct rep count<input type="number" min={1} max={2147483647} step={1} disabled={disabled||saving} value={reps} onChange={e=>{setReps(e.target.value);changed();}}/></label>}
+ <p className="muted">A valid result must contain at least one whole second or repetition. If none are valid, use Reject ranking.</p>
+ {error&&<p role="alert" className="error">{error}</p>}<button className="button primary" disabled={!ready} onClick={()=>setConfirm(true)}>Review correction</button>
+ {confirm&&<div className="dialog-backdrop"><div className="dialog" role="dialog" aria-modal="true" aria-label="Confirm measurement correction"><h3>Save this correction?</h3><p>{item.claimed_value} → {value} {hold?'seconds':'reps'}. The video stays published and the uploader receives your review note.</p><p>{note.trim()}</p><button className="button secondary" disabled={saving} onClick={()=>setConfirm(false)}>Cancel</button><button className="button primary" disabled={!ready} onClick={()=>void save()}>{saving?'Saving…':'Save correction'}</button></div></div>}
+ </>}
+ </section>;
+}
