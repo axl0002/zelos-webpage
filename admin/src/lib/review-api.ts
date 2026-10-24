@@ -89,6 +89,7 @@ export function rpcFailure(error: { code?: string; message?: string }, operation
     invalid_hold_timing: "Choose start and end frames inside the clip, covering at least one whole second.",
     measurement_unchanged: "Choose a different result or different hold frames.",
     correction_not_applicable: "This flag needs a review decision rather than a measurement correction.",
+    invalid_queue_cursor: "Refresh the review queue before loading another page.",
     invalid_decision: "Check the review details and try again.",
     assisted_exercise_not_eligible:
       "This clip mentions assistance and is not eligible for ranking. Scan the queue to apply the automatic rejection.",

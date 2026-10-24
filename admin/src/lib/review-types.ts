@@ -1,3 +1,4 @@
+import type { ReviewQueueCursor } from "./review-queue-sort";
 export type Board = {
   id: string;
   exercise_id: string;
@@ -41,6 +42,13 @@ export type Candidate = {
   suggestions: Suggestion[];
   warnings: string[];
   current_records: CurrentRecord[];
+  queue_sort?: {
+    level: 0 | 1 | 2;
+    board: string;
+    board_name: string | null;
+    measurement: number;
+    metric: "reps" | "seconds" | null;
+  };
   board_id: string | null;
   value: number | null;
   note: string;
@@ -50,6 +58,8 @@ export type Candidate = {
 export type QueuePage = {
   items: Candidate[];
   stats: Record<"pending" | "approved" | "skipped", number>;
+  has_more?: boolean;
+  next_cursor?: ReviewQueueCursor | null;
 };
 export type Decision = {
   post_id: string;

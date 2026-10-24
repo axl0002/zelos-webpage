@@ -60,8 +60,8 @@ export default function ReviewDashboard({
     const abort = new AbortController();
     const epoch = ++queryEpoch.current;
     const current = () => !abort.signal.aborted && epoch === queryEpoch.current;
-    const q = new URLSearchParams({ status, exercise, q: search });
-    if (cursor) q.set("after", cursor);
+    const q = new URLSearchParams({ status, exercise, q: search, order: "difficulty_v1" });
+    if (cursor) q.set("cursor", cursor);
     setLoading(!refresh.background || loadedQuery.current !== q.toString());
     setRefreshing(true);
     setError("");
@@ -186,6 +186,7 @@ export default function ReviewDashboard({
             {scanning ? "Scanning…" : "Scan training clips"}
           </button>
         </header>
+        <p className="small muted">Known difficulty and results first: hardest progression, then highest reps or hold time within each progression. Imported claims still need review; missing information follows.</p>
         {scanning && (
           <p role="status" className="notice">
             {scanProgress ||
@@ -298,6 +299,11 @@ export default function ReviewDashboard({
                     <small>
                       {c.suggestions.map((s) => s.name).join(" · ")}
                     </small>
+                    {c.queue_sort?.board_name && <small>
+                      {c.status === "pending" ? "Imported claim" : "Reviewed result"}: {c.queue_sort.board_name} · {c.queue_sort.measurement > 0
+                        ? `${c.queue_sort.measurement}${c.queue_sort.metric === "seconds" ? "s" : " reps"}`
+                        : "Result not recorded"}
+                    </small>}
                   </span>
                   <span className="arrow">›</span>
                 </button>
@@ -326,10 +332,10 @@ export default function ReviewDashboard({
               <span className="small">Page {history.length + 1}</span>
               <button
                 className="button text"
-                disabled={loading || !page || page.items.length <= 20}
+                disabled={loading || !page?.has_more || !page.next_cursor}
                 onClick={() => {
                   setHistory((v) => [...v, cursor]);
-                  setCursor(page!.items[19].post_id);
+                  setCursor(JSON.stringify(page!.next_cursor));
                 }}
               >
                 Next →
