@@ -13,6 +13,7 @@ export const adminDestinations = [
   {href: "/admin/safety", label: "Upload safety"},
   {href: "/admin/users", label: "Users"},
   {href: "/admin/scoring-lab", label: "Scoring lab"},
+  {href: "/admin/feed-lab", label: "Feed lab"},
 ] as const;
 
 const countKinds: Record<string, keyof AdminReviewCounts> = {

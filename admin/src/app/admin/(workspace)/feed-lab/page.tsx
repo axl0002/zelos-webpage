@@ -1,0 +1,3 @@
+import {redirect} from 'next/navigation';import {requireAdmin} from '@/lib/require-admin';import FeedLab from '@/components/feed-lab-dashboard';
+export const dynamic='force-dynamic';export const metadata={title:'Feed lab · Zelos admin'};
+export default async function FeedLabPage(){const auth=await requireAdmin();if(auth.response?.status===503)return <div className="workspace-state"><section className="review-panel"><h1>Could not load feed lab.</h1><p role="alert">The service is temporarily unavailable.</p><a className="button primary" href="/admin/feed-lab">Try again</a></section></div>;if(auth.response)redirect(auth.response.status===401?'/admin/login':'/admin/login?error=access');return <FeedLab/>;}
