@@ -46,6 +46,20 @@ export function parseDecision(value: unknown): Decision | null {
       d.replace_current)
   )
     return null;
+  if (d.hold_timing !== undefined) {
+    const t = d.hold_timing, m = t?.media;
+    if (d.decision !== "approve" || !t || !m ||
+      !Number.isSafeInteger(t.start_ms) || t.start_ms < 0 ||
+      !Number.isSafeInteger(t.end_ms) || t.end_ms > 2147483647 ||
+      t.end_ms - t.start_ms < 1000 ||
+      Math.floor((t.end_ms - t.start_ms) / 1000) !== d.value ||
+      typeof m.primary_url !== "string" || m.primary_url.length > 4096 ||
+      !Number.isSafeInteger(m.duration_ms) || m.duration_ms! < t.end_ms ||
+      !m.renditions || typeof m.renditions !== "object" || Array.isArray(m.renditions) ||
+      Object.keys(m).some(k => !["primary_url", "duration_ms", "renditions"].includes(k)) ||
+      Object.entries(m.renditions).length > 32 ||
+      Object.entries(m.renditions).some(([k, v]) => k.length > 200 || typeof v !== "string" || v.length > 4096)) return null;
+  }
   return d;
 }
 export function rpcFailure(error: { code?: string; message?: string }, operation: "load" | "save" = "save") {

@@ -1,0 +1,11 @@
+.frames {
+  min-width: 0;
+  margin: 0 0 20px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.frames legend { font-weight: 600; font-size: 13px; }
+.frames label { display: block; margin: 14px 0 7px; font-size: 12px; font-weight: 600; }
+.frames input { margin-bottom: 10px; }
+.frames button { white-space: normal; }

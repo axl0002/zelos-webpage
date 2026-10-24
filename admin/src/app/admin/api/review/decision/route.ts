@@ -12,7 +12,18 @@ export async function POST(request: NextRequest) {
       { error: "Check the exercise, result and review confirmation." },
       { status: 400 },
     );
-  const { data, error } = await auth.client.rpc("admin_decide_rank_candidate", {
+  const timing = body.hold_timing;
+  const { data, error } = timing ? await auth.client.rpc("admin_approve_rank_candidate_timed", {
+    target_post: body.post_id,
+    expected_revision: body.revision,
+    selected_board: body.board_id,
+    hold_start_ms: timing.start_ms,
+    hold_end_ms: timing.end_ms,
+    expected_media: timing.media,
+    review_note: body.note,
+    watched_video: body.watched,
+    replace_current: body.replace_current,
+  }) : await auth.client.rpc("admin_decide_rank_candidate", {
     target_post: body.post_id,
     expected_revision: body.revision,
     decision: body.decision,
@@ -22,5 +33,5 @@ export async function POST(request: NextRequest) {
     watched_video: body.watched,
     replace_current: body.replace_current,
   });
-  return error ? rpcFailure(error) : NextResponse.json(data);
+  return error ? rpcFailure(error) : NextResponse.json(data, {headers: {"Cache-Control": "private, no-store"}});
 }

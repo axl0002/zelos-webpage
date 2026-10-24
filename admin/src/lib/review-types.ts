@@ -62,4 +62,9 @@ export type Decision = {
   note: string;
   watched: boolean;
   replace_current: boolean;
+  hold_timing?: {
+    start_ms: number;
+    end_ms: number;
+    media: Pick<Candidate, "primary_url" | "duration_ms" | "renditions">;
+  };
 };

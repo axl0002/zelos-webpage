@@ -3,6 +3,7 @@ import {notifyAdminReviewCountsChanged} from "@/lib/admin-review-counts";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Board, Candidate, Decision, QueuePage } from "@/lib/review-types";
 import { mediaUrls } from "@/lib/review-media";
+import timingStyles from "./review-hold-timing.module.css";
 
 async function api<T>(
   path: string,
@@ -405,15 +406,58 @@ export function CandidateReview({
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const [source, setSource] = useState(0);
+  const [holdStart, setHoldStart] = useState<number | null>(null);
+  const [holdEnd, setHoldEnd] = useState<number | null>(null);
   const urls = mediaUrls(c);
   const video = useRef<HTMLVideoElement>(null);
+  const displayedFrame = useRef<number | null>(null);
+  useEffect(() => {
+    const element = video.current;
+    displayedFrame.current = null;
+    if (!element) return;
+    let callback: number | undefined;
+    const seeking = () => {displayedFrame.current = null;};
+    element.addEventListener("seeking", seeking);
+    if (typeof element.requestVideoFrameCallback === "function") {
+      const rendered: VideoFrameRequestCallback = (_now, metadata) => {
+        displayedFrame.current = Math.round(metadata.mediaTime * 1000);
+        callback = element.requestVideoFrameCallback(rendered);
+      };
+      callback = element.requestVideoFrameCallback(rendered);
+    }
+    return () => {
+      element.removeEventListener("seeking", seeking);
+      if (callback !== undefined) element.cancelVideoFrameCallback(callback);
+      displayedFrame.current = null;
+    };
+  }, [c.post_id, source]);
+  function markHoldFrame(setPoint: (point: number) => void) {
+    const element = video.current;
+    if (!element || !Number.isFinite(element.currentTime) || element.readyState < 2 || element.seeking) {
+      setError("Wait for the video to display the selected frame before marking it.");
+      return;
+    }
+    element.pause();
+    if (typeof element.requestVideoFrameCallback === "function" && displayedFrame.current === null) {
+      setError("Play or scrub the video to display the frame, then mark it.");
+      return;
+    }
+    setPoint(displayedFrame.current ?? Math.round(element.currentTime * 1000));
+    setError("");
+  }
   const board = boards.find((b) => b.id === boardId),
     current = c.current_records.find((r) => r.exercise_id === exercise);
   const exercises = [
     ...new Map(boards.map((b) => [b.exercise_id, b.exercise_name])).entries(),
   ];
   const editable = c.status === "pending";
-  const numeric = /^\d+$/.test(value) ? Number(value) : NaN;
+  const isHold = board?.metric === "seconds";
+  const timingValid = holdStart !== null && holdEnd !== null &&
+    holdStart >= 0 && holdEnd - holdStart >= 1000 &&
+    !!c.duration_ms && holdEnd <= c.duration_ms;
+  const numeric = isHold
+    ? timingValid ? Math.floor((holdEnd! - holdStart!) / 1000) : NaN
+    : /^\d+$/.test(value) ? Number(value) : NaN;
   const tooLong =
     board?.metric === "seconds" &&
     (!c.duration_ms || (numeric + 1) * 1000 > c.duration_ms);
@@ -430,6 +474,8 @@ export function CandidateReview({
     const matches = boards.filter((b) => b.exercise_id === id);
     setBoardId(matches.length === 1 ? matches[0].id : "");
     setValue("");
+    setHoldStart(null);
+    setHoldEnd(null);
     setReplace(false);
   }
   async function decide(action: Decision["decision"]) {
@@ -446,6 +492,10 @@ export function CandidateReview({
       // Clicking Approve ranking confirms the review for the existing API.
       watched: action === "approve",
       replace_current: action === "approve" && !!current && replace,
+      ...(action === "approve" && isHold ? {hold_timing: {
+        start_ms: holdStart!, end_ms: holdEnd!,
+        media: {primary_url: c.primary_url, duration_ms: c.duration_ms, renditions: c.renditions},
+      }} : {}),
     };
     try {
       const result = await api<{ active: boolean }>(
@@ -596,11 +646,45 @@ export function CandidateReview({
                 min="1"
                 max={board?.metric === "seconds" ? board.max_value : undefined}
                 step="1"
-                placeholder="Count from the video"
-                value={value}
+                placeholder={isHold ? "Set start and end frames" : "Count from the video"}
+                value={isHold ? Number.isFinite(numeric) ? numeric : "" : value}
                 onChange={(e) => setValue(e.target.value)}
                 disabled={!board || busy}
+                readOnly={isHold}
               />
+              {isHold && <fieldset disabled={busy || source >= urls.length} className={timingStyles.frames}>
+                <legend>Hold start and end frames</legend>
+                <p className="small muted">Pause the video at each boundary and set its frame. The result is the selected duration rounded down to whole seconds. Long training clips do not need trimming.</p>
+                <div className="playback-tools">
+                  <button type="button" className="button secondary" onClick={() => {
+                    if (video.current) {video.current.pause(); displayedFrame.current = null; video.current.currentTime = Math.max(0, video.current.currentTime - 1 / 30);}
+                  }}>Back 1/30s</button>
+                  <button type="button" className="button secondary" onClick={() => {
+                    if (video.current) {video.current.pause(); displayedFrame.current = null; video.current.currentTime = Math.min(c.duration_ms! / 1000, video.current.currentTime + 1 / 30);}
+                  }}>Forward 1/30s</button>
+                </div>
+                <p className="small muted">Step controls move by 1/30 second; use the time fields for finer adjustments.</p>
+                {(["start", "end"] as const).map(point => {
+                  const selected = point === "start" ? holdStart : holdEnd;
+                  const setPoint = point === "start" ? setHoldStart : setHoldEnd;
+                  return <div key={point}>
+                    <label htmlFor={`hold-${point}`}>Hold {point} (seconds)</label>
+                    <input id={`hold-${point}`} type="number" min="0" step="0.001"
+                      max={c.duration_ms ? c.duration_ms / 1000 : undefined}
+                      value={selected === null ? "" : selected / 1000}
+                      onChange={e => setPoint(e.target.value === "" ? null : Math.round(Number(e.target.value) * 1000))}/>
+                    <div className="playback-tools">
+                      <button type="button" className="button secondary" onClick={() => markHoldFrame(setPoint)}>Set hold {point} at playhead</button>
+                      <button type="button" className="button text" disabled={selected === null} onClick={() => {
+                        if (video.current && selected !== null) {video.current.pause(); displayedFrame.current = null; video.current.currentTime = selected / 1000;}
+                      }}>View {point} frame</button>
+                    </div>
+                  </div>;
+                })}
+                <p aria-live="polite" className="small">{timingValid
+                  ? `${((holdEnd! - holdStart!) / 1000).toFixed(3)}s selected → ${numeric} whole seconds`
+                  : "Select start and end inside the clip, at least one second apart."}</p>
+              </fieldset>}
               {tooLong && (
                 <p className="error small">
                   The video must include at least one second beyond the hold.
