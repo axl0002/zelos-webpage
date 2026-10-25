@@ -16,7 +16,8 @@ const request = (path: string, method: string, from = origin, type = "applicatio
 beforeEach(() => {vi.resetAllMocks(); vi.stubEnv("ADMIN_ORIGIN", origin);});
 
 it("covers every protected endpoint, including future additions", () => {
-  expect(protectedRoutes).toHaveLength(25);
+  expect(protectedRoutes).toHaveLength(26);
+  expect(protectedRoutes.some(({path})=>path==="/admin/api/ranking-flags/correction/v2")).toBe(true);
   expect(routes.filter(({route}) => route.POST).length).toBeGreaterThan(10);
 });
 

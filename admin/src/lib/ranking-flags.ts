@@ -47,3 +47,16 @@ export function parseRankingFlagCorrection(value:unknown){
  if(v.hold_start_ms===null&&v.reviewed_duration_ms!==null)return null;
  return {report_id:v.report_id,expected_revision:v.expected_revision as number,expected_media_fingerprint:v.expected_media_fingerprint,corrected_value:v.corrected_value as number,hold_start_ms:v.hold_start_ms as number|null,hold_end_ms:v.hold_end_ms as number|null,reviewed_duration_ms:v.reviewed_duration_ms as number|null,watched_video:true,review_note:v.review_note.trim()};
 }
+
+/** Versioned hold-only command: the backend derives the value from frames. */
+export function parseRankingHoldCorrectionV2(value:unknown){
+ if(!value||typeof value!=="object"||Array.isArray(value))return null;
+ const v=value as Record<string,unknown>;
+ const keys=["report_id","expected_revision","expected_media_fingerprint","hold_start_ms","hold_end_ms","reviewed_duration_ms","watched_video","review_note"];
+ if(Object.keys(v).length!==keys.length||keys.some(k=>!(k in v))||!Number.isSafeInteger(v.hold_start_ms)||!Number.isSafeInteger(v.hold_end_ms))return null;
+ const start=v.hold_start_ms as number,end=v.hold_end_ms as number;
+ const parsed=parseRankingFlagCorrection({...v,corrected_value:Math.floor((end-start)/1000)});
+ if(!parsed)return null;
+ const {corrected_value,...command}=parsed;void corrected_value;
+ return {...command,hold_start_ms:start,hold_end_ms:end};
+}
