@@ -1,9 +1,9 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { parseAdminReviewCounts, reviewCountsChanged, type AdminReviewCounts } from "@/lib/admin-review-counts";
+import { parseAdminReviewCountsV2, reviewCountsChanged, type AdminReviewCountsV2 } from "@/lib/admin-review-counts";
 
-type CountsState = {counts: AdminReviewCounts | null; loading: boolean};
+type CountsState = {counts: AdminReviewCountsV2 | null; loading: boolean};
 const CountsContext = createContext<CountsState>({counts: null, loading: false});
 export function AdminReviewCountsProvider({children}: {children: React.ReactNode}) {
   const pathname = usePathname();
@@ -20,9 +20,9 @@ export function AdminReviewCountsProvider({children}: {children: React.ReactNode
       if (mounted.current && current === version.current) setState({counts: null, loading: false});
     }, 15000);
     try {
-      const response = await fetch("/admin/api/review-counts", {cache: "no-store", signal: controller.signal});
+      const response = await fetch("/admin/api/review-counts/v2", {cache: "no-store", signal: controller.signal});
       if (!response.ok) throw new Error("Review counts unavailable");
-      const counts = parseAdminReviewCounts(await response.json());
+      const counts = parseAdminReviewCountsV2(await response.json());
       if (mounted.current && current === version.current && !controller.signal.aborted) setState({counts, loading: false});
     } catch {
       // A failed or expired read means unknown, never an empty queue.
@@ -50,10 +50,11 @@ export function AdminReviewCountsProvider({children}: {children: React.ReactNode
   useEffect(() => {void refresh();}, [pathname, refresh]);
   return <CountsContext.Provider value={state}>{children}</CountsContext.Provider>;
 }
-export function ReviewCountBadge({kind, id}: {kind: keyof AdminReviewCounts; id: string}) {
+export function ReviewCountBadge({kind, id}: {kind: keyof AdminReviewCountsV2; id: string}) {
   const {counts, loading} = useContext(CountsContext);
   const count = counts?.[kind];
   const description = count === undefined ? loading ? "Loading unprocessed count" : "Unprocessed count unavailable"
+    : kind === "upload_safety" ? `${count} ${count === 1 ? "upload" : "uploads"} awaiting safety review`
     : `${count} unprocessed ${kind === "user_reports" ? `reports: ${counts!.current_reports} current, ${counts!.legacy_reports} legacy` : kind.replaceAll("_", " ")}`;
   return <span id={id} className={`review-count-badge ${count === undefined ? "unknown" : count === 0 ? "quiet" : "pending"}`}
     title={description} aria-busy={loading || undefined}>

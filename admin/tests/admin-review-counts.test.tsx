@@ -6,10 +6,11 @@ vi.mock("next/link",()=>({default:({children,prefetch:_prefetch,...props}:React.
 import AdminWorkspace from "../src/components/admin-workspace";
 import RankedUploadsDashboard from "../src/components/ranked-uploads-dashboard";
 import ModerationReportsDashboard from "../src/components/moderation-reports-dashboard";
+import SafetyReviewDashboard from "../src/components/safety-review-dashboard";
 import {rankedUpload, privatePreview} from "./fixtures/ranked-upload";
 import {report} from "./fixtures/moderation-report";
 import {notifyAdminReviewCountsChanged} from "../src/lib/admin-review-counts";
-const counts={current_reports:51,legacy_reports:205,user_reports:256,ranking_flags:101,ranked_uploads:102};
+const counts={current_reports:51,legacy_reports:205,user_reports:256,ranking_flags:101,ranked_uploads:102,upload_safety:3};
 const response=(value=counts)=>({ok:true,json:async()=>value});
 const badge=(name:string)=>document.getElementById(screen.getByRole("link",{name}).getAttribute("aria-describedby")!)!;
 const flush=async()=>{await act(async()=>{await Promise.resolve();await Promise.resolve();});};
@@ -23,6 +24,7 @@ it("distinguishes loading, nonzero backlog and quiet zero without changing acces
  await act(async()=>resolve(response({...counts,ranking_flags:0})));
  expect(badge("User reports").getAttribute("title")).toBe("51 unprocessed current reports");
  expect(badge("Ranked uploads").textContent).toContain("102");
+ expect(badge("Upload safety").textContent).toContain("3");
  expect(badge("Ranking flags").className).toContain("quiet");
  expect(screen.getByRole("link",{name:"Ranking flags"})).toBeTruthy();
 });
@@ -71,7 +73,7 @@ it("turns a timed out read into unavailable even when the transport ignores abor
 
 it.each([false,true])("refreshes after a successful upload decision only, never preview or failed decision (fail: %s)",async fail=>{
  let countReads=0;
- const fetch=vi.fn(async (url:string)=>url==="/admin/api/review-counts" ? response({...counts,ranked_uploads:++countReads===1?102:101})
+ const fetch=vi.fn(async (url:string)=>url==="/admin/api/review-counts/v2" ? response({...counts,ranked_uploads:++countReads===1?102:101})
   : url.endsWith("/preview") ? {ok:true,json:async()=>privatePreview}
   : url.endsWith("/decision") ? {ok:!fail,json:async()=>fail?{error:"Try again"}:{ok:true}}
   : {ok:true,json:async()=>[rankedUpload]});
@@ -86,7 +88,7 @@ it.each([false,true])("refreshes after a successful upload decision only, never 
 });
 it("exposes legacy backlog beside the current reports queue and refreshes both after a saved report decision",async()=>{
  let countReads=0;
- vi.stubGlobal("fetch",vi.fn(async (url:string)=>url==="/admin/api/review-counts"?response(++countReads===1?counts:{...counts,current_reports:50,user_reports:255})
+ vi.stubGlobal("fetch",vi.fn(async (url:string)=>url==="/admin/api/review-counts/v2"?response(++countReads===1?counts:{...counts,current_reports:50,user_reports:255})
   : url.endsWith("/decision")?{ok:true,json:async()=>({ok:true})}
   : {ok:true,json:async()=>[{...report,target_kind:"profile",context:{username:"reported_athlete",body:"Report evidence"}}]}));
  render(<AdminWorkspace><ModerationReportsDashboard/></AdminWorkspace>);
@@ -97,4 +99,27 @@ it("exposes legacy backlog beside the current reports queue and refreshes both a
  fireEvent.click(screen.getByRole("button",{name:"Confirm decision"}));
  await waitFor(()=>expect(countReads).toBe(2));
  expect(badge("User reports").getAttribute("title")).toBe("50 unprocessed current reports");
+});
+
+it.each([[true,false],[false,false],[true,true],[false,true]])("updates safety badge only after a saved decision (approve %s, fail %s)",async(approve,fail)=>{
+ let reads=0,decided=false;
+ const item={id:"dddddddd-dddd-4ddd-8ddd-dddddddddddd",owner_id:"owner",post_id:"post",title:"Safety clip",state:"review",created_at:"2026-10-15T00:00:00Z",evidence:null};
+ vi.stubGlobal("fetch",vi.fn(async(url:string)=>{
+  if(url==="/admin/api/review-counts/v2"){reads++;return response({...counts,upload_safety:decided?0:1});}
+  if(url.endsWith("/preview"))return {ok:true,json:async()=>({url:"https://private.example/clip"})};
+  if(url.endsWith("/decision")){if(!fail)decided=true;return {ok:!fail,json:async()=>fail?{error:"Try again"}:{ok:true}};}
+  return {ok:true,json:async()=>decided?[]:[item]};
+ }));
+ render(<AdminWorkspace><SafetyReviewDashboard/></AdminWorkspace>);
+ await screen.findByRole("heading",{name:"Safety clip"});
+ await waitFor(()=>expect(badge("Upload safety").getAttribute("title")).toBe("1 upload awaiting safety review"));
+ fireEvent.click(screen.getByRole("button",{name:"Open private video"}));
+ await waitFor(()=>expect(document.querySelector("video")).not.toBeNull());
+ expect(reads).toBe(1);
+ fireEvent.click(screen.getByRole("checkbox"));
+ if(!approve)fireEvent.change(screen.getByLabelText("Review note"),{target:{value:"Reviewed fixture reason"}});
+ fireEvent.click(screen.getByRole("button",{name:approve?"Approve upload":"Reject upload"}));
+ fireEvent.click(screen.getByRole("button",{name:approve?/^Approve$/:/^Reject$/}));
+ if(fail){await screen.findByText("Try again");expect(reads).toBe(1);expect(badge("Upload safety").textContent).toContain("1");}
+ else{await waitFor(()=>expect(reads).toBe(2));await waitFor(()=>expect(badge("Upload safety").getAttribute("title")).toBe("0 uploads awaiting safety review"));expect(badge("Upload safety").className).toContain("quiet");}
 });

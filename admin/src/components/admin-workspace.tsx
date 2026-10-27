@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import {AdminReviewCountsProvider, ReviewCountBadge} from "./admin-review-counts";
-import type {AdminReviewCounts} from "@/lib/admin-review-counts";
+import type {AdminReviewCountsV2} from "@/lib/admin-review-counts";
 
 export const adminDestinations = [
   {href: "/admin", label: "Exercise review"},
@@ -17,8 +17,9 @@ export const adminDestinations = [
   {href: "/admin/analytics", label: "Analytics"},
 ] as const;
 
-const countKinds: Record<string, keyof AdminReviewCounts> = {
+const countKinds: Record<string, keyof AdminReviewCountsV2> = {
   "/admin/ranked-uploads": "ranked_uploads", "/admin/ranking-flags": "ranking_flags", "/admin/reports": "current_reports",
+  "/admin/safety": "upload_safety",
 };
 
 /** One persistent navigation shell for every admin workspace route/state. */

@@ -10,6 +10,13 @@ export function parseAdminReviewCounts(value: unknown): AdminReviewCounts {
   if (v.user_reports !== (v.current_reports as number) + (v.legacy_reports as number)) throw new Error("Review counts unavailable");
   return Object.fromEntries(fields.map(field => [field, v[field]])) as AdminReviewCounts;
 }
+export type AdminReviewCountsV2 = AdminReviewCounts & {upload_safety: number};
+export function parseAdminReviewCountsV2(value: unknown): AdminReviewCountsV2 {
+  const legacy = parseAdminReviewCounts(value);
+  const safety = (value as Record<string, unknown>).upload_safety;
+  if (!Number.isSafeInteger(safety) || (safety as number) < 0) throw new Error("Review counts unavailable");
+  return {...legacy, upload_safety: safety as number};
+}
 export const reviewCountsChanged = "zelos:admin-review-counts-changed";
 /** Called only after a successful moderation mutation, never a preview. */
 export function notifyAdminReviewCountsChanged() {
