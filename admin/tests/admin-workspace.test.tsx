@@ -19,8 +19,9 @@ import Safety from "../src/app/admin/(workspace)/safety/page";
 import Users from "../src/app/admin/(workspace)/users/page";
 import ScoringLab from "../src/app/admin/(workspace)/scoring-lab/page";
 import FeedLab from "../src/app/admin/(workspace)/feed-lab/page";
+import Analytics from "../src/app/admin/(workspace)/analytics/page";
 import {adminDestinations} from "../src/components/admin-workspace";
-const pages = [AdminHome, RankedUploads, RankingFlags, Reports, Safety, Users, ScoringLab, FeedLab];
+const pages = [AdminHome, RankedUploads, RankingFlags, Reports, Safety, Users, ScoringLab, FeedLab, Analytics];
 const routes = adminDestinations.map((route, index) => ({...route, page: pages[index]}));
 beforeEach(() => {
   vi.resetAllMocks(); mocks.path = "/admin";

@@ -14,6 +14,7 @@ export const adminDestinations = [
   {href: "/admin/users", label: "Users"},
   {href: "/admin/scoring-lab", label: "Scoring lab"},
   {href: "/admin/feed-lab", label: "Feed lab"},
+  {href: "/admin/analytics", label: "Analytics"},
 ] as const;
 
 const countKinds: Record<string, keyof AdminReviewCounts> = {
