@@ -214,3 +214,38 @@ it('requires and forwards a custom rejection reason for Other without changing o
  fireEvent.change(screen.getByLabelText('Rejection reason'),{target:{value:'incorrect_exercise'}});expect(screen.queryByLabelText('Custom rejection reason')).toBeNull();fireEvent.click(reject);
  await waitFor(()=>expect(fetch.mock.calls.filter(([p])=>p.endsWith('/decision'))).toHaveLength(2));expect(JSON.parse(fetch.mock.calls.filter(([p])=>p.endsWith('/decision'))[1][1].body as string).review_note).toBe('');
 });
+
+it.each(['incorrect_exercise', 'unacceptable_form', 'other'])(
+  'disables approval for rejection intent %s and restores it only when cleared', async reason => {
+    const fetch = mockApi([rankedUpload], true);
+    render(<RankedUploadsDashboard />);
+    await review();
+    const approve = screen.getByRole('button', {name: 'Approve upload'}) as HTMLButtonElement;
+    expect(approve.disabled).toBe(false);
+    fireEvent.change(screen.getByLabelText('Rejection reason'), {target: {value: reason}});
+    expect(approve.disabled).toBe(true);
+    fireEvent.click(approve);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(fetch.mock.calls.filter(([path]) => path.endsWith('/decision'))).toHaveLength(0);
+    if (reason !== 'other') {
+      fireEvent.click(screen.getByRole('button', {name: 'Reject upload'}));
+      await screen.findByText('Connection failed. Try again.');
+      expect(approve.disabled).toBe(true);
+    }
+    fireEvent.change(screen.getByLabelText('Rejection reason'), {target: {value: ''}});
+    expect(approve.disabled).toBe(false);
+    fireEvent.click(approve);
+    expect(screen.getByRole('dialog', {name: 'Confirm ranked upload decision'})).toBeTruthy();
+    expect(fetch.mock.calls.filter(([path, options]) => path.endsWith('/decision') && JSON.parse(options.body as string).approve)).toHaveLength(0);
+  },
+);
+
+it('selecting a rejection reason closes an existing approval confirmation', async () => {
+  const fetch = mockApi(); render(<RankedUploadsDashboard />); await review();
+  fireEvent.click(screen.getByRole('button', {name: 'Approve upload'}));
+  expect(screen.getByRole('dialog')).toBeTruthy();
+  fireEvent.change(screen.getByLabelText('Rejection reason'), {target: {value: 'incorrect_measurement'}});
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect((screen.getByRole('button', {name: 'Approve upload'}) as HTMLButtonElement).disabled).toBe(true);
+  expect(fetch.mock.calls.filter(([path]) => path.endsWith('/decision'))).toHaveLength(0);
+});

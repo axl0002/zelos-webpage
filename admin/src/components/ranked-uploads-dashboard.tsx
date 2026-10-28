@@ -117,7 +117,7 @@ function RankedUploadDetail({item, onBusy, onSaved, onCorrected}: {
   }, [openPreview]);
   async function decide(approved: boolean) {
     if (savingRef.current || !awaiting ||
-      (approved ? confirmation !== "approve" || !preview || !watched : !validRejection)) return;
+      (approved ? !!reason || confirmation !== "approve" || !preview || !watched : !validRejection)) return;
     savingRef.current = true; setSaving(true); onBusy(true); setError("");
     try {
       await api("/decision", {upload_id: item.id, expected_revision: item.revision,
@@ -195,15 +195,15 @@ function RankedUploadDetail({item, onBusy, onSaved, onCorrected}: {
           <p className="small muted">While this review is pending, the video stays private, earns no points, and the athlete’s current personal best stays in place.</p>
           <div className="decision-actions"><button className="button secondary" disabled={saving || !validRejection}
             onClick={() => void decide(false)}>Reject upload</button>
-            <button className="button primary" disabled={!watched || !preview || saving} onClick={() => setConfirmation("approve")}>Approve upload</button></div>
+            <button className="button primary ranked-upload-approve" disabled={!!reason || !watched || !preview || saving} onClick={() => setConfirmation("approve")}>Approve upload</button></div>
         </>}
       {error && <p className="notice error" role="alert">{error}</p>}
     </div></div>
-    {confirmation && <div className="dialog-backdrop"><div className="dialog" role="dialog" aria-modal="true" aria-label="Confirm ranked upload decision">
+    {confirmation && !reason && <div className="dialog-backdrop"><div className="dialog" role="dialog" aria-modal="true" aria-label="Confirm ranked upload decision">
       <h2>Approve this ranked upload?</h2>
       <p>The upload can be published and counted in rankings after the remaining publication checks pass.</p>
       <div className="decision-actions"><button className="button secondary" disabled={saving} onClick={() => setConfirmation(null)}>Cancel</button>
-        <button className="button primary" disabled={saving} onClick={() => void decide(true)}>{saving ? "Saving…" : "Confirm decision"}</button></div>
+        <button className="button primary" disabled={saving || !!reason} onClick={() => void decide(true)}>{saving ? "Saving…" : "Confirm decision"}</button></div>
     </div></div>}
   </section>;
 }
