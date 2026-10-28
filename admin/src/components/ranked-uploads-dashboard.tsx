@@ -1,4 +1,5 @@
 "use client";
+import RankedUploadHoldEditor from "./ranked-upload-hold-editor";
 import {notifyAdminReviewCountsChanged} from "@/lib/admin-review-counts";
 import {holdTimingReasons} from "@/lib/ranked-review-reasons";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -73,19 +74,20 @@ export default function RankedUploadsDashboard() {
             </span>
           </button>)}
         </section>
-        {current ? <RankedUploadDetail key={`${current.id}:${current.revision}`} item={current} onBusy={setBusy} onSaved={saved} />
+        {current ? <RankedUploadDetail key={`${current.id}:${current.revision}`} item={current} onBusy={setBusy} onSaved={saved} onCorrected={() => {setNotice("Hold frames corrected. The upload is still private and awaiting review. Check the updated result before approving."); void refresh();}} />
           : <section className="review-panel"><p className="empty">Select an upload to review.</p></section>}
       </div>
     </div>;
 }
-function RankedUploadDetail({item, onBusy, onSaved}: {
+function RankedUploadDetail({item, onBusy, onSaved, onCorrected}: {
   item: RankedUploadReview; onBusy: (busy: boolean) => void;
-  onSaved: (approve: boolean) => void;
+  onSaved: (approve: boolean) => void; onCorrected: () => void;
 }) {
   const [preview, setPreview] = useState<{url: string; expires_in: number} | null>(null);
   const [opening, setOpening] = useState(false);
   const [watched, setWatched] = useState(false);
   const [reason, setReason] = useState<RankedUploadReason | "">(item.rejection_reason ?? "");
+  const [customReason, setCustomReason] = useState(item.rejection_reason === "other" ? item.review_note ?? "" : "");
   const [ruleIds, setRuleIds] = useState<string[]>(item.rejection_rules.map(rule => rule.id));
   const [confirmation, setConfirmation] = useState<"approve" | null>(null);
   const [saving, setSaving] = useState(false);
@@ -95,7 +97,7 @@ function RankedUploadDetail({item, onBusy, onSaved}: {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const awaiting = item.state === "rank_review";
   const canRejectTiming = item.metric === "seconds" && !!item.hold_timing;
-  const validRejection = !!reason && (!holdTimingReasons.has(reason) || canRejectTiming);
+  const validRejection = !!reason && (!holdTimingReasons.has(reason) || canRejectTiming) && (reason !== "other" || customReason.trim().length >= 3);
   const ruleType = reason === "unacceptable_form" ? "form" : reason === "unacceptable_filming" ? "filming" : null;
 
   const openPreview = useCallback(async () => {
@@ -120,7 +122,7 @@ function RankedUploadDetail({item, onBusy, onSaved}: {
     try {
       await api("/decision", {upload_id: item.id, expected_revision: item.revision,
         approve: approved, watched_video: approved && watched,
-        reason_code: approved ? null : reason, review_note: "", rule_ids: approved ? [] : ruleIds});
+        reason_code: approved ? null : reason, review_note: !approved && reason === "other" ? customReason.trim() : "", rule_ids: approved ? [] : ruleIds});
       onSaved(approved);
     } catch (cause) { setError((cause as Error).message); setConfirmation(null); }
     finally { savingRef.current = false; setSaving(false); onBusy(false); }
@@ -147,6 +149,7 @@ function RankedUploadDetail({item, onBusy, onSaved}: {
             }
           }}>{boundary === "start_ms" ? "Hold start" : "Hold end"} · {(item.hold_timing![boundary] / 1000).toFixed(3)} s</button>)}
       </div>}
+      {awaiting && item.metric === "seconds" && <RankedUploadHoldEditor key={`${item.id}:${item.revision}:${preview?.url ?? ""}`} item={item} videoRef={videoRef} watched={watched} disabled={!preview || opening || saving} onBusy={value => {savingRef.current=value;setSaving(value);onBusy(value);}} onSaved={() => {setWatched(false);setConfirmation(null);onCorrected();}} />}
       {preview && <button className="button text" disabled={opening || saving} onClick={() => void openPreview()}>Refresh video link</button>}
       <p className="small muted">The preview link is temporary. Refresh it if playback stops. This video has not been published.</p>
       <div className="notice">
@@ -173,6 +176,10 @@ function RankedUploadDetail({item, onBusy, onSaved}: {
             <option value="">Choose a reason if rejecting</option>
             {Object.entries(rankedUploadReasons).filter(([code]) => !holdTimingReasons.has(code) || canRejectTiming).map(([code, label]) => <option key={code} value={code}>{label}</option>)}
           </select>
+          {reason === "other" && <label htmlFor="ranked-upload-custom-reason">Custom rejection reason
+            <textarea id="ranked-upload-custom-reason" maxLength={1000} disabled={saving} value={customReason} placeholder="Explain why this upload was rejected. This is shown to the uploader."
+              onChange={event => {setCustomReason(event.target.value);setConfirmation(null);}} />
+          </label>}
           {ruleType && <fieldset disabled={saving}>
             <legend>Which {ruleType} rules were not met?</legend>
             <p className="small muted">Select up to eight specific rules to include in the uploader’s rejection feedback.</p>

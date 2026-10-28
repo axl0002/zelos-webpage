@@ -202,3 +202,15 @@ it("preserves validated precise timing and lets reviewers seek each boundary", a
   expect((screen.getByRole("button", {name: "Approve upload"}) as HTMLButtonElement).disabled).toBe(true);
   pause.mockRestore();
 });
+it('requires and forwards a custom rejection reason for Other without changing other reason requests',async()=>{
+ const fetch=mockApi([rankedUpload],true);render(<RankedUploadsDashboard/>);await screen.findByRole('heading',{name:rankedUpload.title});
+ fireEvent.change(screen.getByLabelText('Rejection reason'),{target:{value:'other'}});
+ const reject=screen.getByRole('button',{name:'Reject upload'}) as HTMLButtonElement;
+ expect(reject.disabled).toBe(true);
+ const reason=screen.getByLabelText('Custom rejection reason');fireEvent.change(reason,{target:{value:'  The hold is supported by the rail.  '}});expect(reject.disabled).toBe(false);
+ fireEvent.click(reject);await screen.findByText('Connection failed. Try again.');
+ expect((reason as HTMLTextAreaElement).value).toBe('  The hold is supported by the rail.  ');
+ expect(JSON.parse(fetch.mock.calls.find(([p])=>p.endsWith('/decision'))![1].body as string)).toMatchObject({reason_code:'other',review_note:'The hold is supported by the rail.',rule_ids:[]});
+ fireEvent.change(screen.getByLabelText('Rejection reason'),{target:{value:'incorrect_exercise'}});expect(screen.queryByLabelText('Custom rejection reason')).toBeNull();fireEvent.click(reject);
+ await waitFor(()=>expect(fetch.mock.calls.filter(([p])=>p.endsWith('/decision'))).toHaveLength(2));expect(JSON.parse(fetch.mock.calls.filter(([p])=>p.endsWith('/decision'))[1][1].body as string).review_note).toBe('');
+});
