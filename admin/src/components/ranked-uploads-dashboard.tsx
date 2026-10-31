@@ -1,5 +1,6 @@
 "use client";
 import RankedUploadHoldEditor from "./ranked-upload-hold-editor";
+import HoldReviewTimeline from "./hold-review-timeline";
 import {notifyAdminReviewCountsChanged} from "@/lib/admin-review-counts";
 import {holdTimingReasons} from "@/lib/ranked-review-reasons";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -138,16 +139,10 @@ function RankedUploadDetail({item, onBusy, onSaved, onCorrected}: {
           onError={() => {setPreview(null); setWatched(false); setConfirmation(null); setError("The video could not play. Retry the video to get a fresh private link.");}} />
           : <button className="button secondary" disabled={opening || saving} onClick={() => void openPreview()}>{opening ? "Loading video…" : "Retry video"}</button>}
       </div>
+      {item.metric === "seconds" && <HoldReviewTimeline videoRef={videoRef} source={preview?.url ?? ""} timing={item.hold_timing} disabled={opening || saving} />}
       {item.hold_timing && <div className="playback-tools" aria-label="Selected hold timing">
         <p>Selected hold: {(item.hold_timing.duration_ms / 1000).toFixed(3)} s · credited {item.claim} s</p>
-        {(["start_ms", "end_ms"] as const).map(boundary => <button key={boundary}
-          className="button secondary" disabled={!preview || opening || saving}
-          onClick={() => {
-            if (videoRef.current) {
-              videoRef.current.pause();
-              videoRef.current.currentTime = item.hold_timing![boundary] / 1000;
-            }
-          }}>{boundary === "start_ms" ? "Hold start" : "Hold end"} · {(item.hold_timing![boundary] / 1000).toFixed(3)} s</button>)}
+
       </div>}
       {awaiting && item.metric === "seconds" && <RankedUploadHoldEditor key={`${item.id}:${item.revision}:${preview?.url ?? ""}`} item={item} videoRef={videoRef} watched={watched} disabled={!preview || opening || saving} onBusy={value => {savingRef.current=value;setSaving(value);onBusy(value);}} onSaved={() => {setWatched(false);setConfirmation(null);onCorrected();}} />}
       {preview && <button className="button text" disabled={opening || saving} onClick={() => void openPreview()}>Refresh video link</button>}

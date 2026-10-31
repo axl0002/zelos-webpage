@@ -943,3 +943,8 @@ textarea {
   .analytics-secondary-controls select { max-width: min(240px,65vw); }
 }
 @media (max-width: 380px) { .analytics-metrics, .analytics-skeleton-grid { grid-template-columns: minmax(0,1fr); } }
+
+/* Keep report snapshot frame jumps readable beside the uploader timeline. */
+.hold-boundary-tools { flex-wrap: wrap; }
+.hold-boundary-tools p { flex-basis: 100%; }
+.hold-boundary-tools button { max-width: 100%; white-space: normal; }

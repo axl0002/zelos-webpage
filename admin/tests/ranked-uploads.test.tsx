@@ -194,9 +194,12 @@ it("preserves validated precise timing and lets reviewers seek each boundary", a
   mockApi([item]); render(<RankedUploadsDashboard />);
   await screen.findByText("Selected hold: 10.999 s · credited 10 s");
   await waitFor(() => expect(document.querySelector("video")).not.toBeNull());
-  fireEvent.click(screen.getByRole("button", {name: "Hold start · 1.500 s"}));
+  const video = document.querySelector("video")!;
+  Object.defineProperty(video, "duration", {value: 30});
+  fireEvent.loadedMetadata(video);
+  fireEvent.click(screen.getByRole("button", {name: "Uploader start · 1.500 s"}));
   expect(document.querySelector("video")!.currentTime).toBe(1.5);
-  fireEvent.click(screen.getByRole("button", {name: "Hold end · 12.499 s"}));
+  fireEvent.click(screen.getByRole("button", {name: "Uploader end · 12.499 s"}));
   expect(document.querySelector("video")!.currentTime).toBe(12.499);
   expect(pause).toHaveBeenCalledTimes(2);
   expect((screen.getByRole("button", {name: "Approve upload"}) as HTMLButtonElement).disabled).toBe(true);

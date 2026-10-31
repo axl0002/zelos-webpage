@@ -1,5 +1,6 @@
 "use client";
 import RankingCorrectionEditor from "./ranking-correction-editor";
+import HoldReviewTimeline from "./hold-review-timeline";
 import {notifyAdminReviewCountsChanged} from "@/lib/admin-review-counts";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { mediaUrls } from "@/lib/review-media";
@@ -100,7 +101,8 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
     {source < urls.length ? <video ref={videoRef} key={urls[source]} controls playsInline preload="metadata" src={urls[source]}
       aria-label="Reported clip" onError={() => { setSource(old => old + 1); setWatched(false); setConfirm(null); }} />
       : <p role="alert">Video unavailable. Refresh the queue before reviewing.</p>}
-    {timing && <div className="playback-tools" aria-label="Reported hold timing">
+    {(item.metric ?? item.board_metric) === "seconds" && <HoldReviewTimeline key={`${item.id}:${item.measurement_revision}:${urls[source]}`} videoRef={videoRef} source={urls[source] ?? ""} timing={item.hold_timing} disabled={saving} label="Current upload hold frames" />}
+    {timing?.snapshot && <div className="playback-tools hold-boundary-tools" aria-label="Reported hold timing">
       <p>{timing.snapshot ? "Reported hold boundaries" : "Selected hold boundaries"} · {(timing.duration_ms / 1000).toFixed(3)} s</p>
       {(["start_ms", "end_ms"] as const).map(boundary => <button key={boundary}
         className="button secondary" disabled={saving || !urls[source]}
