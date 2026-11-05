@@ -65,9 +65,11 @@ export default function RankingFlagsDashboard() {
 }
 function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confirmed: boolean|"corrected"|"timing_updated", resolvedIds?: string[]) => void; onBusy: (busy: boolean) => void}) {
   const [note, setNote] = useState(item.details || rankingReasons[item.reason] || "");
-  const ruleType = item.reason === "unacceptable_form" ? "form" : item.reason === "unacceptable_filming" ? "filming" : null;
+  const [rejectionReason, setRejectionReason] = useState(item.reason);
+  const changedReason = rejectionReason !== item.reason;
+  const ruleType = rejectionReason === "unacceptable_form" ? "form" : rejectionReason === "unacceptable_filming" ? "filming" : null;
   const frameFlag = ["incorrect_start_frame", "incorrect_end_frame", "incorrect_hold_frames"].includes(item.reason);
-  const choices = frameFlag ? [] : item.rules.filter(rule => ruleType === null || rule.type === ruleType);
+  const choices = ruleType === null ? [] : item.rules.filter(rule => rule.type === ruleType);
   const [selectedRules, setSelectedRules] = useState<string[]>(item.rule_violations
     .filter(rule => choices.some(current => current.id === rule.id)).map(rule => rule.id));
   const chosen = choices.filter(rule => selectedRules.includes(rule.id));
@@ -132,19 +134,27 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
   const canReject = item.submission_status === "eligible" && !unavailable;
   async function decide() {
     if (confirm === null || refreshRequired || savingRef.current || checkingRelated || (!related && !singleOnly) || (applyAll && !related) || !watched || (!urls[source] && !unavailable) ||
-      (confirm && (!canReject || !validRejection || (frameFlag && !timing)))) return;
+      (confirm && (!canReject || !validRejection || (frameFlag && !changedReason && !timing)))) return;
     savingRef.current = true;
     setSaving(true); onBusy(true); setError("");
     try {
       const decision = {report_id: item.id, confirmed: confirm, review_note: note, watched_video: watched && !unavailable, rule_ids: confirm ? chosen.map(rule => rule.id) : []};
       if (applyAll && related) {
-        const response = await fetch("/admin/api/ranking-flags/decision/group/v1", {method: "POST", cache: "no-store", headers: {"Content-Type": "application/json"}, body: JSON.stringify({...decision, expected_open_report_ids: related.open_report_ids})});
+        const response = await fetch(`/admin/api/ranking-flags/decision/group/${changedReason && confirm ? "v2" : "v1"}`, {method: "POST", cache: "no-store", headers: {"Content-Type": "application/json"}, body: JSON.stringify({...decision, ...(changedReason && confirm ? {reason_code: rejectionReason} : {}), expected_open_report_ids: related.open_report_ids})});
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "The group decision could not be saved. Refresh the queue before retrying.");
         const result = parseRankingFlagGroupResult(data, related.open_report_ids, confirm);
         if (!result) throw new Error("The saved group decision could not be verified. Refresh the queue before retrying.");
         notifyAdminReviewCountsChanged(); onSaved(confirm, result.resolved_report_ids);
-      } else {await api(decision); onSaved(confirm);}
+      } else {
+        if (changedReason && confirm) {
+          const response = await fetch("/admin/api/ranking-flags/decision/v2", {method:"POST", cache:"no-store", headers:{"Content-Type":"application/json"}, body:JSON.stringify({...decision,reason_code:rejectionReason})});
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || "The decision could not be saved. Try again.");
+          notifyAdminReviewCountsChanged();
+        } else await api(decision);
+        onSaved(confirm);
+      }
     }
     catch (cause) {
       if (applyAll) {
@@ -184,6 +194,13 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
     {!canReject && <p>{unavailable ? "The ranked content is no longer available for review. You can inspect the report evidence and dismiss the flag; this does not change rankings." : "This result is no longer eligible for ranking. You can dismiss this flag."}</p>}
     <label><input type="checkbox" checked={watched} disabled={saving || refreshRequired || (!urls[source] && !unavailable)}
       onChange={event => {setWatched(event.target.checked); closeConfirmation();}} /> {unavailable ? "I reviewed the available report evidence" : "I watched the clip and checked the reported issue"}</label>
+    <label htmlFor="ranking-rejection-reason">Rejection reason</label>
+    <select id="ranking-rejection-reason" value={rejectionReason} disabled={saving} onChange={event => {
+      setRejectionReason(event.target.value); setSelectedRules([]);
+      setNote(rankingReasons[event.target.value] ?? ""); closeConfirmation();
+    }}>
+      {Object.entries({...rankingReasons,other:"Other"}).map(([code,label]) => <option key={code} value={code}>{label}</option>)}
+    </select>
     {choices.length > 0 && <fieldset disabled={saving}><legend>Rules verified as not met</legend>
       {choices.map(rule => <label className="check" key={rule.id}><input type="checkbox" checked={selectedRules.includes(rule.id)}
         disabled={saving || (selectedRules.length >= 8 && !selectedRules.includes(rule.id))}
@@ -199,7 +216,7 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
     {refreshRequired && <p className="muted">Refresh queue before trying another decision.</p>}
     <div className="actions"><button className="button secondary" disabled={!watched || saving || refreshRequired}
       onClick={() => beginConfirmation(false)}>Dismiss flag</button>
-      <button className="button danger" disabled={!watched || saving || refreshRequired || !canReject || !validRejection || (frameFlag && !timing)}
+      <button className="button danger" disabled={!watched || saving || refreshRequired || !canReject || !validRejection || (frameFlag && !changedReason && !timing)}
         onClick={() => beginConfirmation(true)}>Reject ranking</button></div>
     {confirm !== null && <div className="dialog-backdrop"><div className="dialog" role="dialog" aria-modal="true" aria-label="Confirm ranking decision">
       <h2>{confirm ? "Reject this ranking?" : "Dismiss this flag?"}</h2>

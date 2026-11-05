@@ -171,3 +171,25 @@ it("shows reporter usernames separately from the reported athlete and handles un
  expect(screen.getAllByText("Reported by: Username unavailable")).toHaveLength(2);
  expect(screen.queryByText("Reported by: @athlete")).toBeNull();
 });
+it("allows incorrect exercise rejection independently of a form allegation without selecting an unrelated rule",async()=>{
+ const fetch=vi.fn(async(_input:string,options:RequestInit)=>({ok:true,json:async()=>options.method==="POST"?{ok:true}:[item]}));
+ mockFetch(fetch);render(<RankingFlagsDashboard/>);await screen.findByText("Keep arms straight.");
+ fireEvent.change(screen.getByLabelText("Rejection reason"),{target:{value:"incorrect_exercise"}});
+ expect(screen.queryByLabelText("Form: Keep arms straight.")).toBeNull();
+ fireEvent.click(screen.getByLabelText("I watched the clip and checked the reported issue"));
+ fireEvent.click(screen.getByRole("button",{name:"Reject ranking"}));await confirmDecision();
+ await screen.findByText("Ranking rejected. The uploader has been notified with your reason.");
+ const [path,options]=fetch.mock.calls.find(([,o])=>o.method==="POST")!;
+ expect(path).toBe("/admin/api/ranking-flags/decision/v2");
+ expect(JSON.parse(options.body as string)).toEqual({report_id:item.id,confirmed:true,reason_code:"incorrect_exercise",review_note:"Incorrect exercise or progression",watched_video:true,rule_ids:[]});
+});
+it("requires a matching form rule again when changing back from incorrect exercise",async()=>{
+ mockFetch(vi.fn(async()=>({ok:true,json:async()=>[item]})));
+ render(<RankingFlagsDashboard/>);await screen.findByText("Keep arms straight.");
+ fireEvent.click(screen.getByLabelText("I watched the clip and checked the reported issue"));
+ fireEvent.change(screen.getByLabelText("Rejection reason"),{target:{value:"incorrect_exercise"}});
+ fireEvent.change(screen.getByLabelText("Rejection reason"),{target:{value:"unacceptable_form"}});
+ expect((screen.getByRole("button",{name:"Reject ranking"}) as HTMLButtonElement).disabled).toBe(true);
+ fireEvent.click(screen.getByLabelText("Form: Keep arms straight."));
+ expect((screen.getByRole("button",{name:"Reject ranking"}) as HTMLButtonElement).disabled).toBe(false);
+});

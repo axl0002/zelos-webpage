@@ -21,6 +21,8 @@ it("covers every protected endpoint, including future additions", () => {
   expect(protectedRoutes.some(({path})=>path==="/admin/api/ranking-flags/correction/v2")).toBe(true);
   expect(protectedRoutes.some(({path})=>path==="/admin/api/ranking-flags/group-context")).toBe(true);
   expect(protectedRoutes.some(({path})=>path==="/admin/api/ranking-flags/decision/group/v1")).toBe(true);
+  expect(protectedRoutes.some(({path})=>path==="/admin/api/ranking-flags/decision/v2")).toBe(true);
+  expect(protectedRoutes.some(({path})=>path==="/admin/api/ranking-flags/decision/group/v2")).toBe(true);
   expect(routes.filter(({route}) => route.POST).length).toBeGreaterThan(10);
 });
 
