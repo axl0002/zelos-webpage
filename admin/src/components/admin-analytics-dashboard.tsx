@@ -1,5 +1,6 @@
 "use client";
 import {useEffect, useId, useRef, useState} from "react";
+import AdminInstagramAdoption from "@/components/admin-instagram-adoption";
 import {analyticsMetricKeys, parseDailyAnalytics, type AnalyticsCounts, type AnalyticsDay, type DailyAnalytics} from "@/lib/admin-analytics";
 const number = new Intl.NumberFormat("en-US");
 function dateLabel(value: string, long = false) {return new Intl.DateTimeFormat("en-US", {month: "short", day: "numeric", ...(long ? {year: "numeric"} : {}), timeZone: "UTC"}).format(new Date(value + "T12:00:00Z"));}
@@ -58,6 +59,7 @@ export default function AdminAnalyticsDashboard() {
       <div className="analytics-controls"><div className="analytics-range" role="group" aria-label="Date range">{[7,30,90].map(value=><button key={value} type="button" aria-pressed={days===value} onClick={()=>chooseDays(value)}>{value} days</button>)}</div>
         <div className="analytics-secondary-controls"><label>Time zone<select value={timezone} onChange={e=>chooseTimezone(e.target.value)}><option value="UTC">UTC</option>{localZone!=="UTC"&&<option value={localZone}>{localZone} (local)</option>}</select></label><button type="button" className="button secondary" disabled={loading} onClick={reload}>Refresh</button></div>
       </div></header>
+    <AdminInstagramAdoption refresh={refresh}/>
     {loading&&<section className="analytics-loading" role="status" aria-label="Loading analytics"><div className="analytics-skeleton-grid">{Array.from({length:6},(_,i)=><div className="analytics-skeleton" key={i}/>)}</div><p>Loading analytics…</p></section>}
     {error&&<section className="analytics-error"><p role="alert">{error}</p><button className="button primary" onClick={reload}>Try again</button></section>}
     {data&&<>

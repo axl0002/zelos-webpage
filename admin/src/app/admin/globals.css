@@ -948,3 +948,7 @@ textarea {
 .hold-boundary-tools { flex-wrap: wrap; }
 .hold-boundary-tools p { flex-basis: 100%; }
 .hold-boundary-tools button { max-width: 100%; white-space: normal; }
+
+.analytics-instagram { margin: 0 0 28px; display: grid; gap: 12px; }
+.analytics-instagram h2 { font-size: 16px; margin-bottom: 5px; }
+.analytics-instagram .analytics-metrics { margin-bottom: 0; }

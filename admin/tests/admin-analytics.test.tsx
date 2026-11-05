@@ -3,6 +3,7 @@ import {cleanup,fireEvent,render,screen,waitFor,within} from "@testing-library/r
 import Dashboard from "../src/components/admin-analytics-dashboard";
 import {analyticsFixture} from "./fixtures/analytics";
 import {analyticsMetricKeys} from "../src/lib/admin-analytics";
+vi.mock("../src/components/admin-instagram-adoption",()=>({default:()=>null}));
 afterEach(()=>{cleanup();vi.unstubAllGlobals();vi.restoreAllMocks();});
 function mockFetch(){const fn=vi.fn(async(url:string)=>{const p=new URL(url,"https://fixture.test").searchParams;return {ok:true,json:async()=>analyticsFixture(Number(p.get("days")),p.get("tz")!)};});vi.stubGlobal("fetch",fn);return fn;}
 it("shows simple period metrics, charts, coverage and exact daily totals without plan tiers",async()=>{

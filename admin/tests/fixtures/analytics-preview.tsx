@@ -6,6 +6,7 @@ import {analyticsFixture} from "./analytics";
 import "../../src/app/admin/globals.css";
 window.fetch=async(input)=>{
   const url=new URL(String(input),location.href);
+  if(url.pathname==="/admin/api/analytics/instagram")return new Response(JSON.stringify({schema_version:1,cohort_start:"2026-10-22T00:00:00Z",generated_at:"2026-11-05T12:00:00Z",signed_in_accounts:480,with_instagram:320,without_instagram:100,unanswered:60}));
   if(url.pathname!=="/admin/api/analytics")throw new Error("Network disabled in this fixture");
   return new Response(JSON.stringify(analyticsFixture(Number(url.searchParams.get("days")),url.searchParams.get("tz")??"UTC")),{headers:{"content-type":"application/json"}});
 };
