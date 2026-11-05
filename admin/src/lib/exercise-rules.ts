@@ -1,6 +1,8 @@
 export type ExerciseRule = {id: string; type: "form" | "filming"; text: string; position: number};
 export const ruleUuid = (value: unknown): value is string => typeof value === "string" &&
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  // Rule IDs include deterministic hash-derived PostgreSQL UUIDs. Their version
+  // and variant bits are not constrained; the backend checks rule membership.
+  /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(value);
 export function parseRuleIds(value: unknown): string[] | null {
   if (value === undefined) return [];
   return Array.isArray(value) && value.length <= 8 && value.every(ruleUuid) && new Set(value).size === value.length
