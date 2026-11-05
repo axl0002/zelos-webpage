@@ -1,5 +1,6 @@
 "use client";
 import RankingCorrectionEditor from "./ranking-correction-editor";
+import ClipTrimPanel from "./clip-trim-panel";
 import HoldReviewTimeline from "./hold-review-timeline";
 import {notifyAdminReviewCountsChanged} from "@/lib/admin-review-counts";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -54,6 +55,7 @@ export default function RankingFlagsDashboard() {
           <span>{rankingReasons[item.reason]}</span><small>Reported by: {item.reporter_username ? `@${item.reporter_username}` : "Username unavailable"}</small></span></button>)}
       </section>
         {current ? <FlagReview key={current.id} item={current} onBusy={setBusy} onSaved={(confirmed, resolvedIds) => {
+          if(confirmed==="trimmed"){void refresh();setNotice("Clip trimmed. Review the updated video; the flag and result are unchanged.");return;}
           if(confirmed==="timing_updated"){void refresh();setNotice("Hold timing corrected. This flag is still open for its original issue.");return;}
           const closed = new Set(resolvedIds ?? [current.id]);
           setQueue(old => old.filter(item => !closed.has(item.id))); setSelected(null);
@@ -63,7 +65,7 @@ export default function RankingFlagsDashboard() {
       </div>
     </div>;
 }
-function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confirmed: boolean|"corrected"|"timing_updated", resolvedIds?: string[]) => void; onBusy: (busy: boolean) => void}) {
+function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confirmed: boolean|"corrected"|"timing_updated"|"trimmed", resolvedIds?: string[]) => void; onBusy: (busy: boolean) => void}) {
   const [note, setNote] = useState(item.details || rankingReasons[item.reason] || "");
   const [rejectionReason, setRejectionReason] = useState(item.reason);
   const changedReason = rejectionReason !== item.reason;
@@ -76,6 +78,7 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
   const validRejection = (ruleType && choices.length > 0 ? chosen.length > 0 : note.trim().length >= 3 || chosen.length > 0);
   const [watched, setWatched] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [trimOpen,setTrimOpen]=useState(false),[trimBusy,setTrimBusy]=useState(false);
   const [refreshRequired, setRefreshRequired] = useState(false);
   const savingRef = useRef(false);
   const [confirm, setConfirm] = useState<boolean | null>(null);
@@ -116,7 +119,7 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
     }
   }
   function beginConfirmation(reject: boolean) {
-    if (refreshRequired || savingRef.current || !watched) return;
+    if (refreshRequired || savingRef.current || trimBusy || !watched) return;
     setConfirm(reject); void loadRelated();
   }
   useEffect(() => () => {relatedVersion.current++; relatedRequest.current?.abort();}, []);
@@ -133,7 +136,7 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
   const unavailable = item.review_unavailable === true;
   const canReject = item.submission_status === "eligible" && !unavailable;
   async function decide() {
-    if (confirm === null || refreshRequired || savingRef.current || checkingRelated || (!related && !singleOnly) || (applyAll && !related) || !watched || (!urls[source] && !unavailable) ||
+    if (confirm === null || refreshRequired || savingRef.current || trimBusy || checkingRelated || (!related && !singleOnly) || (applyAll && !related) || !watched || (!urls[source] && !unavailable) ||
       (confirm && (!canReject || !validRejection || (frameFlag && !changedReason && !timing)))) return;
     savingRef.current = true;
     setSaving(true); onBusy(true); setError("");
@@ -172,11 +175,11 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
     {source < urls.length ? <video ref={videoRef} key={urls[source]} controls playsInline preload="metadata" src={urls[source]}
       aria-label="Reported clip" onError={() => { setSource(old => old + 1); setWatched(false); closeConfirmation(); }} />
       : <p role="alert">Video unavailable. Refresh the queue before reviewing.</p>}
-    {(item.metric ?? item.board_metric) === "seconds" && <HoldReviewTimeline key={`${item.id}:${item.measurement_revision}:${urls[source]}`} videoRef={videoRef} source={urls[source] ?? ""} timing={item.hold_timing} disabled={saving} label="Current upload hold frames" />}
+    {(item.metric ?? item.board_metric) === "seconds" && <HoldReviewTimeline key={`${item.id}:${item.measurement_revision}:${urls[source]}`} videoRef={videoRef} source={urls[source] ?? ""} timing={item.hold_timing} disabled={saving || trimBusy} label="Current upload hold frames" />}
     {timing?.snapshot && <div className="playback-tools hold-boundary-tools" aria-label="Reported hold timing">
       <p>{timing.snapshot ? "Reported hold boundaries" : "Selected hold boundaries"} · {(timing.duration_ms / 1000).toFixed(3)} s</p>
       {(["start_ms", "end_ms"] as const).map(boundary => <button key={boundary}
-        className="button secondary" disabled={saving || !urls[source]}
+        className="button secondary" disabled={saving || trimBusy || !urls[source]}
         onClick={() => {
           const video = videoRef.current;
           if (video) {
@@ -192,25 +195,27 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
     {item.rule_violations.length > 0 && <ul>{item.rule_violations.map(rule => <li key={rule.id}>{rule.text}</li>)}</ul>}
     {item.details && <p>{item.details}</p>}
     {!canReject && <p>{unavailable ? "The ranked content is no longer available for review. You can inspect the report evidence and dismiss the flag; this does not change rankings." : "This result is no longer eligible for ranking. You can dismiss this flag."}</p>}
-    <label><input type="checkbox" checked={watched} disabled={saving || refreshRequired || (!urls[source] && !unavailable)}
+    <label><input type="checkbox" checked={watched} disabled={saving || trimBusy || refreshRequired || (!urls[source] && !unavailable)}
       onChange={event => {setWatched(event.target.checked); closeConfirmation();}} /> {unavailable ? "I reviewed the available report evidence" : "I watched the clip and checked the reported issue"}</label>
     <label htmlFor="ranking-rejection-reason">Rejection reason</label>
-    <select id="ranking-rejection-reason" value={rejectionReason} disabled={saving} onChange={event => {
+    <select id="ranking-rejection-reason" value={rejectionReason} disabled={saving || trimBusy} onChange={event => {
       setRejectionReason(event.target.value); setSelectedRules([]);
       setNote(rankingReasons[event.target.value] ?? ""); closeConfirmation();
     }}>
       {Object.entries({...rankingReasons,other:"Other"}).map(([code,label]) => <option key={code} value={code}>{label}</option>)}
     </select>
-    {choices.length > 0 && <fieldset disabled={saving}><legend>Rules verified as not met</legend>
+    {choices.length > 0 && <fieldset disabled={saving || trimBusy}><legend>Rules verified as not met</legend>
       {choices.map(rule => <label className="check" key={rule.id}><input type="checkbox" checked={selectedRules.includes(rule.id)}
-        disabled={saving || (selectedRules.length >= 8 && !selectedRules.includes(rule.id))}
+        disabled={saving || trimBusy || (selectedRules.length >= 8 && !selectedRules.includes(rule.id))}
         onChange={event => {setSelectedRules(old => event.target.checked ? [...old, rule.id] : old.filter(id => id !== rule.id)); closeConfirmation();}} />
         {rule.type === "form" ? "Form" : "Filming"}: {rule.text}</label>)}
     </fieldset>}
     <label htmlFor="ranking-rejection-note">Review note shown to the uploader</label>
-    <textarea id="ranking-rejection-note" value={note} maxLength={1000} rows={4} disabled={saving}
+    <textarea id="ranking-rejection-note" value={note} maxLength={1000} rows={4} disabled={saving || trimBusy}
       onChange={event => {setNote(event.target.value); closeConfirmation();}} />
-    {canReject&&(item.board_metric==="seconds"||["incorrect_measurement","incorrect_start_frame","incorrect_end_frame","incorrect_hold_frames"].includes(item.reason))&&<RankingCorrectionEditor key={`${item.id}:${item.measurement_revision}:${item.media_fingerprint}:${urls[source]}`} item={item} videoRef={videoRef} watched={watched} note={note} disabled={saving||refreshRequired||!urls[source]} onBusy={value=>{setSaving(value);onBusy(value);}} onSaved={resolved=>onSaved(resolved?"corrected":"timing_updated")}/>}
+    {canReject&&(item.board_metric==="seconds"||["incorrect_measurement","incorrect_start_frame","incorrect_end_frame","incorrect_hold_frames"].includes(item.reason))&&<RankingCorrectionEditor key={`${item.id}:${item.measurement_revision}:${item.media_fingerprint}:${urls[source]}`} item={item} videoRef={videoRef} watched={watched} note={note} disabled={saving||trimBusy||refreshRequired||!urls[source]} onBusy={value=>{setSaving(value);onBusy(value);}} onSaved={resolved=>onSaved(resolved?"corrected":"timing_updated")}/>}
+    {canReject && <button className="button secondary" disabled={saving||trimBusy||refreshRequired} onClick={()=>{videoRef.current?.pause();setWatched(false);closeConfirmation();setTrimOpen(v=>!v);}}>{trimOpen?"Close trim editor":"Trim clip"}</button>}
+    {canReject && trimOpen && <ClipTrimPanel target={{kind:"post",id:item.post_id}} disabled={saving||refreshRequired} onBusy={value=>{setTrimBusy(value);onBusy(value);}} onSaved={()=>{setWatched(false);closeConfirmation();setTrimOpen(false);onSaved("trimmed");}} />}
     <p className="muted">Confirm only the issues you verified. Rejecting removes this result from rankings and hides the video from feeds and the athlete’s profile.</p>
     {error && <p role="alert" className="error">{error}</p>}
     {refreshRequired && <p className="muted">Refresh queue before trying another decision.</p>}
@@ -224,17 +229,17 @@ function FlagReview({item, onSaved, onBusy}: {item: RankingFlag; onSaved: (confi
       <p>{confirm ? `The uploader will receive this reason: ${note.trim() || chosen.map(rule => rule.text).join("; ")}` : "The ranking stays unchanged."}</p>
       {checkingRelated && <p role="status">Checking other open flags for this submission…</p>}
       {related && related.other_open_count > 0 && <>
-        <label className="check"><input type="checkbox" checked={applyAll} disabled={saving} onChange={event => setApplyAll(event.target.checked)} /> Apply to all {related.other_open_count} other {related.other_open_count === 1 ? "flag" : "flags"} for this submission</label>
+        <label className="check"><input type="checkbox" checked={applyAll} disabled={saving || trimBusy} onChange={event => setApplyAll(event.target.checked)} /> Apply to all {related.other_open_count} other {related.other_open_count === 1 ? "flag" : "flags"} for this submission</label>
         <p className="small muted">{applyAll ? confirm ? `Reject the ranking once and close all ${related.open_report_ids.length} flags. The uploader receives one notification.` : `Dismiss all ${related.open_report_ids.length} flags. The ranking stays unchanged.` : "Only this flag will be resolved unless you select the option above."}</p>
       </>}
       {related && related.other_open_count === 0 && <p className="small muted">There are no other open flags for this submission.</p>}
       {relatedError && <div><p role="alert">{relatedError}</p><p className="small muted">Retry the related-flag check, or explicitly continue with this flag only.</p>
-        <button className="button secondary" disabled={saving} onClick={() => void loadRelated()}>Retry related flags</button>
-        <button className="button secondary" disabled={saving || singleOnly} onClick={() => {setSingleOnly(true); setApplyAll(false);}}>Continue with this flag only</button>
+        <button className="button secondary" disabled={saving || trimBusy} onClick={() => void loadRelated()}>Retry related flags</button>
+        <button className="button secondary" disabled={saving || trimBusy || singleOnly} onClick={() => {setSingleOnly(true); setApplyAll(false);}}>Continue with this flag only</button>
         {singleOnly && <p>Only this flag will be resolved.</p>}
       </div>}
-      <button className="button secondary" disabled={saving} onClick={closeConfirmation}>Cancel</button>
-      <button className="button primary" disabled={saving || checkingRelated || (!related && !singleOnly)} onClick={() => void decide()}>{saving ? "Saving…" : "Confirm decision"}</button>
+      <button className="button secondary" disabled={saving || trimBusy} onClick={closeConfirmation}>Cancel</button>
+      <button className="button primary" disabled={saving || trimBusy || checkingRelated || (!related && !singleOnly)} onClick={() => void decide()}>{saving ? "Saving…" : "Confirm decision"}</button>
     </div></div>}
   </section>;
 }

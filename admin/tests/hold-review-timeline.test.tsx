@@ -1,5 +1,5 @@
 import {afterEach, expect, it, vi} from "vitest";
-import {cleanup, fireEvent, render, screen, within} from "@testing-library/react";
+import {cleanup, fireEvent, render, screen, waitFor, within} from "@testing-library/react";
 import {createRef} from "react";
 import HoldReviewTimeline from "../src/components/hold-review-timeline";
 import RankingFlagsDashboard from "../src/components/ranking-flags-dashboard";
@@ -60,6 +60,6 @@ it('ranked submissions expose uploader frame markers without marking watched or 
  const fetch=vi.fn(async(path:string)=>({ok:true,json:async()=>path.endsWith('/preview')?privatePreview:[{...rankedUpload,hold_timing:frames}]}));vi.stubGlobal('fetch',fetch);
  const {container}=render(<RankedUploadsDashboard/>);await screen.findByLabelText('Private ranked upload');
  const video=container.querySelector('video')!;Object.defineProperties(video,{duration:{value:30},pause:{value:vi.fn()}});fireEvent.loadedMetadata(video);
- const timeline=within(screen.getByRole('region',{name:'Uploader-selected hold frames'}));fireEvent.click(timeline.getByRole('button',{name:'Uploader end · 11.999 s'}));expect(video.currentTime).toBe(11.999);
+ const timeline=within(screen.getByRole('region',{name:'Uploader-selected hold frames'}));const end=timeline.getByRole('button',{name:'Uploader end · 11.999 s'});await waitFor(()=>expect((end as HTMLButtonElement).disabled).toBe(false));fireEvent.click(end);expect(video.currentTime).toBe(11.999);
  expect((screen.getByLabelText('I watched the full video and checked the exercise, result and form against these rules.') as HTMLInputElement).checked).toBe(false);expect(fetch.mock.calls.every(([path])=>!path.endsWith('/decision')&&!path.endsWith('/hold-correction'))).toBe(true);
 });

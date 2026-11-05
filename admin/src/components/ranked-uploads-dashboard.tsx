@@ -1,5 +1,6 @@
 "use client";
 import RankedUploadHoldEditor from "./ranked-upload-hold-editor";
+import ClipTrimPanel from "./clip-trim-panel";
 import HoldReviewTimeline from "./hold-review-timeline";
 import {notifyAdminReviewCountsChanged} from "@/lib/admin-review-counts";
 import {holdTimingReasons} from "@/lib/ranked-review-reasons";
@@ -75,14 +76,14 @@ export default function RankedUploadsDashboard() {
             </span>
           </button>)}
         </section>
-        {current ? <RankedUploadDetail key={`${current.id}:${current.revision}`} item={current} onBusy={setBusy} onSaved={saved} onCorrected={() => {setNotice("Hold frames corrected. The upload is still private and awaiting review. Check the updated result before approving."); void refresh();}} />
+        {current ? <RankedUploadDetail key={`${current.id}:${current.revision}`} item={current} onBusy={setBusy} onSaved={saved} onCorrected={() => {setNotice("Hold frames corrected. The upload is still private and awaiting review. Check the updated result before approving."); void refresh();}} onTrimmed={()=>{setNotice("Clip trimmed. The upload is still private. Review the new video before approving.");void refresh();}} />
           : <section className="review-panel"><p className="empty">Select an upload to review.</p></section>}
       </div>
     </div>;
 }
-function RankedUploadDetail({item, onBusy, onSaved, onCorrected}: {
+function RankedUploadDetail({item, onBusy, onSaved, onCorrected,onTrimmed}: {
   item: RankedUploadReview; onBusy: (busy: boolean) => void;
-  onSaved: (approve: boolean) => void; onCorrected: () => void;
+  onSaved: (approve: boolean) => void; onCorrected: () => void;onTrimmed:()=>void;
 }) {
   const [preview, setPreview] = useState<{url: string; expires_in: number} | null>(null);
   const [opening, setOpening] = useState(false);
@@ -92,6 +93,7 @@ function RankedUploadDetail({item, onBusy, onSaved, onCorrected}: {
   const [ruleIds, setRuleIds] = useState<string[]>(item.rejection_rules.map(rule => rule.id));
   const [confirmation, setConfirmation] = useState<"approve" | null>(null);
   const [saving, setSaving] = useState(false);
+  const [trimOpen,setTrimOpen]=useState(false),[trimBusy,setTrimBusy]=useState(false);
   const [error, setError] = useState("");
   const previewRequest = useRef<AbortController | null>(null);
   const savingRef = useRef(false);
@@ -117,7 +119,7 @@ function RankedUploadDetail({item, onBusy, onSaved, onCorrected}: {
     return () => previewRequest.current?.abort();
   }, [openPreview]);
   async function decide(approved: boolean) {
-    if (savingRef.current || !awaiting ||
+    if (savingRef.current || trimBusy || !awaiting ||
       (approved ? !!reason || confirmation !== "approve" || !preview || !watched : !validRejection)) return;
     savingRef.current = true; setSaving(true); onBusy(true); setError("");
     try {
@@ -137,16 +139,18 @@ function RankedUploadDetail({item, onBusy, onSaved, onCorrected}: {
       <div className="video-frame">
         {preview ? <video ref={videoRef} key={preview.url} src={preview.url} autoPlay muted controls playsInline preload="auto" aria-label="Private ranked upload"
           onError={() => {setPreview(null); setWatched(false); setConfirmation(null); setError("The video could not play. Retry the video to get a fresh private link.");}} />
-          : <button className="button secondary" disabled={opening || saving} onClick={() => void openPreview()}>{opening ? "Loading video…" : "Retry video"}</button>}
+          : <button className="button secondary" disabled={opening || saving || trimBusy} onClick={() => void openPreview()}>{opening ? "Loading video…" : "Retry video"}</button>}
       </div>
-      {item.metric === "seconds" && <HoldReviewTimeline videoRef={videoRef} source={preview?.url ?? ""} timing={item.hold_timing} disabled={opening || saving} />}
+      {item.metric === "seconds" && <HoldReviewTimeline videoRef={videoRef} source={preview?.url ?? ""} timing={item.hold_timing} disabled={opening || saving || trimBusy} />}
       {item.hold_timing && <div className="playback-tools" aria-label="Selected hold timing">
         <p>Selected hold: {(item.hold_timing.duration_ms / 1000).toFixed(3)} s · credited {item.claim} s</p>
 
       </div>}
-      {awaiting && item.metric === "seconds" && <RankedUploadHoldEditor key={`${item.id}:${item.revision}:${preview?.url ?? ""}`} item={item} videoRef={videoRef} watched={watched} disabled={!preview || opening || saving} onBusy={value => {savingRef.current=value;setSaving(value);onBusy(value);}} onSaved={() => {setWatched(false);setConfirmation(null);onCorrected();}} />}
-      {preview && <button className="button text" disabled={opening || saving} onClick={() => void openPreview()}>Refresh video link</button>}
+      {awaiting && item.metric === "seconds" && <RankedUploadHoldEditor key={`${item.id}:${item.revision}:${preview?.url ?? ""}`} item={item} videoRef={videoRef} watched={watched} disabled={!preview || opening || saving || trimBusy} onBusy={value => {savingRef.current=value;setSaving(value);onBusy(value);}} onSaved={() => {setWatched(false);setConfirmation(null);onCorrected();}} />}
+      {preview && <button className="button text" disabled={opening || saving || trimBusy} onClick={() => void openPreview()}>Refresh video link</button>}
       <p className="small muted">The preview link is temporary. Refresh it if playback stops. This video has not been published.</p>
+      {awaiting && <button className="button secondary" disabled={saving||opening||trimBusy} onClick={()=>{videoRef.current?.pause();setWatched(false);setConfirmation(null);setTrimOpen(v=>!v);}}>{trimOpen?"Close trim editor":"Trim clip"}</button>}
+      {awaiting && trimOpen && <ClipTrimPanel target={{kind:"upload",id:item.id}} disabled={saving||opening} onBusy={value=>{setTrimBusy(value);onBusy(value);}} onSaved={()=>{setWatched(false);setConfirmation(null);onTrimmed();}} />}
       <div className="notice">
         {item.reason === "always_review" ? <p>This progression requires a review for every ranked upload.</p>
           : <p>This result is projected into the top {item.top_percent}% of its worldwide progression and gender board.</p>}
@@ -163,19 +167,19 @@ function RankedUploadDetail({item, onBusy, onSaved, onCorrected}: {
       {!awaiting ? <div className="notice"><h3>{item.rejection_reason ? rankedUploadReasons[item.rejection_reason] : "Rejected"}</h3>
         {item.review_note && item.review_note !== (item.rejection_reason ? rankedUploadReasons[item.rejection_reason] : null) && <p className="review-rule-copy">{item.review_note}</p>}<ul>{item.rejection_rules.map(rule => <li key={rule.id}>{rule.text}</li>)}</ul><p>The upload remains private and earns no points.</p></div>
         : <>
-          <label className="check"><input type="checkbox" checked={watched} disabled={!preview || saving}
+          <label className="check"><input type="checkbox" checked={watched} disabled={!preview || saving || trimBusy}
             onChange={event => {setWatched(event.target.checked); setConfirmation(null);}} />
             I watched the full video and checked the exercise, result and form against these rules.</label>
           <label htmlFor="ranked-upload-reason">Rejection reason</label>
-          <select id="ranked-upload-reason" value={reason} disabled={saving} onChange={event => {setReason(event.target.value as RankedUploadReason | ""); setRuleIds([]); setConfirmation(null);}}>
+          <select id="ranked-upload-reason" value={reason} disabled={saving || trimBusy} onChange={event => {setReason(event.target.value as RankedUploadReason | ""); setRuleIds([]); setConfirmation(null);}}>
             <option value="">Choose a reason if rejecting</option>
             {Object.entries(rankedUploadReasons).filter(([code]) => !holdTimingReasons.has(code) || canRejectTiming).map(([code, label]) => <option key={code} value={code}>{label}</option>)}
           </select>
           {reason === "other" && <label htmlFor="ranked-upload-custom-reason">Custom rejection reason
-            <textarea id="ranked-upload-custom-reason" maxLength={1000} disabled={saving} value={customReason} placeholder="Explain why this upload was rejected. This is shown to the uploader."
+            <textarea id="ranked-upload-custom-reason" maxLength={1000} disabled={saving || trimBusy} value={customReason} placeholder="Explain why this upload was rejected. This is shown to the uploader."
               onChange={event => {setCustomReason(event.target.value);setConfirmation(null);}} />
           </label>}
-          {ruleType && <fieldset disabled={saving}>
+          {ruleType && <fieldset disabled={saving || trimBusy}>
             <legend>Which {ruleType} rules were not met?</legend>
             <p className="small muted">Select up to eight specific rules to include in the uploader’s rejection feedback.</p>
             {g.rules.filter(rule => rule.type === ruleType).map(rule => <label key={rule.id} className="check">
@@ -188,17 +192,17 @@ function RankedUploadDetail({item, onBusy, onSaved, onCorrected}: {
           </fieldset>}
           {holdTimingReasons.has(reason) && <p className="small muted">Use Hold start and Hold end above to check the selected times. The uploader will be told which boundary is inaccurate.</p>}
           <p className="small muted">While this review is pending, the video stays private, earns no points, and the athlete’s current personal best stays in place.</p>
-          <div className="decision-actions"><button className="button secondary" disabled={saving || !validRejection}
+          <div className="decision-actions"><button className="button secondary" disabled={saving || trimBusy || !validRejection}
             onClick={() => void decide(false)}>Reject upload</button>
-            <button className="button primary ranked-upload-approve" disabled={!!reason || !watched || !preview || saving} onClick={() => setConfirmation("approve")}>Approve upload</button></div>
+            <button className="button primary ranked-upload-approve" disabled={!!reason || !watched || !preview || saving || trimBusy} onClick={() => setConfirmation("approve")}>Approve upload</button></div>
         </>}
       {error && <p className="notice error" role="alert">{error}</p>}
     </div></div>
     {confirmation && !reason && <div className="dialog-backdrop"><div className="dialog" role="dialog" aria-modal="true" aria-label="Confirm ranked upload decision">
       <h2>Approve this ranked upload?</h2>
       <p>The upload can be published and counted in rankings after the remaining publication checks pass.</p>
-      <div className="decision-actions"><button className="button secondary" disabled={saving} onClick={() => setConfirmation(null)}>Cancel</button>
-        <button className="button primary" disabled={saving || !!reason} onClick={() => void decide(true)}>{saving ? "Saving…" : "Confirm decision"}</button></div>
+      <div className="decision-actions"><button className="button secondary" disabled={saving || trimBusy} onClick={() => setConfirmation(null)}>Cancel</button>
+        <button className="button primary" disabled={saving || trimBusy || !!reason} onClick={() => void decide(true)}>{saving ? "Saving…" : "Confirm decision"}</button></div>
     </div></div>}
   </section>;
 }

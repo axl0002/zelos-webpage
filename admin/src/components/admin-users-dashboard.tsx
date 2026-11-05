@@ -3,6 +3,8 @@ import {notifyAdminReviewCountsChanged} from "@/lib/admin-review-counts";
 import { useEffect, useRef, useState } from "react";
 import type { AdminUser } from "@/lib/admin-users";
 import ModerationActionForm from "./moderation-action-form";
+import AdminUserClips from "./admin-user-clips";
+import AthleteIdentity from "./athlete-identity";
 export default function AdminUsersDashboard() {
   const [query, setQuery] = useState(""), [users, setUsers] = useState<AdminUser[]>([]);
   const [selected, setSelected] = useState<string | null>(null), [searched, setSearched] = useState(false);
@@ -33,10 +35,10 @@ export default function AdminUsersDashboard() {
         {!loading && !searched && <p className="empty">Search for a username or user ID to find an account.</p>}
         {!loading && searched && !users.length && <p className="empty">No matching users.</p>}
         {users.map(item => <button key={item.id} disabled={busy} aria-label={`${item.username || "Unnamed account"} · ${item.is_banned ? "Banned" : "Active"} · ${item.id}`} aria-pressed={item.id === selected} className={`candidate ${item.id === selected ? "selected" : ""}`}
-          onClick={() => {setSelected(item.id); setNotice("");}}><span className="candidate-copy"><strong>{item.username || "Unnamed account"}</strong>
+          onClick={() => {setSelected(item.id); setNotice("");}}><span className="candidate-copy"><strong><AthleteIdentity username={item.username} country={item.country}/></strong>
             <span>{item.is_banned ? "Banned" : "Active"} · {item.country || "No country"}</span><small>{item.id}</small></span></button>)}
       </section><section className="review-panel" aria-label="User details">
-        {user ? <><h2>{user.username || "Unnamed account"}</h2><p className="muted">{user.id}</p>
+        {user ? <><h2><AthleteIdentity username={user.username} country={user.country}/></h2><p className="muted">{user.id}</p>
           <p>Account status: {user.is_banned ? "Banned" : "Active"}</p>
           {user.manual_ban && <p>{user.manual_ban_until ? <>Manual ban ends: <time dateTime={user.manual_ban_until}>{new Date(user.manual_ban_until).toLocaleString()}</time></> : "Manual ban: indefinite"}</p>}
           {!user.manual_ban && user.is_banned && user.ban_until && <p>Restriction ends: <time dateTime={user.ban_until}>{new Date(user.ban_until).toLocaleString()}</time></p>}
@@ -52,6 +54,7 @@ export default function AdminUsersDashboard() {
               notifyAdminReviewCountsChanged();
             }} />
           {!user.can_ban && !user.can_unban && <p className="muted">This account cannot be changed here.</p>}
+          <AdminUserClips userId={user.id} disabled={busy}/>
         </> : <p className="empty">Search and select a user to review their account.</p>}
       </section></div>
     </div>;

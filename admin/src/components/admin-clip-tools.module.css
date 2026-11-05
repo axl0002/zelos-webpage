@@ -1,0 +1,22 @@
+.panel, .library, .detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  min-width: 0;
+}
+.panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  background: var(--surface);
+}
+.panel > *, .grid > * { min-width: 0; max-width: 100%; }
+.panel label { display: grid; gap: 8px; }
+.panel label:has(input[type="checkbox"]) { display: flex; align-items: flex-start; gap: 9px; }
+.panel video { width: 100%; max-height: 520px; object-fit: contain; background: #111; border-radius: 10px; }
+.panel textarea { min-height: 100px; }
+.panel button, .clipList button { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 14px; }
+.clipList { display: flex; flex-wrap: wrap; gap: 8px; max-height: 280px; overflow-y: auto; }
+.clipList button[aria-pressed="true"] { border-color: currentColor; background: var(--soft); }
+@media(max-width: 650px) { .panel { padding: 12px; } }

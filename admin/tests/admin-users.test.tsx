@@ -6,7 +6,7 @@ const user = {id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", username: "athlete", c
 afterEach(() => {cleanup(); vi.unstubAllGlobals();});
 it.each([false, true])("searches then confirms and refreshes a manual ban removal=%s", async unban => {
   const item = {...user, is_banned: unban, manual_ban: unban, can_ban: !unban, can_unban: unban};
-  const fetch = vi.fn(async (path: string) => ({ok: true, json: async () => path.includes("?q=") ? [item] : {ok: true}}));
+  const fetch = vi.fn(async (path: string) => ({ok: true, json: async () => path.includes("?q=") ? [item] : path.includes("/users/clips?") ? {items: [], has_more: false, next_cursor: null} : {ok: true}}));
   vi.stubGlobal("fetch", fetch); render(<AdminUsersDashboard />);
   fireEvent.change(screen.getByLabelText("Username or user ID"), {target: {value: "athlete"}}); fireEvent.click(screen.getByRole("button", {name: "Search users"}));
   await screen.findByRole("heading", {name: "athlete"});
@@ -27,7 +27,7 @@ it.each([false, true])("searches then confirms and refreshes a manual ban remova
   await waitFor(() => expect(fetch.mock.calls.filter(([path]) => path.includes("?q="))).toHaveLength(2));
 });
 it("retains reason and retry identity after failure and does not claim success", async () => {
-  const fetch = vi.fn(async (path: string) => ({ok: !path.endsWith("/ban"), json: async () => path.includes("?q=") ? [user] : {error: "Please try again."}}));
+  const fetch = vi.fn(async (path: string) => ({ok: !path.endsWith("/ban"), json: async () => path.includes("?q=") ? [user] : path.includes("/users/clips?") ? {items: [], has_more: false, next_cursor: null} : {error: "Please try again."}}));
   vi.stubGlobal("fetch", fetch); render(<AdminUsersDashboard />);
   fireEvent.change(screen.getByLabelText("Username or user ID"), {target: {value: "athlete"}}); fireEvent.click(screen.getByRole("button", {name: "Search users"}));
   await screen.findByRole("heading", {name: "athlete"}); fireEvent.change(screen.getByLabelText(/^(Action reason|Ban reason)/), {target: {value: "Repeated abuse"}});
@@ -43,7 +43,7 @@ it("resets pending confirmation when switching accounts and uses the selected us
   let saved = false;
   const fetch = vi.fn(async (path: string, options?: RequestInit) => {
     if (path.endsWith("/ban")) saved = true;
-    return {ok: true, json: async () => path.includes("?q=") ? [user, {...second, revision: saved ? 5 : 4, is_banned: saved, can_ban: !saved, can_unban: saved}] : {ok: true}};
+    return {ok: true, json: async () => path.includes("?q=") ? [user, {...second, revision: saved ? 5 : 4, is_banned: saved, can_ban: !saved, can_unban: saved}] : path.includes("/users/clips?") ? {items: [], has_more: false, next_cursor: null} : {ok: true}};
   });
   vi.stubGlobal("fetch", fetch); render(<AdminUsersDashboard />);
   fireEvent.change(screen.getByLabelText("Username or user ID"), {target: {value: "athlete"}}); fireEvent.click(screen.getByRole("button", {name: "Search users"}));
@@ -61,7 +61,7 @@ it("resets pending confirmation when switching accounts and uses the selected us
 });
 
 it("validates temporary days, confirms duration and changes retry identity when duration changes", async () => {
-  const fetch = vi.fn(async (path: string, options?: RequestInit) => ({ok: !path.endsWith("/ban"), json: async () => path.includes("?q=") ? [user] : {error: "Please try again."}}));
+  const fetch = vi.fn(async (path: string, options?: RequestInit) => ({ok: !path.endsWith("/ban"), json: async () => path.includes("?q=") ? [user] : path.includes("/users/clips?") ? {items: [], has_more: false, next_cursor: null} : {error: "Please try again."}}));
   vi.stubGlobal("fetch", fetch); render(<AdminUsersDashboard />);
   fireEvent.change(screen.getByLabelText("Username or user ID"), {target: {value: "athlete"}}); fireEvent.click(screen.getByRole("button", {name: "Search users"}));
   await screen.findByRole("heading", {name: "athlete"}); fireEvent.change(screen.getByLabelText("Ban reason (shown to the user)"), {target: {value: "Repeated abuse"}});
@@ -84,7 +84,7 @@ it("validates temporary days, confirms duration and changes retry identity when 
   expect(bodies[0].request_id).not.toBe(bodies[1].request_id);
 });
 it.each([null, "2026-10-28T12:00:00Z"])("shows manual ban expiry %s without the indefinite Auth sentinel", async manual_ban_until => {
-  vi.stubGlobal("fetch", vi.fn(async () => ({ok: true, json: async () => [{...user, is_banned: true, manual_ban: true,
+  vi.stubGlobal("fetch", vi.fn(async (path: string) => ({ok: true, json: async () => path.includes("/users/clips?") ? {items: [], has_more: false, next_cursor: null} : [{...user, is_banned: true, manual_ban: true,
     manual_ban_until, ban_until: "2126-10-21T12:00:00Z", can_ban: false, can_unban: true}]})));
   const {container} = render(<AdminUsersDashboard />);
   fireEvent.change(screen.getByLabelText("Username or user ID"), {target: {value: "athlete"}}); fireEvent.click(screen.getByRole("button", {name: "Search users"}));
