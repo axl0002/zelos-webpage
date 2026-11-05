@@ -8,7 +8,7 @@ const item={id:report,post_id:'touch-fixture',reason:'incorrect_exercise',detail
 afterEach(()=>{cleanup();vi.unstubAllGlobals();});
 for(const grouped of [false,true])it(`changes incorrect exercise to form and submits both deployed rule IDs through the real parser (group: ${grouped})`,async()=>{
  const ids=grouped?[report,sibling]:[report];
- const fetch=vi.fn(async(path:string,options:RequestInit={})=>{
+ const fetch=vi.fn(async(path:string,options:RequestInit)=>{
   if(path.includes('/group-context?'))return {ok:true,json:async()=>({report_id:report,submission_id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',open_report_ids:ids,other_open_count:ids.length-1})};
   if(options.method==='POST'){
    const parsed=parseRankingFlagRejectionV2(JSON.parse(options.body as string),grouped);
