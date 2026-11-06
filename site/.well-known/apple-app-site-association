@@ -9,6 +9,10 @@
           {
             "/": "/profile/*",
             "comment": "Shared Zelos athlete profiles"
+          },
+          {
+            "/": "/battle/*",
+            "comment": "Shared Zelos battles"
           }
         ]
       }

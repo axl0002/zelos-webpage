@@ -15,9 +15,9 @@ it("offers an app destination and both store fallbacks without fetching profile 
 it("rejects malformed profile identifiers", async () => {
   await expect(SharedProfile({ params: Promise.resolve({ id: "bad-id" }) })).rejects.toThrow("not found");
 });
-it("associates only shared profile paths with the existing iOS app", () => {
+it("preserves profile association and adds battle paths for the existing iOS app", () => {
   const data = JSON.parse(readFileSync("public/.well-known/apple-app-site-association", "utf8"));
-  expect(data.applinks.details).toEqual([{ appIDs: ["MK29ZT8FZ7.club.zelos.app"], components: [{ "/": "/profile/*", comment: "Shared Zelos athlete profiles" }] }]);
+  expect(data.applinks.details).toEqual([{ appIDs: ["MK29ZT8FZ7.club.zelos.app"], components: [{ "/": "/profile/*", comment: "Shared Zelos athlete profiles" }, { "/": "/battle/*", comment: "Shared Zelos battles" }] }]);
 });
 it("publishes registered Android certificate fingerprints", () => {
   const data = JSON.parse(readFileSync("public/.well-known/assetlinks.json", "utf8"));
