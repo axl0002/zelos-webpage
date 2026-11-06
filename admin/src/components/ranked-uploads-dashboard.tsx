@@ -1,5 +1,6 @@
 "use client";
 import RankedUploadHoldEditor from "./ranked-upload-hold-editor";
+import RankedUploadRepEditor from "./ranked-upload-rep-editor";
 import ClipTrimPanel from "./clip-trim-panel";
 import HoldReviewTimeline from "./hold-review-timeline";
 import {notifyAdminReviewCountsChanged} from "@/lib/admin-review-counts";
@@ -29,20 +30,24 @@ export default function RankedUploadsDashboard() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [reviewReload,setReviewReload]=useState(0);
   // An older in-flight queue response must not restore a completed review.
   const completed = useRef(new Set<string>());
   async function refresh(signal?: AbortSignal) {
     setLoading(true); setError("");
     try {
       const items = await api<RankedUploadReview[]>("", undefined, signal);
-      if (signal?.aborted) return;
+      if (signal?.aborted) return false;
       const pending = items.filter(item => item.state === "rank_review" && !completed.current.has(item.id));
       setQueue(pending);
       setSelected(old => pending.some(item => item.id === old) ? old : pending[0]?.id ?? null);
+      return true;
     } catch (cause) {
       if (!signal?.aborted) setError((cause as Error).message);
+      return false;
     } finally { if (!signal?.aborted) setLoading(false); }
   }
+  async function reloadReview() {if (await refresh()) setReviewReload(n => n+1);}
   useEffect(() => {
     const controller = new AbortController(); void refresh(controller.signal);
     return () => controller.abort();
@@ -61,7 +66,7 @@ export default function RankedUploadsDashboard() {
       <header className="page-header"><div>
         <p className="eyebrow">BEFORE PUBLICATION</p><h1>Ranked uploads</h1>
         <p className="muted">Check the complete video against the exercise rules before it becomes public or earns points.</p>
-      </div><button className="button secondary" disabled={loading || busy} onClick={() => void refresh()}>Refresh queue</button></header>
+      </div><button className="button secondary" disabled={loading || busy} onClick={() => void reloadReview()}>Refresh queue</button></header>
       {error && <p className="notice error" role="alert">{error}</p>}
       {notice && <p className="notice success" role="status">{notice}</p>}
       <div className="review-layout">
@@ -76,14 +81,14 @@ export default function RankedUploadsDashboard() {
             </span>
           </button>)}
         </section>
-        {current ? <RankedUploadDetail key={`${current.id}:${current.revision}`} item={current} onBusy={setBusy} onSaved={saved} onCorrected={() => {setNotice("Hold frames corrected. The upload is still private and awaiting review. Check the updated result before approving."); void refresh();}} onTrimmed={()=>{setNotice("Clip trimmed. The upload is still private. Review the new video before approving.");void refresh();}} />
+        {current ? <RankedUploadDetail key={`${current.id}:${current.revision}:${reviewReload}`} item={current} onBusy={setBusy} onSaved={saved} onCorrected={metric => {setNotice(`${metric === "reps" ? "Rep count" : "Hold frames"} corrected. The upload is still private and awaiting review. Check the updated result before approving.`); void refresh();}} onRefresh={() => void reloadReview()} onTrimmed={()=>{setNotice("Clip trimmed. The upload is still private. Review the new video before approving.");void refresh();}} />
           : <section className="review-panel"><p className="empty">Select an upload to review.</p></section>}
       </div>
     </div>;
 }
-function RankedUploadDetail({item, onBusy, onSaved, onCorrected,onTrimmed}: {
+function RankedUploadDetail({item, onBusy, onSaved, onCorrected,onTrimmed,onRefresh}: {
   item: RankedUploadReview; onBusy: (busy: boolean) => void;
-  onSaved: (approve: boolean) => void; onCorrected: () => void;onTrimmed:()=>void;
+  onSaved: (approve: boolean) => void; onCorrected: (metric?: "reps") => void;onTrimmed:()=>void;onRefresh:()=>void;
 }) {
   const [preview, setPreview] = useState<{url: string; expires_in: number} | null>(null);
   const [opening, setOpening] = useState(false);
@@ -94,6 +99,7 @@ function RankedUploadDetail({item, onBusy, onSaved, onCorrected,onTrimmed}: {
   const [confirmation, setConfirmation] = useState<"approve" | null>(null);
   const [saving, setSaving] = useState(false);
   const [trimOpen,setTrimOpen]=useState(false),[trimBusy,setTrimBusy]=useState(false);
+  const [editingReps,setEditingReps]=useState(false);
   const [error, setError] = useState("");
   const previewRequest = useRef<AbortController | null>(null);
   const savingRef = useRef(false);
@@ -119,7 +125,7 @@ function RankedUploadDetail({item, onBusy, onSaved, onCorrected,onTrimmed}: {
     return () => previewRequest.current?.abort();
   }, [openPreview]);
   async function decide(approved: boolean) {
-    if (savingRef.current || trimBusy || !awaiting ||
+    if (savingRef.current || trimBusy || editingReps || !awaiting ||
       (approved ? !!reason || confirmation !== "approve" || !preview || !watched : !validRejection)) return;
     savingRef.current = true; setSaving(true); onBusy(true); setError("");
     try {
@@ -147,9 +153,13 @@ function RankedUploadDetail({item, onBusy, onSaved, onCorrected,onTrimmed}: {
 
       </div>}
       {awaiting && item.metric === "seconds" && <RankedUploadHoldEditor key={`${item.id}:${item.revision}:${preview?.url ?? ""}`} item={item} videoRef={videoRef} watched={watched} disabled={!preview || opening || saving || trimBusy} onBusy={value => {savingRef.current=value;setSaving(value);onBusy(value);}} onSaved={() => {setWatched(false);setConfirmation(null);onCorrected();}} />}
-      {preview && <button className="button text" disabled={opening || saving || trimBusy} onClick={() => void openPreview()}>Refresh video link</button>}
+      {awaiting && item.metric === "reps" && <RankedUploadRepEditor item={item} watched={watched} disabled={!preview || opening || saving || trimBusy || trimOpen}
+        onOpenChange={value => {setEditingReps(value);setConfirmation(null);}}
+        onBusy={value => {savingRef.current=value;setSaving(value);onBusy(value);}}
+        onSaved={() => {setWatched(false);setConfirmation(null);onCorrected("reps");}} onRefresh={onRefresh} />}
+      {preview && <button className="button text" disabled={opening || saving || trimBusy || editingReps} onClick={() => void openPreview()}>Refresh video link</button>}
       <p className="small muted">The preview link is temporary. Refresh it if playback stops. This video has not been published.</p>
-      {awaiting && <button className="button secondary" disabled={saving||opening||trimBusy} onClick={()=>{videoRef.current?.pause();setWatched(false);setConfirmation(null);setTrimOpen(v=>!v);}}>{trimOpen?"Close trim editor":"Trim clip"}</button>}
+      {awaiting && <button className="button secondary" disabled={saving||opening||trimBusy||editingReps} onClick={()=>{videoRef.current?.pause();setWatched(false);setConfirmation(null);setTrimOpen(v=>!v);}}>{trimOpen?"Close trim editor":"Trim clip"}</button>}
       {awaiting && trimOpen && <ClipTrimPanel target={{kind:"upload",id:item.id}} disabled={saving||opening} onBusy={value=>{setTrimBusy(value);onBusy(value);}} onSaved={()=>{setWatched(false);setConfirmation(null);onTrimmed();}} />}
       <div className="notice">
         {item.reason === "always_review" ? <p>This progression requires a review for every ranked upload.</p>
@@ -192,9 +202,9 @@ function RankedUploadDetail({item, onBusy, onSaved, onCorrected,onTrimmed}: {
           </fieldset>}
           {holdTimingReasons.has(reason) && <p className="small muted">Use Hold start and Hold end above to check the selected times. The uploader will be told which boundary is inaccurate.</p>}
           <p className="small muted">While this review is pending, the video stays private, earns no points, and the athlete’s current personal best stays in place.</p>
-          <div className="decision-actions"><button className="button secondary" disabled={saving || trimBusy || !validRejection}
+          <div className="decision-actions"><button className="button secondary" disabled={saving || trimBusy || editingReps || !validRejection}
             onClick={() => void decide(false)}>Reject upload</button>
-            <button className="button primary ranked-upload-approve" disabled={!!reason || !watched || !preview || saving || trimBusy} onClick={() => setConfirmation("approve")}>Approve upload</button></div>
+            <button className="button primary ranked-upload-approve" disabled={!!reason || !watched || !preview || saving || trimBusy || editingReps} onClick={() => setConfirmation("approve")}>Approve upload</button></div>
         </>}
       {error && <p className="notice error" role="alert">{error}</p>}
     </div></div>
