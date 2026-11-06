@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { getPublicScoreRules } from "@/lib/score-rules.server";
 import type { PublicScoreRules } from "@/lib/score-rules";
 import ScoringGuide from "@/components/scoring-guide";
+import { getPublicScoreWeights } from "@/lib/score-weights.server";
+import ScoringWeights from "@/components/scoring-weights";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Scoring – Zelos",
@@ -19,12 +21,13 @@ export const metadata: Metadata = {
   icons: { icon: "/assets/z_app_icon.png", apple: "/assets/z_app_icon.png" },
 };
 export default async function ScoringPage() {
-  let rules: PublicScoreRules | null = null;
-  try {
-    rules = await getPublicScoreRules();
-  } catch {
-    /* Show unavailability, never silently present stale rules as current. */
-  }
+  // Each response is independently guarded. A status outage must not hide
+  // verified weights; a weights outage must never revive a stale formula.
+  const [status, publishedWeights] = await Promise.allSettled([
+    getPublicScoreRules(), getPublicScoreWeights(),
+  ]);
+  const rules: PublicScoreRules | null = status.status === "fulfilled" ? status.value : null;
+  const weights = publishedWeights.status === "fulfilled" ? publishedWeights.value : null;
   return (
     <>
       <link rel="stylesheet" href="/styles.css" />
@@ -89,12 +92,13 @@ export default async function ScoringPage() {
           <section className="document-card" role="status">
             <h2>Scoring details are temporarily unavailable.</h2>
             <p>
-              We can’t verify the current formula and weights right now. Please
+              We can’t verify the current scoring status right now. Please
               try again shortly.
             </p>
             <a href="/scoring">Try again</a>
           </section>
         )}
+        {rules?.schema_version !== 1 && <ScoringWeights weights={weights} />}
       </main>
       <footer className="site-footer">
         <div className="footer-container">

@@ -1,8 +1,12 @@
 # Public scoring transparency
 
-When the public scoring contract returns `scores_only`, keep formulas and
-algorithm parameters private and show the generic public scoring page. Do not
-restore a public calculator for an alternative algorithm.
+When the public scoring contract returns `scores_only`, keep formulas,
+expert-reference benchmarks and other algorithm parameters private. The owner
+explicitly authorized restoring public Push/Pull exercise weight tables on
+6 November 2026. Publish those current weights only through the separately
+allowlisted `get_public_score_weights_v1()` contract; retain the legacy
+`get_public_score_rules()` response unchanged. Do not restore the old rank-only
+explanation or a public calculator for an alternative algorithm.
 
 Keep `/scoring` accurate whenever changing the record-points formula, weights,
 aggregation, tie rules, or eligibility. Its source is the read-only

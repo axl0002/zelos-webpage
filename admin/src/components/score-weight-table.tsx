@@ -4,7 +4,7 @@ export default function ScoreWeightTable({
   rules,
   discipline,
 }: {
-  rules: ScoreRules;
+  rules: Pick<ScoreRules, "weights">;
   discipline: "push" | "pull";
 }) {
   const enabled = rules.weights.filter((w) => w.enabled || w.availability === "coming_soon");
@@ -22,6 +22,7 @@ export default function ScoreWeightTable({
     ...values,
   ])].sort((a, b) => a - b);
   const title = discipline === "push" ? "Push" : "Pull";
+  if (!boards.length) return <div><h3>{title}</h3><p>No ranked {title} exercises are currently available.</p></div>;
   return (
     <div>
       <h3>{title}</h3>
