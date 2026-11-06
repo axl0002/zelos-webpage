@@ -8,6 +8,11 @@ allowlisted `get_public_score_weights_v1()` contract; retain the legacy
 `get_public_score_rules()` response unchanged. Do not restore the old rank-only
 explanation or a public calculator for an alternative algorithm.
 
+The public CSV export uses that same read-only weight allowlist. CSV upload,
+preview and Apply belong in the authenticated admin workspace; only an explicit
+admin Apply changes weights and recalculates rankings. Keep imported changes
+audited and preserve the previous CSV for a fresh, reviewed restore.
+
 Keep `/scoring` accurate whenever changing the record-points formula, weights,
 aggregation, tie rules, or eligibility. Its source is the read-only
 `get_public_score_rules()` RPC in the canonical mobile/backend Supabase migrations.

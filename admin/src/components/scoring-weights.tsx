@@ -30,7 +30,7 @@ export default function ScoringWeights({ weights }: { weights: PublicScoreWeight
         Available for training, with ranking not yet enabled: {weights.unranked_exercises.map(row => row.name).join(", ")}.
         These exercises have no ranked weight in the tables.
       </p>}
-      <p><a href="/scoring/weights.json">View current weights (JSON)</a></p>
+      <p><a href="/scoring/weights.csv" download>Download current weights (CSV)</a>{" · "}<a href="/scoring/weights.json">View current weights (JSON)</a></p>
     </section>
   );
 }

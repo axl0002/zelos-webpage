@@ -26,6 +26,22 @@ const text = (value: unknown): value is string =>
 const discipline = (value: unknown) => value === "push" || value === "pull";
 const metric = (value: unknown) => value === "reps" || value === "seconds";
 
+export function parsePublicScoreWeightRows(value: unknown): PublicScoreWeight[] {
+  const fail = (): never => { throw new Error("Exercise weights unavailable"); };
+  if (!Array.isArray(value) || value.length > 500) return fail();
+  const weights: PublicScoreWeight[] = value.map((row: unknown) => {
+    if (!object(row) || !text(row.id) || !text(row.name) || !text(row.exercise) ||
+        (row.progression !== null && !text(row.progression)) || !discipline(row.discipline) ||
+        !metric(row.metric) || typeof row.weight !== "number" || !Number.isFinite(row.weight) || row.weight < 0 ||
+        row.enabled !== true || row.availability !== "active") return fail();
+    return { id: row.id, name: row.name, exercise: row.exercise, progression: row.progression as string | null,
+      discipline: row.discipline as "push" | "pull", metric: row.metric as "reps" | "seconds",
+      weight: row.weight, enabled: true, availability: "active" };
+  });
+  if (new Set(weights.map(row => row.id)).size !== weights.length) return fail();
+  return weights;
+}
+
 // This is a separate public allowlist, not a partial alternative formula.
 // Reconstruct every object so upstream/private fields never enter HTML or JSON.
 export function parsePublicScoreWeights(value: unknown): PublicScoreWeights {
@@ -35,15 +51,7 @@ export function parsePublicScoreWeights(value: unknown): PublicScoreWeights {
       typeof value.updated_at !== "string" || !Number.isFinite(Date.parse(value.updated_at)) ||
       !Array.isArray(value.weights) || value.weights.length > 500 ||
       !Array.isArray(value.unranked_exercises) || value.unranked_exercises.length > 500) return fail();
-  const weights: PublicScoreWeight[] = value.weights.map((row: unknown) => {
-    if (!object(row) || !text(row.id) || !text(row.name) || !text(row.exercise) ||
-        (row.progression !== null && !text(row.progression)) || !discipline(row.discipline) ||
-        !metric(row.metric) || typeof row.weight !== "number" || !Number.isFinite(row.weight) || row.weight < 0 ||
-        row.enabled !== true || row.availability !== "active") return fail();
-    return { id: row.id, name: row.name, exercise: row.exercise, progression: row.progression as string | null,
-      discipline: row.discipline as "push" | "pull", metric: row.metric as "reps" | "seconds",
-      weight: row.weight, enabled: true, availability: "active" };
-  });
+  const weights = parsePublicScoreWeightRows(value.weights);
   const unranked: UnrankedExercise[] = value.unranked_exercises.map((row: unknown) => {
     if (!object(row) || !text(row.id) || !text(row.name) || !discipline(row.discipline) ||
         !metric(row.metric) || row.availability !== "coming_soon") return fail();

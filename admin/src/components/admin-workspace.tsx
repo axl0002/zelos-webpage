@@ -12,6 +12,7 @@ export const adminDestinations = [
   {href: "/admin/reports", label: "User reports"},
   {href: "/admin/safety", label: "Upload safety"},
   {href: "/admin/users", label: "Users"},
+  {href: "/admin/scoring-weights", label: "Scoring weights"},
   {href: "/admin/scoring-lab", label: "Scoring lab"},
   {href: "/admin/feed-lab", label: "Feed lab"},
   {href: "/admin/analytics", label: "Analytics"},
