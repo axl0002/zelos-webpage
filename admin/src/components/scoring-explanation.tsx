@@ -11,7 +11,7 @@ export default function ScoringExplanation({explanation}: {explanation: ScoreExp
   const record = method.kind === "rank_only"
     ? "Each record’s leaderboard standing is scaled by its exercise weight."
     : `Each record blends ${percent(method.rank_share)} leaderboard standing and ${percent(method.performance_share)} performance against an expert reference, scaled by its exercise weight. Performance has diminishing returns.`;
-  const terms = example.scores.map((score, i) => i === 0 ? number(score) : `${number(score)} × ${percent(aggregation.contribution_multipliers[i])}`);
+  const terms = example.scores.map((score, i) => i === 0 ? `${number(score)} Elo` : `${number(score)} Elo × ${percent(aggregation.contribution_multipliers[i])}`);
   return <section className="document-card" aria-labelledby="elo-explanation-title">
     <h2 id="elo-explanation-title">How your Elo is calculated</h2>
     <p>Push and Pull are scored separately. {record}{" "}
@@ -19,7 +19,7 @@ export default function ScoringExplanation({explanation}: {explanation: ScoreExp
       {method.performance_capped && "The performance component is capped. "}
       One active progression counts per exercise. Up to {aggregation.top_k} {aggregation.top_k === 1 ? "highest exercise score contributes" : "highest exercise scores contribute"} {list(rates)}{aggregation.top_k > 5
         ? `, then each next rate is ${percent(aggregation.discount)} of the previous rate.` : ", respectively."}</p>
-    <p><strong>Example:</strong> {terms.join(" + ")} = {number(example.total)} Elo.</p>
+    <p><strong>Example exercise scores:</strong> {terms.join(" + ")} = {number(example.total)} overall Elo.</p>
     <p className="small muted">Explanation revision {explanation.revision} · Updated{" "}
       <time dateTime={explanation.updated_at}>{new Date(explanation.updated_at).toLocaleDateString("en-GB", {day: "numeric", month: "long", year: "numeric", timeZone: "UTC"})}</time></p>
   </section>;
