@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1 --port 3004",
-    "build": "next build",
+    "build": "node scripts/verify-dau-connection.mjs && next build",
     "start": "next start --hostname 127.0.0.1 --port 3004",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
