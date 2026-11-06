@@ -52,7 +52,8 @@ it("places every currently ranked progression in the correct Push/Pull matrix wi
   }
   expect(screen.getByText(/difficulty coefficient/)).toBeTruthy();expect(screen.getByText(/not the final Elo/)).toBeTruthy();
   expect(screen.getByText(/Available for training, with ranking not yet enabled/).textContent).toContain("Pelican");
-  expect(screen.getByRole("link",{name:"View current weights (JSON)"}).getAttribute("href")).toBe("/scoring/weights.json");
+  expect(screen.queryByRole("link",{name:"View current weights (JSON)"})).toBeNull();
+  expect(screen.getByRole("link",{name:"Download current weights (CSV)"}).getAttribute("href")).toBe("/scoring/weights.csv");
   expect(screen.queryByRole("math")).toBeNull();expect(screen.queryByRole("spinbutton")).toBeNull();
 });
 

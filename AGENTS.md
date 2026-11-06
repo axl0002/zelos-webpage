@@ -1,12 +1,13 @@
 # Public scoring transparency
 
-When the public scoring contract returns `scores_only`, keep formulas,
-expert-reference benchmarks and other algorithm parameters private. The owner
-explicitly authorized restoring public Push/Pull exercise weight tables on
-6 November 2026. Publish those current weights only through the separately
-allowlisted `get_public_score_weights_v1()` contract; retain the legacy
-`get_public_score_rules()` response unchanged. Do not restore the old rank-only
-explanation or a public calculator for an alternative algorithm.
+The owner authorized public Push/Pull weight tables and a concise explanation
+of the current overall Elo method, with a worked example, on 6 November 2026.
+Use `get_public_score_weights_v1()` for current weights and
+`get_public_score_explanation_v1()` for the active blend, selection and
+aggregation rules. Preserve the legacy `get_public_score_rules()` response,
+including `scores_only`. Keep athlete data and expert-reference benchmark
+mappings private. Do not show a stale rank-only guide or calculator for a
+different active method.
 
 The public CSV export uses that same read-only weight allowlist. CSV upload,
 preview and Apply belong in the authenticated admin workspace; only an explicit
@@ -17,8 +18,10 @@ Keep `/scoring` accurate whenever changing the record-points formula, weights,
 aggregation, tie rules, or eligibility. Its source is the read-only
 `get_public_score_rules()` RPC in the canonical mobile/backend Supabase migrations.
 
-- Configuration/weight edits appear automatically. For a new formula, update the
-  contract, page copy, calculator, worked examples and tests in the same release.
+- Supported numeric configuration/weight edits must appear automatically. For
+  a new engine or mapper, update the publication support, concise page copy,
+  worked example and tests before activation; preserve the pinned explanation
+  guard. Do not add a calculator without a verified current contract.
 - Keep the backend's implementation-hash guard. Do not silently fall back to an
   old formula or hardcoded weights when the live contract is unavailable.
 - Do not expose athlete records, database write APIs or privileged credentials.
